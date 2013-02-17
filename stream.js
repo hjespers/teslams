@@ -1,4 +1,4 @@
-var request = require('request');
+var request = require('request'); // run "npm install request" to get this required module
 var fs = require('fs');
 
 // edit the credentials to contain your teslamotors.com login email and password
