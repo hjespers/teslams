@@ -1,6 +1,6 @@
 #Tesla Model S REST API
 
-An implementation is Node.js of the interface documented at:
+An implementation in Node.js of the interface documented at:
 
 http://docs.timdorr.apiary.io/
 
