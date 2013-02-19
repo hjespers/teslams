@@ -61,7 +61,8 @@ Constants include:
 A sample application which uses the teslams.js library to call common functions provided in the REST API.
 A valid teslamotors.com login and password is required and must be inserted into the top of this program in "creds"
 
-To execute run "node main"
+To execute run 
+	node main
 
 #stream.js 
 
@@ -69,11 +70,14 @@ A sample application which uses the TESLA HTTP Long Polling "STREAMING" API to g
 A valid teslamotors.com login and password is required and must be inserted into the top of this program in "creds"
 By default the output goes to a file called "stream_output.txt". Each time you run the program you will over-write this file so copy old log data before running the application a second time.
 
-To execute run "node stream"
+To execute run 
+	node stream
 
 #Requirements
 
-The applications provided require the 'request' node module. Run "npm install request" once before running the applications.
+The applications provided require the 'request' node module. 
+	npm install request
+Run "npm install request" once before running the applications.
 Edit the credentials at the top of the programs before running or authentication will fail.
 
 #Support
