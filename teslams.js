@@ -1,16 +1,16 @@
 var request = require('request');
 
-// edit the credentials to contain your teslamotors.com login email and password
-var creds = { email: "youremail.com", password: "yourpassword" };
 var portal = 'https://portal.vn.teslamotors.com';
+exports.portal = portal;
 
 function mobile_enabled( vid ) {
-	request( portal + '/vehicles/' + vid + '/mobile_enabled', function (error, response, body) { 
+  request( portal + '/vehicles/' + vid + '/mobile_enabled', function (error, response, body) { 
 		var data = JSON.parse(body); 
 		console.log("\nMobile State:");
 		console.log(data);
 	});
 }
+exports.mobile_enabled = mobile_enabled;
 
 function get_charge_state( vid ) {
 	request( portal + '/vehicles/' + vid + '/command/charge_state', function (error, response, body) { 
@@ -19,6 +19,7 @@ function get_charge_state( vid ) {
 		console.log(data);
 	});
 }
+exports.get_charge_state = get_charge_state;
 
 function get_climate_state( vid ) {
 	request( portal + '/vehicles/' + vid + '/command/climate_state', function (error, response, body) { 
@@ -27,6 +28,7 @@ function get_climate_state( vid ) {
 		console.log(data);
 	});
 }
+exports.get_climate_state = get_climate_state;
 
 function get_drive_state( vid ) {
 	request( portal + '/vehicles/' + vid + '/command/drive_state', function (error, response, body) { 
@@ -35,6 +37,7 @@ function get_drive_state( vid ) {
 		console.log(data);
 	});
 }
+exports.get_drive_state = get_drive_state;
 
 function get_vehicle_state( vid ) {
 	request( portal + '/vehicles/' + vid + '/command/vehicle_state', function (error, response, body) { 
@@ -43,6 +46,7 @@ function get_vehicle_state( vid ) {
 		console.log(data);
 	});
 }
+exports.get_vehicle_state = get_vehicle_state;
 
 function get_gui_settings( vid ) {
 	request( portal + '/vehicles/' + vid + '/command/gui_settings', function (error, response, body) { 
@@ -51,6 +55,7 @@ function get_gui_settings( vid ) {
 		console.log(data);
 	});
 }
+exports.get_gui_settings = get_gui_settings;
 
 function wake_up( vid ) {
 	request( portal + '/vehicles/' + vid + '/command/wake_up', function (error, response, body) { 
@@ -59,6 +64,7 @@ function wake_up( vid ) {
 		console.log(data);
 	});
 }
+exports.wake_up = wake_up;
 
 function open_charge_port( vid ) {
 	request( portal + '/vehicles/' + vid + '/command/charge_port_door_open', function (error, response, body) { 
@@ -67,6 +73,7 @@ function open_charge_port( vid ) {
 		console.log(data);
 	});
 }
+exports.open_charge_port = open_charge_port;
 
 var CHARGE_OFF   = 0; // changes charge state to ON without effecting range mode
 var CHARGE_ON    = 1; // changes charge state to OFF without effecting range mode
@@ -90,6 +97,9 @@ function charge_state( vid, state ) {
 		console.log( "Error: Invalid charge state = " + state);
 	} 
 }
+exports.charge_state = charge_state;
+exports.CHARGE_OFF = CHARGE_OFF;
+exports.CHARGE_ON = CHARGE_ON;
 
 var RANGE_STD    = 0; // changes range mode to STANDARD without effecting charge state
 var RANGE_MAX    = 1; // changes range mode to MAX_RANGE without effecting charge state
@@ -110,6 +120,9 @@ function charge_range( vid, range ) {
 		console.log( "Error: Invalid charge range = " + range);
 	} 
 }
+exports.charge_range = charge_range;
+exports.RANGE_STD = RANGE_STD;
+exports.RANGE_MAX = RANGE_MAX;
 
 function flash( vid ) {
 	request( portal + '/vehicles/' + vid + '/command/flash_lights', function (error, response, body) { 
@@ -118,6 +131,7 @@ function flash( vid ) {
 		console.log(data);
 	});
 }
+exports.flash = flash;
 
 function honk( vid ) {
 	request( portal + '/vehicles/' + vid + '/command/honk_horn', function (error, response, body) { 
@@ -126,6 +140,7 @@ function honk( vid ) {
 		console.log(data);
 	});
 }
+exports.honk = honk;
 
 var LOCK_OFF = 0;
 var LOCK_ON  = 1;
@@ -146,6 +161,9 @@ function door_lock( vid, state ) {
 		console.log( "Error: Invalid door lock state = " + state);
 	}
 }
+exports.door_lock = door_lock;
+exports.LOCK_OFF = LOCK_OFF;
+exports.LOCK_ON = LOCK_ON;
 
 var TEMP_HI = 32;
 var TEMP_LO = 17;
@@ -175,6 +193,9 @@ function set_temperature( vid, dtemp, ptemp ) {
 		console.log('\nError: Invalid temperature setting (' + dtemp + 'C), Passenger (' + ptemp + 'C)');
 	}
 }
+exports.set_temperature = set_temperature;
+exports.TEMP_HI = TEMP_HI;
+exports.TEMP_LO = TEMP_LO;
 
 var CLIMATE_OFF = 0;
 var CLIMATE_ON  = 1;
@@ -197,6 +218,9 @@ function auto_conditioning( vid, state ) {
 		console.log( "Error: Invalid auto conditining state = " + state);
 	}
 }
+exports.auto_conditioning = auto_conditioning;
+exports.CLIMATE_OFF = CLIMATE_OFF;
+exports.CLIMATE_ON = CLIMATE_ON;
 
 var ROOF_CLOSE   = 0;
 var ROOF_VENT    = 1;
@@ -221,69 +245,9 @@ function sun_roof( vid, state ) {
 		console.log( 'Valid sun roof states are "open", "close", "comfort", or "vent"');
 	}
 }
+exports.sun_roof = sun_roof;
+exports.ROOF_CLOSE = ROOF_CLOSE;
+exports.ROOF_VENT = ROOF_VENT;
+exports.ROOF_COMFORT = ROOF_COMFORT;
+exports.ROOF_OPEN = ROOF_OPEN;
 
-
-// enough with all the functions. Put these in a proper node.js module so they are out of my sight!
-// below is an example of how to use these functions
-//
-// Login, get cookies, and figure out the vehicle ID (vid) for subsequent queries
-//
-var tesla = request( { method: 'POST',
-	   url: portal + '/login',
-	   form:{
-		"user_session[email]": creds.email, 
-		"user_session[password]": creds.password 
-	   }}, 
-	   function (error, response, body) {
-		if (!error) {
-			request(portal + '/vehicles', function (error, response, body) 
-				  { 
-					if ( body.substr(0,1) != "[" ) {
-						console.log(' login failed, please edit this program to include valid login/password');
-						process.exit( 1 );
-					}
-					var data = JSON.parse( body.substr(1, body.length - 2 ) ); 
-					console.log("\nVehicle List:");
-					console.log(data);
-					console.log("REST API\nid :" + data.id);
-					tesla.id = data.id;
-					if (tesla.id == undefined) {
-						console.log("Error: Undefined vehicle id");
-					} else {
-						//
-						// Remember NODE is all async non-blocking so all these requests go in parallel
-						//
-						// not needed for REST API but test all known REST functions anyway
-						//
-						wake_up( tesla.id );
-						//
-						// get some info
-						//
-						mobile_enabled( tesla.id );
-						get_charge_state( tesla.id );
-						get_climate_state( tesla.id );
-						get_drive_state( tesla.id );
-						get_vehicle_state( tesla.id );
-						get_gui_settings( tesla.id );
-						//
-						//  cute but annoying stuff while debugging
-						//
-						//flash( tesla.id ); 
-						//honk( tesla.id ); 
-						//open_charge_port( tesla.id ) 
-						//
-						// control some stuff
-						//
-						door_lock( tesla.id, LOCK_ON );
-						sun_roof( tesla.id, ROOF_CLOSE );
-						auto_conditioning( tesla.id, CLIMATE_OFF ); 
-						charge_range( tesla.id, RANGE_STD ); 
-						charge_state( tesla.id, CHARGE_ON ); 
-						set_temperature( tesla.id, 20); // automatically set passenger to driver setting
-						// set_temperature( tesla.id, TEMP_LO , TEMP_HI ); 
-					}
-				  }
-			)
-		}	
-	   }
-        );
