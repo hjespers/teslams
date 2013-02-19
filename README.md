@@ -6,7 +6,7 @@ An implementation in Node.js of the client side interface to the Tesla Model S A
 
 This is unofficial documentation of the Tesla Model S REST API used by the iOS and Android apps. It features functionality to monitor and control the Model S remotely. Documentation is provided on the Apiary.io site linked above.
 
-These programs and documentation do not come from the Tesla Motor Company.
+These programs and documentation do not come from Tesla Motors Inc.
 
 Be careful when using these programs as they can lock and unlock your car as well as control various functions relating to the charging system, sun_roof, lights, horn, and other subsystems of the car.
 
@@ -75,4 +75,8 @@ To execute run "node stream"
 
 The applications provided require the 'request' node module. Run "npm install request" once before running the applications.
 Edit the credentials at the top of the programs before running or authentication will fail.
+
+#Support
+
+For more information, feedback, or community support see the Tesla Motors Club forum at http://www.teslamotorsclub.com/showthread.php/13410-Model-S-REST-API
 
