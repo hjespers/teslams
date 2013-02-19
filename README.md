@@ -12,7 +12,9 @@ Be careful when using these programs as they can lock and unlock your car as wel
 
 Be careful not to send your login and password to anyone other than Tesla or you are giving away the authentication details required to control your car.
 
-Use these programs at your own risk. The author (Hans Jespersen) does not guaranteed the proper functioning of these applications in any way including any damage that might result as a result of using this code. Use of these functions can change the settings on your car and may have negative consequences such as (but not limited to) unlocking the doors, opening the sun_roof, and reducing the charge in the battery.
+#Disclaimer
+
+Use these programs at your own risk. The author (Hans Jespersen) does not guaranteed the proper functioning of these applications. This code attempts to use the same interfaces used by the official Tesla phone apps. However, it is possible that use of this code may cause unexpected damage for which nobody but you are responsible. Use of these functions can change the settings on your car and may have negative consequences such as (but not limited to) unlocking the doors, opening the sun roof, or reducing the available charge in the battery.
 
 #teslams.js 
 
@@ -20,39 +22,39 @@ Contains a library of functions and constants which allow the uses the TESLA "RE
 
 Functions include:
 
-	mobile_enabled( vid ) 
-	get_charge_state( vid ) 
-	get_climate_state( vid ) 
-	get_drive_state( vid ) 
-	get_vehicle_state( vid ) 
-	get_gui_settings( vid ) 
-	wake_up( vid ) 
-	open_charge_port( vid ) 
-	charge_state( vid, state ) 
-	charge_range( vid, range ) 
-	flash( vid ) 
-	honk( vid ) 
-	door_lock( vid, state ) 
-	set_temperature( vid, dtemp, ptemp ) 
-	auto_conditioning( vid, state ) 
-	sun_roof( vid, state ) 
+	mobile_enabled( vid )  - check is remote/mobile control is on or off
+	get_charge_state( vid ) - get the full set of charge state information
+	get_climate_state( vid ) - get the full set of climate state information 
+	get_drive_state( vid )  - get the full set of drive state information
+	get_vehicle_state( vid ) - get the full set of vehicle state information 
+	get_gui_settings( vid ) - get the GUI setting
+	wake_up( vid ) - wake up the communication with the car (if dormant). Triggers new tokens needed for streaming API
+	open_charge_port( vid ) - open the charge port door 
+	charge_state( vid, state ) - set the charging state 
+	charge_range( vid, range ) - set the range mode 
+	flash( vid ) - flash the headlights 
+	honk( vid ) - honk the horn 
+	door_lock( vid, state ) - lock/unlock the doors 
+	set_temperature( vid, dtemp, ptemp )  - set the climate control temperatures
+	auto_conditioning( vid, state ) - turn on/off the climate control (HVAC) system
+	sun_roof( vid, state ) - control the sun roof 
 
 Constants include:
 
-	CHARGE_OFF
-	CHARGE_ON
-	RANGE_STD
-	RANGE_MAX
-	LOCK_OFF
-	LOCK_ON
-	TEMP_HI
-	TEMP_LO
-	CLIMATE_OFF
-	CLIMATE_ON
-	ROOF_CLOSE
-	ROOF_VENT
-	ROOF_COMFORT
-	ROOF_OPEN
+	CHARGE_OFF - turns the charger off
+	CHARGE_ON - turns the charger on
+	RANGE_STD - set the charge mode to standard range
+	RANGE_MAX - set the charge mode to maximum range
+	LOCK_OFF - turns the door locks off (unlock)
+	LOCK_ON - turns the door locks on (locked)
+	TEMP_HI - highest temperature setting on climate control
+	TEMP_LO - lowest temperature setting on climate control
+	CLIMATE_OFF - turns climate control off
+	CLIMATE_ON - turns climate control on
+	ROOF_CLOSE - closes the roof
+	ROOF_VENT - puts the roof in vent position
+	ROOF_COMFORT - puts the roof in the 80% open position (for reduced noice)
+	ROOF_OPEN - puts the roof in the 100% open position
 
 #main.js
 
@@ -73,3 +75,4 @@ To execute run "node stream"
 
 The applications provided require the 'request' node module. Run "npm install request" once before running the applications.
 Edit the credentials at the top of the programs before running or authentication will fail.
+
