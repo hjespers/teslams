@@ -18,6 +18,42 @@ Use these programs at your own risk. The author (Hans Jespersen) does not guaran
 
 Contains a library of functions and constants which allow the uses the TESLA "REST" API to get and set values on the Tesla Model S. 
 
+Functions include:
+
+	mobile_enabled( vid ) 
+	get_charge_state( vid ) 
+	get_climate_state( vid ) 
+	get_drive_state( vid ) 
+	get_vehicle_state( vid ) 
+	get_gui_settings( vid ) 
+	wake_up( vid ) 
+	open_charge_port( vid ) 
+	charge_state( vid, state ) 
+	charge_range( vid, range ) 
+	flash( vid ) 
+	honk( vid ) 
+	door_lock( vid, state ) 
+	set_temperature( vid, dtemp, ptemp ) 
+	auto_conditioning( vid, state ) 
+	sun_roof( vid, state ) 
+
+Constants include:
+
+	CHARGE_OFF
+	CHARGE_ON
+	RANGE_STD
+	RANGE_MAX
+	LOCK_OFF
+	LOCK_ON
+	TEMP_HI
+	TEMP_LO
+	CLIMATE_OFF
+	CLIMATE_ON
+	ROOF_CLOSE
+	ROOF_VENT
+	ROOF_COMFORT
+	ROOF_OPEN
+
 #main.js
 
 A sample application which uses the teslams.js library to call common functions provided in the REST API.
