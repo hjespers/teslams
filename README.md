@@ -59,7 +59,7 @@ Constants include:
 #main.js
 
 A sample application which uses the teslams.js library to call common functions provided in the REST API.
-A valid teslamotors.com login and password is required and must be inserted into the top of this program in "creds"
+A valid teslamotors.com login and password is required and must be inserted into the config.json configuration file.
 
 To execute run: 
 
@@ -68,8 +68,8 @@ To execute run:
 #stream.js 
 
 A sample application which uses the TESLA HTTP Long Polling "STREAMING" API to get continuous telemetry from the Tesla Model S. 
-A valid teslamotors.com login and password is required and must be inserted into the top of this program in "creds"
-By default the output goes to a file called "stream_output.txt". Each time you run the program you will over-write this file so copy old log data before running the application a second time.
+A valid teslamotors.com login and password is required and must be configured in the config.json file. 
+By default the output goes to a file called "stream_output.txt" which can also be changed in the config.json file. Each time you run the program you will over-write the output file so copy old log data before running the application a second time.
 
 To execute run:
 
@@ -81,9 +81,12 @@ The applications provided require the 'request' node module. Run "npm install re
 
 	npm install request
 
-Edit the credentials at the top of the programs before running or authentication will fail.
+Edit the credentials in the file "config.json" before running the programs or authentication will fail.
 
-	var creds = { email: "mytesla@email.com", password: "yourmyteslapasssword" };
+	{
+	"username": "yourMyTeslaLogin@email.com",
+	"password": "yourPassword",
+	}
 
 #Support
 

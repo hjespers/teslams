@@ -1,0 +1,7 @@
+{
+	"portal_url": "https://portal.vn.teslamotors.com/vehicles/",
+	"stream_url": "https://streaming.vn.teslamotors.com/stream/",
+	"username": "yourMyTeslaLogin@email.com",
+	"password": "yourPassword",
+	"output_file": "stream_output.txt" 
+}

@@ -1,8 +1,20 @@
 var request = require('request');
 var teslams = require('./teslams.js');
 
-// edit the credentials to contain your teslamotors.com login email and password
-var creds = { email: "mytesla@email.com", password: "yourmyteslapasssword" };
+// edit the config.json file to contain your teslamotors.com login email and password, and the name of the output file
+var fs = require('fs');
+try {
+
+	var jsonString = fs.readFileSync("./config.json").toString();
+	var config = JSON.parse(jsonString);
+	var creds = { 
+		email: config.username, 
+		password: config.password 
+	};
+} catch (err) {
+	console.warn("The file 'config.json' does not exist or contains invalid arguments! Exiting...");
+	process.exit(1);
+}
 
 //
 // Login, get cookies, and figure out the vehicle ID (vid) for subsequent queries
