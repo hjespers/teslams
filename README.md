@@ -74,6 +74,16 @@ By default the output goes to a file called "stream_output.txt" which can also b
 To execute run:
 
 	node stream
+	
+#Streaming API Security Tokens
+
+Tokens always expire at one of 4 times, corresponding to the top of the hour (:00), or in 15 minutes increments thereafter (:15, :30, :45). New tokens are generated at these 15 minute intervals. 
+
+- every HTTP Long Poll will timeout in ~2 minutes (121.5 seconds give or take a few milliseconds)
+- if you get a token it will be good for somewhere between 15-30 minutes depending on what time of day it was when you started
+- if you check every 15 minutes for a new token then you should see your old one listed as the the second in the token list and you can switch the first token in the list for another 15 minutes.
+- if you ever get undefined tokens, or get an HTTP 401: Unauthorized return code, then call REST API /wake_up, followed by /vehicles, and the last two active tokens will be once again revealed
+
 
 #Requirements
 
