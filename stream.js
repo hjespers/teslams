@@ -28,10 +28,12 @@ function get_stream( vid, long_vid, token ) {
 	} else {
 	   request( 
 		{ 
-			// 'uri': 'https://streaming.vn.teslamotors.com/stream/' + long_vid +'/?values=speed,odometer,soc,elevation,est_heading,est_lat,est_lng,power,shift_state', 
 			'uri': s_url + long_vid +'/?values=speed,odometer,soc,elevation,est_heading,est_lat,est_lng,power,shift_state', 
 			'method' : 'GET',
-			'auth': creds.email + ':' + token
+			'auth': {
+				'user': creds.email,
+				'pass': token
+			}
 		},  
 		function( error, response, body) {
 			if (!error && response.statusCode == 200) {
