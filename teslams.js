@@ -79,10 +79,10 @@ var CHARGE_OFF   = 0; // changes charge state to ON without effecting range mode
 var CHARGE_ON    = 1; // changes charge state to OFF without effecting range mode
 function charge_state( vid, state ) {
 	// Change the range mode if necessary
-	if (state == CHARGE_ON  || state == "start" || state == true) { 
+	if (state == CHARGE_ON  || state == "on" || state == "start" || state == true) { 
 		state = "start"; 
 	};
-	if (state == CHARGE_OFF || state == "stop" || state == false) { 
+	if (state == CHARGE_OFF || state == "off" || state == "stop" || state == false) { 
 		state = "stop" 
 	};
 

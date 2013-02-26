@@ -86,28 +86,28 @@ For help run :
 
 	$ teslacmd.js --help
 	Usage: teslacmd.js -u username -p password -cdFgHimPtvw -A [on|off] -C [start|stop] -R [std|max] -S [close|vent|comfort|open] -L [lock|unlock] -T temp
-	
+
 	Options:
+	  -u, --username  Teslamotors.com login                                        [required]
+	  -p, --password  Teslamotors.com password                                     [required]
 	  -c              Display the charge state                                     [boolean]
-	  -t              Display the climate state
-	  -d              Display the drive state                                      [boolean]
+	  -d, --drive     Display the drive state                                      [boolean]
 	  -F, --flash     Flash the car headlights                                     [boolean]
-	  -g              Display the GUI settings                                     [boolean]
+	  -g, --gui       Display the GUI settings                                     [boolean]
 	  -H, --honk      Honk the car horn                                            [boolean]
 	  -m, --mobile    Display the mobile state                                     [boolean]
 	  -P, --port      Open charge port door                                        [boolean]
+	  -t              Display the climate/temp state                               [boolean]
 	  -v              Display the vehicle state                                    [boolean]
 	  -i, --id        Print vehicle identification "--no-i" for silent mode        [boolean]  [default: true]
 	  -w, --wake      Wake up the car telemetry                                    [boolean]
-	  -R, --range     Charging range mode: "std" or "max"
+	  -R, --range     Charging range mode: "std" or "max"                        
 	  -S, --roof      Move the car sunroof to: "close", "vent", "comfort", "open"
-	  -T, --temp      Set the car climate control temperature
-	  -L, --lock      Lock/Unlock the car doors
-	  -A, --climate   Turn the air conditioning and heating on/off
-	  -C, --charge    Turn the charging on/off
-	  -u, --username  Teslamotors.com login                                        [required]
-	  -p, --password  Teslamotors.com password                                     [required]
-	  -?, --help      Print usage information
+	  -T, --temp      Set the car climate control temperature (in Celcius)       
+	  -L, --lock      Lock/Unlock the car doors                                  
+	  -A, --climate   Turn the air conditioning and heating on/off               
+	  -C, --charge    Turn the charging on/off                                   
+	  -?, --help      Print usage information                                    
 	
 	Missing required arguments: u, p
 	
