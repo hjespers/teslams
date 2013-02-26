@@ -85,7 +85,8 @@ To execute run:
 For help run :
 
 	$ teslacmd.js --help
-	Usage: teslacmd.js -u username -p password -cdFgHimPtvw -A [on|off] -C [start|stop] -R [std|max] -S [close|vent|comfort|open] -L [lock|unlock] -T temp
+	Usage: teslacmd.js -u username -p password -cdFgHimPtvw -A [on|off] -C [start|stop] 
+	                   -R [std|max] -S [close|vent|comfort|open] -L [lock|unlock] -T temp
 
 	Options:
 	  -u, --username  Teslamotors.com login                                        [required]
