@@ -61,15 +61,62 @@ Constants include:
 A sample application which uses the teslams.js library to call common functions provided in the REST API.
 A valid teslamotors.com login and password is required and must be inserted into the config.json configuration file.
 
+The main.js application requires the 'request' node module. Run "npm install request" once before running the applications.
+
+	npm install request
+
 To execute run: 
 
 	node main
 
+#teslacmd.js
+
+A sample command line application which uses the teslams.js library and takes command line arguments that allow all know REST API functions to be used.
+
+To work this program requires the node modules "optimist" in addition to "request" which is required by all applications
+	
+	npm install request
+	npm install optimist
+
+To execute run:
+
+	teslacmd.js -u <username> -p <password>
+
+For help run :
+
+	$ teslacmd.js --help
+	Usage: teslacmd.js -u username -p password -cdFgHimPtvw -A [on|off] -C [start|stop] -R [std|max] -S [close|vent|comfort|open] -L [lock|unlock] -T temp
+	
+	Options:
+	  -c              Display the charge state                                     [boolean]
+	  -t              Display the climate state
+	  -d              Display the drive state                                      [boolean]
+	  -F, --flash     Flash the car headlights                                     [boolean]
+	  -g              Display the GUI settings                                     [boolean]
+	  -H, --honk      Honk the car horn                                            [boolean]
+	  -m, --mobile    Display the mobile state                                     [boolean]
+	  -P, --port      Open charge port door                                        [boolean]
+	  -v              Display the vehicle state                                    [boolean]
+	  -i, --id        Print vehicle identification "--no-i" for silent mode        [boolean]  [default: true]
+	  -w, --wake      Wake up the car telemetry                                    [boolean]
+	  -R, --range     Charging range mode: "std" or "max"
+	  -S, --roof      Move the car sunroof to: "close", "vent", "comfort", "open"
+	  -T, --temp      Set the car climate control temperature
+	  -L, --lock      Lock/Unlock the car doors
+	  -A, --climate   Turn the air conditioning and heating on/off
+	  -C, --charge    Turn the charging on/off
+	  -u, --username  Teslamotors.com login                                        [required]
+	  -p, --password  Teslamotors.com password                                     [required]
+	  -?, --help      Print usage information
+	
+	Missing required arguments: u, p
+	
 #stream.js 
 
 A sample application which uses the TESLA HTTP Long Polling "STREAMING" API to get continuous telemetry from the Tesla Model S. 
 A valid teslamotors.com login and password is required and must be configured in the config.json file. 
 By default the output goes to a file called "stream_output.txt" which can also be changed in the config.json file. Each time you run the program you will over-write the output file so copy old log data before running the application a second time.
+
 
 To execute run:
 
@@ -87,11 +134,11 @@ Tokens always expire at one of 4 times, corresponding to the top of the hour (:0
 
 #Requirements
 
-The applications provided require the 'request' node module. Run "npm install request" once before running the applications.
+All sample applications requires the 'request' node module. Run "npm install request" once before running the applications.
 
 	npm install request
 
-Edit the credentials in the file "config.json" before running the programs or authentication will fail.
+The main.js and stream.js application require that you edit the credentials in the file "config.json" before running the programs or authentication will fail.
 
 	{
 	"username": "yourMyTeslaLogin@email.com",
