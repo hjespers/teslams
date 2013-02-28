@@ -19,25 +19,26 @@ Use these programs at your own risk. The author (Hans Jespersen) does not guaran
 #teslams.js 
 
 Contains a library of functions and constants which allow the uses the TESLA "REST" API to get and set values on the Tesla Model S. 
+All functions take an optional callback that will be passed the javascript object returned from the TESLA API.
 
 Functions include:
 
-	mobile_enabled( vid )  - check is remote/mobile control is on or off
-	get_charge_state( vid ) - get the full set of charge state information
-	get_climate_state( vid ) - get the full set of climate state information 
-	get_drive_state( vid )  - get the full set of drive state information
-	get_vehicle_state( vid ) - get the full set of vehicle state information 
-	get_gui_settings( vid ) - get the GUI setting
-	wake_up( vid ) - wake up the communication with the car (if dormant). Triggers new tokens needed for streaming API
-	open_charge_port( vid ) - open the charge port door 
-	charge_state( vid, state ) - set the charging state 
-	charge_range( vid, range ) - set the range mode 
-	flash( vid ) - flash the headlights 
-	honk( vid ) - honk the horn 
-	door_lock( vid, state ) - lock/unlock the doors 
-	set_temperature( vid, dtemp, ptemp )  - set the climate control temperatures
-	auto_conditioning( vid, state ) - turn on/off the climate control (HVAC) system
-	sun_roof( vid, state ) - control the sun roof 
+	mobile_enabled( vid, callback )  - check is remote/mobile control is on or off
+	get_charge_state( vid, callback ) - get the full set of charge state information
+	get_climate_state( vid, callback ) - get the full set of climate state information 
+	get_drive_state( vid, callback )  - get the full set of drive state information
+	get_vehicle_state( vid, callback ) - get the full set of vehicle state information 
+	get_gui_settings( vid, callback ) - get the GUI setting
+	wake_up( vid, callback ) - wake up the communication with the car (if dormant). Triggers new tokens needed for streaming API
+	open_charge_port( vid, callback ) - open the charge port door 
+	charge_state( vid, state, callback ) - set the charging state 
+	charge_range( vid, range, callback ) - set the range mode 
+	flash( vid, callback ) - flash the headlights 
+	honk( vid, callback ) - honk the horn 
+	door_lock( vid, state, callback ) - lock/unlock the doors 
+	set_temperature( vid, dtemp, ptemp, callback )  - set the climate control temperatures
+	auto_conditioning( vid, state, callback ) - turn on/off the climate control (HVAC) system
+	sun_roof( vid, state, callback ) - control the sun roof 
 
 Constants include:
 
@@ -85,9 +86,11 @@ To execute run:
 For help run :
 
 	$ teslacmd.js --help
-	Usage: teslacmd.js -u username -p password -cdFgHimPtvw -A [on|off] -C [start|stop] -R [std|max] -S [close|vent|comfort|open] -L [lock|unlock] -T temp
+	Usage: teslacmd.js -u <username> -p <password> [-cdFgHimPtvw] -A [on|off] -C [start|stop] -R [std|max] -S [close|vent|comfort|open] -L [lock|unlock] -T <temp>
 	
 	Options:
+	  -u, --username  Teslamotors.com login                                        [required]
+	  -p, --password  Teslamotors.com password                                     [required]
 	  -c              Display the charge state                                     [boolean]
 	  -t              Display the climate state
 	  -d              Display the drive state                                      [boolean]
@@ -105,8 +108,6 @@ For help run :
 	  -L, --lock      Lock/Unlock the car doors
 	  -A, --climate   Turn the air conditioning and heating on/off
 	  -C, --charge    Turn the charging on/off
-	  -u, --username  Teslamotors.com login                                        [required]
-	  -p, --password  Teslamotors.com password                                     [required]
 	  -?, --help      Print usage information
 	
 	Missing required arguments: u, p

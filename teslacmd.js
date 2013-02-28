@@ -1,8 +1,9 @@
 #!/usr/bin/env node
 var request = require('request');
+var util = require('util');
 var teslams = require('./teslams.js');
 var argv = require('optimist')
-	.usage('Usage: $0 -u username -p password -cdFgHimPtvw -A [on|off] -C [start|stop] -R [std|max] -S [close|vent|comfort|open] -L [lock|unlock] -T temp')
+	.usage('Usage: $0 -u <username> -p <password> -cdFgHimPtvw -A [on|off] -C [start|stop] -R [std|max] -S [close|vent|comfort|open] -L [lock|unlock] -T temp')
 	.boolean(['c', 'l', 'd', 'F', 'g', 'H', 'm', 'P', 'v', 'i', 'w'])
 	.describe('c', 'Display the charge state')
 	.describe('t', 'Display the climate state')
@@ -46,7 +47,9 @@ var argv = require('optimist')
 
 
 if ( argv.help == true ) {
-	console.log( 'Usage: teslacmd.js -cdFgHimPtvw -A [on|off] -C [start|stop] -R [std|max] -S [close|vent|comfort|open] -L [lock|unlock] -T temp');
+	console.log( 'Usage: teslacmd.js -u <username> -p <password> -cdFgHimPtvVw');
+	console.log( '                   -A [on|off] -C [start|stop] -R [std|max]');
+	console.log( '                   -S [close|vent|comfort|open] -L [lock|unlock] -T temp');
 	process.exit(1);
 }
 
@@ -54,6 +57,10 @@ var creds = {
 	email: argv.username, 
 	password: argv.password 
 };
+
+function pr( stuff ) {
+	console.log( util.inspect(stuff) );
+}
 
 //
 // Login, get cookies, and figure out the vehicle ID (vid) for subsequent queries
@@ -87,61 +94,61 @@ var mytesla = request( { method: 'POST',
 						// not needed for REST API but test all known REST functions anyway
 						//
 						if (argv.w) {
-							teslams.wake_up( mytesla.id );
+							teslams.wake_up( mytesla.id, pr );
 						}
 						//
 						// get some info
 						//
 						if (argv.m) {
-							teslams.mobile_enabled( mytesla.id );
+							teslams.mobile_enabled( mytesla.id, pr );
 						}
 						if (argv.c) {
-							teslams.get_charge_state( mytesla.id );
+							teslams.get_charge_state( mytesla.id, pr );
 						}
 						if (argv.t) {
-							teslams.get_climate_state( mytesla.id );
+							teslams.get_climate_state( mytesla.id, pr );
 						}
 						if (argv.d) {
-							teslams.get_drive_state( mytesla.id );
+							teslams.get_drive_state( mytesla.id, pr );
 						}
 						if (argv.v) {
-							teslams.get_vehicle_state( mytesla.id );
+							teslams.get_vehicle_state( mytesla.id, pr );
 						}
 						if (argv.g) {
-							teslams.get_gui_settings( mytesla.id );
+							teslams.get_gui_settings( mytesla.id, pr );
 						}
 						//
 						//  cute but annoying stuff while debugging
 						//
 						if (argv.F) {
-							teslams.flash( mytesla.id ); 
+							teslams.flash( mytesla.id, pr ); 
 						}
 						if (argv.H) {
-							teslams.honk( mytesla.id ); 
+							teslams.honk( mytesla.id, pr ); 
 						}
 						if (argv.P) {
-							teslams.open_charge_port( mytesla.id ) 
+							teslams.open_charge_port( mytesla.id, pr ) 
 						}
 						//
 						// control some stuff
 						//
 						if ( argv.lock == "open" || argv.lock == "close" ) {
-							teslams.door_lock( mytesla.id, argv.lock );
+							teslams.door_lock( mytesla.id, argv.lock, pr );
 						}
 						if ( argv.roof == "open" || argv.roof == "close" || argv.roof == "vent" || argv.roof == "comfort" ) {
-							teslams.sun_roof( mytesla.id, argv.roof );
+							teslams.sun_roof( mytesla.id, argv.roof, pr );
 						}
 						if ( argv.climate == "on" || argv.climate == "off") {
-							teslams.auto_conditioning( mytesla.id, argv.climate ); 
+							teslams.auto_conditioning( mytesla.id, argv.climate, pr ); 
 						}
 						if ( argv.range == "std" || argv.range == "max") {
-							teslams.charge_range( mytesla.id, argv.range ); 
+							teslams.charge_range( mytesla.id, argv.range, pr ); 
 						}
 						if ( argv.charge == "start" || argv.charge == "stop") {
-							teslams.charge_state( mytesla.id, argv.charge ); 
+							teslams.charge_state( mytesla.id, argv.charge, pr ); 
 						}
 						if ( argv.temp >= teslams.TEMP_LO && argv.temp <= teslams.TEMP_HI) {
-							teslams.set_temperature( mytesla.id, argv.temp); 
+							teslams.set_temperature( mytesla.id, argv.temp, pr); 
 						}
 					}
 				  }

@@ -3,81 +3,106 @@ var request = require('request');
 var portal = 'https://portal.vn.teslamotors.com';
 exports.portal = portal;
 
-function mobile_enabled( vid ) {
+function mobile_enabled( vid, cb ) {
   request( portal + '/vehicles/' + vid + '/mobile_enabled', function (error, response, body) { 
 		var data = JSON.parse(body); 
-		console.log("\nMobile State:");
-		console.log(data);
+		if (cb != undefined) {
+			return cb( data );
+		} else {
+			return;
+		}
 	});
 }
 exports.mobile_enabled = mobile_enabled;
 
-function get_charge_state( vid ) {
+function get_charge_state( vid, cb ) {
 	request( portal + '/vehicles/' + vid + '/command/charge_state', function (error, response, body) { 
 		var data = JSON.parse(body); 
-		console.log("\nCharge State:");
-		console.log(data);
+		if (cb != undefined) {
+			return cb( data );
+		} else {
+			return;
+		}
 	});
 }
 exports.get_charge_state = get_charge_state;
 
-function get_climate_state( vid ) {
+function get_climate_state( vid, cb ) {
 	request( portal + '/vehicles/' + vid + '/command/climate_state', function (error, response, body) { 
 		var data = JSON.parse(body); 
-		console.log("\nClimate State:");
-		console.log(data);
+		if (cb != undefined) {
+			return cb( data );
+		} else {
+			return;
+		}
 	});
 }
 exports.get_climate_state = get_climate_state;
 
-function get_drive_state( vid ) {
+function get_drive_state( vid, cb ) {
 	request( portal + '/vehicles/' + vid + '/command/drive_state', function (error, response, body) { 
 		var data = JSON.parse(body); 
-		console.log("\nDrive State:");
-		console.log(data);
+		if (cb != undefined) {
+			return cb( data );
+		} else {
+			return;
+		}
 	});
 }
 exports.get_drive_state = get_drive_state;
 
-function get_vehicle_state( vid ) {
+function get_vehicle_state( vid, cb ) {
 	request( portal + '/vehicles/' + vid + '/command/vehicle_state', function (error, response, body) { 
 		var data = JSON.parse(body); 
-		console.log("\nVehicle State:");
-		console.log(data);
+		if (cb != undefined) {
+			return cb( data );
+		} else {
+			return;
+		}
 	});
 }
 exports.get_vehicle_state = get_vehicle_state;
 
-function get_gui_settings( vid ) {
+function get_gui_settings( vid, cb ) {
 	request( portal + '/vehicles/' + vid + '/command/gui_settings', function (error, response, body) { 
 		var data = JSON.parse(body); 
-		console.log("\nGUI Settings:");
-		console.log(data);
+		if (cb != undefined) {
+			return cb( data );
+		} else {
+			return;
+		}
 	});
 }
 exports.get_gui_settings = get_gui_settings;
 
-function wake_up( vid ) {
+function wake_up( vid, cb ) {
 	request( portal + '/vehicles/' + vid + '/command/wake_up', function (error, response, body) { 
 		var data = JSON.parse(body); 
 		console.log("\nWake up Model S it's time to talk!");
-		console.log(data);
+		if (cb != undefined) {
+			return cb( data );
+		} else {
+			return;
+		}
 	});
 }
 exports.wake_up = wake_up;
 
-function open_charge_port( vid ) {
+function open_charge_port( vid, cb ) {
 	request( portal + '/vehicles/' + vid + '/command/charge_port_door_open', function (error, response, body) { 
 		var data = JSON.parse(body); 
-		console.log("\nCharge port door open:");
-		console.log(data);
+		if (cb != undefined) {
+			return cb( data );
+		} else {
+			return;
+		}
 	});
 }
 exports.open_charge_port = open_charge_port;
 
 var CHARGE_OFF   = 0; // changes charge state to ON without effecting range mode
 var CHARGE_ON    = 1; // changes charge state to OFF without effecting range mode
-function charge_state( vid, state ) {
+function charge_state( vid, state, cb ) {
 	// Change the range mode if necessary
 	if (state == CHARGE_ON  || state == "start" || state == true) { 
 		state = "start"; 
@@ -90,8 +115,11 @@ function charge_state( vid, state ) {
 		console.log('sending GET to ' + portal + '/vehicles/' + vid + '/command/charge_' + state);
 		request( portal + '/vehicles/' + vid + '/command/charge_' + state, function (error, response, body) { 
 			var data = JSON.parse(body); 
-			console.log("\nCharge state setting to " + state);
-			console.log(data);
+			if (cb != undefined) {
+				return cb( data );
+			} else {
+				return;
+			}
 		});
 	} else {
 		console.log( "Error: Invalid charge state = " + state);
@@ -103,7 +131,7 @@ exports.CHARGE_ON = CHARGE_ON;
 
 var RANGE_STD    = 0; // changes range mode to STANDARD without effecting charge state
 var RANGE_MAX    = 1; // changes range mode to MAX_RANGE without effecting charge state
-function charge_range( vid, range ) {
+function charge_range( vid, range, cb ) {
 	if (range == RANGE_STD || range == "std" || range == "standard" ) { 
 		range = "standard" 
 	};
@@ -113,49 +141,65 @@ function charge_range( vid, range ) {
 	if (range == "standard" || "max_range" ) {
 		request( portal + '/vehicles/' + vid + '/command/charge_' + range, function (error, response, body) { 
 			var data = JSON.parse(body); 
-			console.log("\nCharge range set to " + range);
-			console.log(data);
+			if (cb != undefined) {
+				return cb( data );
+			} else {
+				return true;
+			}
 		});
 	} else {
 		console.log( "Error: Invalid charge range = " + range);
+		return false;
 	} 
 }
 exports.charge_range = charge_range;
 exports.RANGE_STD = RANGE_STD;
 exports.RANGE_MAX = RANGE_MAX;
 
-function flash( vid ) {
+function flash( vid, cb ) {
 	request( portal + '/vehicles/' + vid + '/command/flash_lights', function (error, response, body) { 
 		var data = JSON.parse(body); 
-		console.log("\nFlasing lights:");
-		console.log(data);
+		if (cb != undefined) {
+			return cb( data );
+		} else {
+			return true;
+		}
 	});
 }
 exports.flash = flash;
 
-function honk( vid ) {
+function honk( vid, cb ) {
 	request( portal + '/vehicles/' + vid + '/command/honk_horn', function (error, response, body) { 
 		var data = JSON.parse(body); 
-		console.log("\nHonk horn:");
-		console.log(data);
+		if (cb != undefined) {
+			return cb( data );
+		} else {
+			return;
+		}
 	});
 }
 exports.honk = honk;
 
 var LOCK_OFF = 0;
 var LOCK_ON  = 1;
-function door_lock( vid, state ) {
+function door_lock( vid, state, cb ) {
 	if (state == "lock" || state == true || state == "on" || state == "close" ) {
 		request( portal + '/vehicles/' + vid + '/command/door_lock', function (error, response, body) { 
 			var data = JSON.parse(body); 
-			console.log("\nLocking the doors:");
-			console.log(data);
+			if (cb != undefined) {
+				return cb( data );
+			} else {
+				return;
+			}
 		});
 	} else if (state == "unlock" || state == false || state == "off" || state == "open" ) {
 		request( portal + '/vehicles/' + vid + '/command/door_unlock', function (error, response, body) { 
 			var data = JSON.parse(body); 
-			console.log("\nUnlocking the doors:");
-			console.log(data);
+			if (cb != undefined) {
+				return cb( data );
+			} else {
+				return;
+			}
 		});
 	} else {
 		console.log( "Error: Invalid door lock state = " + state);
@@ -167,7 +211,7 @@ exports.LOCK_ON = LOCK_ON;
 
 var TEMP_HI = 32;
 var TEMP_LO = 17;
-function set_temperature( vid, dtemp, ptemp ) {
+function set_temperature( vid, dtemp, ptemp, cb ) {
 	var temp_str = "";
 	if ( dtemp != undefined && dtemp <= TEMP_HI && dtemp >= TEMP_LO) {
 		temp_str = 'driver_temp=' + dtemp;
@@ -186,8 +230,11 @@ function set_temperature( vid, dtemp, ptemp ) {
 	if (!error) {
 		request( portal + '/vehicles/' + vid + '/command/set_temps?' + temp_str, function (error, response, body) { 
 			var data = JSON.parse(body); 
-			console.log('\nSetting cabin temperature to Driver (' + dtemp + 'C), Passenger (' + ptemp + 'C)');
-			console.log(data);
+			if (cb != undefined) {
+				return cb( data );
+			} else {
+				return;
+			}
 		});
 	} else {
 		console.log('\nError: Invalid temperature setting (' + dtemp + 'C), Passenger (' + ptemp + 'C)');
@@ -199,20 +246,26 @@ exports.TEMP_LO = TEMP_LO;
 
 var CLIMATE_OFF = 0;
 var CLIMATE_ON  = 1;
-function auto_conditioning( vid, state ) {
+function auto_conditioning( vid, state, cb ) {
 	if (state == CLIMATE_ON) { state = true };
 	if (state == CLIMATE_OFF) { state = false };
 	if (state == "start" || state == true || state == "on" ) {
 		request( portal + '/vehicles/' + vid + '/command/auto_conditioning_start', function (error, response, body) { 
 			var data = JSON.parse(body); 
-			console.log("\nClimate control changing state to " + state );
-			console.log(data);
+			if (cb != undefined) {
+				return cb( data );
+			} else {
+				return;
+			}
 		});
 	} else if (state == "stop" || state == false || state == "off"  ) {
 		request( portal + '/vehicles/' + vid + '/command/auto_conditioning_stop', function (error, response, body) { 
 			var data = JSON.parse(body); 
-			console.log("\nClimate control changing state to " + state );
-			console.log(data);
+			if (cb != undefined) {
+				return cb( data );
+			} else {
+				return;
+			}
 		});
 	} else {
 		console.log( "Error: Invalid auto conditining state = " + state);
@@ -226,7 +279,7 @@ var ROOF_CLOSE   = 0;
 var ROOF_VENT    = 1;
 var ROOF_COMFORT = 2;
 var ROOF_OPEN    = 3;
-function sun_roof( vid, state ) {
+function sun_roof( vid, state, cb ) {
 	// add a check that  their is a sunroof on the car??
 	if (state == ROOF_CLOSE) { state = "close" };
 	if (state == ROOF_VENT) { state = "vent" };
@@ -237,8 +290,11 @@ function sun_roof( vid, state ) {
 		console.log('Sending GET to ' + portal + '/vehicles/' + vid + '/command/sun_roof_control?state=' + state);
 		request( portal +'/vehicles/' + vid + '/command/sun_roof_control?state=' + state, function (error, response, body) { 
 			var data = JSON.parse(body); 
-			console.log("\nSun roof changing state to " + state);
-			console.log(data);
+			if (cb != undefined) {
+				return cb( data );
+			} else {
+				return;
+			}
 		});
 	} else {
 		console.log( 'Error: Invalid sun roof state = ' + state);
