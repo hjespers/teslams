@@ -57,7 +57,7 @@ Constants include:
 	ROOF_COMFORT - puts the roof in the 80% open position (for reduced noice)
 	ROOF_OPEN - puts the roof in the 100% open position
 
-#main.js
+#example.js
 
 A sample application which uses the teslams.js library to call common functions provided in the REST API.
 A valid teslamotors.com login and password is required and must be inserted into the config.json configuration file.
@@ -68,7 +68,39 @@ The main.js application requires the 'request' node module. Run "npm install req
 
 To execute run: 
 
-	node main
+	node example
+
+#teslamap.js
+
+A sample application which uses the teslams.js library to determine the car location and optionally launch a browser using Google Maps.
+
+
+To work this program requires the node modules "optimist" in addition to "request" which is required by all applications
+	
+	npm install request
+	npm install optimist
+
+
+To execute run:
+
+	node teslamap -u <username> -p <password>
+
+For help run :
+
+	$ teslamap.js --help
+
+	Usage: teslamap.js -u <username> -p <password> [--json || --url] [--map]
+
+	Options:
+	  -u, --username  Teslamotors.com login                                                             [required]
+	  -p, --password  Teslamotors.com password                                                          [required]
+	  -j, --json      Display the drive state info                                                      [boolean]
+	  -m, --map       Open a map in the default browser which displays the current location of the car  [boolean]
+	  -U, --url       Print a URL to google maps on the console                                         [boolean]
+	  -?, --help      Print usage information
+
+	Missing required arguments: u, p
+
 
 #teslacmd.js
 
@@ -81,7 +113,7 @@ To work this program requires the node modules "optimist" in addition to "reques
 
 To execute run:
 
-	teslacmd.js -u <username> -p <password>
+	node teslacmd -u <username> -p <password>
 
 For help run :
 
@@ -141,7 +173,7 @@ All sample applications requires the 'request' node module. Run "npm install req
 
 	npm install request
 
-The main.js and stream.js application require that you edit the credentials in the file "config.json" before running the programs or authentication will fail.
+The example.js and stream.js application require that you edit the credentials in the file "config.json" before running the programs or authentication will fail.
 
 	{
 	"username": "yourMyTeslaLogin@email.com",

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 var request = require('request');
 var util = require('util');
-var teslams = require('./teslams.js');
+var teslams = require('../teslams.js');
 var argv = require('optimist')
 	.usage('Usage: $0 -u <username> -p <password> -cdFgHimPtvw -A [on|off] -C [start|stop] -R [std|max] -S [close|vent|comfort|open] -L [lock|unlock] -T temp')
 	.alias('u', 'username')

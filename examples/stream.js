@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 var request = require('request');
-var teslams = require('./teslams');
+var teslams = require('../teslams.js');
 
 // edit the config.json file to contain your teslamotors.com login email and password, and the name of the output file
 var fs = require('fs');
@@ -91,6 +91,10 @@ var mytesla = request( { method: 'POST',
 		if (!error) {
 			request(teslams.portal + '/vehicles', function (error, response, body) 
 				  { 
+					if ( body.substr(0,1) != "[" ) {
+						console.log(' login failed, please edit config.json to include valid login/password');
+						process.exit( 1 );
+					}	
 					var data = JSON.parse( body.substr(1, body.length - 2 ) ); 
 					console.log(data);
 					mytesla.id = data.id;
