@@ -1,36 +1,23 @@
 {
   "name": "teslams",
-  "description": "Client in Node.js for communicating with a Tesla Model S electric car",
-  "tags": [
-    "tesla"
-  ],
-  "version": "0.2.0",
-  "author": {
-    "name": "Hans Jespersen",
-    "email": "hans.jespersen@gmail.com"
+  "version": "0.2.1",
+  "description": "Utilities for the Tesla Model S ",
+  "main": "main.js",
+  "dependencies": {
+    "optimist": "~0.3.5",
+    "request": "~2.14.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
     "type": "git",
-    "url": "http://github.com/hjespers/teslams.git"
+    "url": "https://github.com/hjespers/teslams.git"
   },
-  "bugs": {
-  },
-  "engines": [
-    "node >= 0.8.10"
+  "keywords": [
+    "tesla"
   ],
-  "main": "./main",
-  "dependencies": {
-    "request": "~2.14.0",
-    "optimist": "~0.3.5"
-  },
-  "bundleDependencies": [
-    "request",
-    "optimist"
-  ],
-  "scripts": {
-    "teslacmd": "node teslacmd.js",
-    "stream": "node stream.js",
-  },
-  "_id": "teslams@0.2.0",
-  "_from": "teslams"
+  "author": "Hans Jespersen",
+  "license": "BSD"
 }
