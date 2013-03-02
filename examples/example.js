@@ -51,13 +51,13 @@ teslams.get_vid( { email: creds.email, password: creds.password }, function ( vi
 		//
 		// control some stuff
 		//
-		teslams.door_lock( vid, teslams.LOCK_ON, pr );
-		teslams.sun_roof( vid, teslams.ROOF_CLOSE, pr );
-		teslams.auto_conditioning( vid, teslams.CLIMATE_OFF, pr ); 
-		teslams.charge_range( vid, teslams.RANGE_STD, pr ); 
-		teslams.charge_state( vid, teslams.CHARGE_ON, pr ); 
-		teslams.set_temperature( { id: vid, dtemp: 20}, pr ); 
-		// teslams.set_temperature( { id: vid, dtemp: teslams.TEMP_LO , ptemp: teslams.TEMP_HI}, pr ); 
+		teslams.door_lock( { id: vid, lock: teslams.LOCK_ON }, pr );
+		teslams.sun_roof( { id: vid, roof: teslams.ROOF_CLOSE }, pr );
+		teslams.auto_conditioning( { id: vid, climate: teslams.CLIMATE_OFF }, pr ); 
+		teslams.charge_range( { id: vid, range: teslams.RANGE_STD }, pr ); 
+		teslams.charge_state( { id: vid, charge: teslams.CHARGE_ON }, pr ); 
+		teslams.set_temperature( { id: vid, dtemp: 20 }, pr ); 
+		// teslams.set_temperature( { id: vid, dtemp: teslams.TEMP_LO , ptemp: teslams.TEMP_HI }, pr ); 
 	}
   }
 );

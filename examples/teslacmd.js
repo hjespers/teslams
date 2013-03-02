@@ -110,19 +110,19 @@ teslams.get_vid( { email: argv.username, password: argv.password }, function ( v
 		// control some stuff
 		//
 		if ( argv.lock == "open" || argv.lock == "close" ) {
-			teslams.door_lock( vid, argv.lock, pr );
+			teslams.door_lock( {id: vid, lock: argv.lock }, pr );
 		}
 		if ( argv.roof == "open" || argv.roof == "close" || argv.roof == "vent" || argv.roof == "comfort" ) {
-			teslams.sun_roof( vid, argv.roof, pr );
+			teslams.sun_roof( {id: vid, roof: argv.roof }, pr );
 		}
 		if ( argv.climate == "on" || argv.climate == "off") {
-			teslams.auto_conditioning( vid, argv.climate, pr ); 
+			teslams.auto_conditioning( { id: vid, climate: argv.climate}, pr ); 
 		}
 		if ( argv.range == "std" || argv.range == "max") {
-			teslams.charge_range( vid, argv.range, pr ); 
+			teslams.charge_range( { id: vid, range: argv.range }, pr ); 
 		}
 		if ( argv.charge == "start" || argv.charge == "stop") {
-			teslams.charge_state( vid, argv.charge, pr ); 
+			teslams.charge_state( { id: vid, charge: argv.charge }, pr ); 
 		}
 		if ( argv.temp >= teslams.TEMP_LO && argv.temp <= teslams.TEMP_HI) {
 			teslams.set_temperature( { id: vid, dtemp: argv.temp}, pr); 

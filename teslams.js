@@ -137,7 +137,9 @@ exports.open_charge_port = open_charge_port;
 
 var CHARGE_OFF   = 0; // changes charge state to ON without effecting range mode
 var CHARGE_ON    = 1; // changes charge state to OFF without effecting range mode
-function charge_state( vid, state, cb ) {
+function charge_state( params, cb ) {
+	var vid = params.id;
+	var state = params.charge;
 	// Change the range mode if necessary
 	if (state == CHARGE_ON  || state == "on" || state == "start" || state == true) { 
 		state = "start"; 
@@ -165,7 +167,9 @@ exports.CHARGE_ON = CHARGE_ON;
 
 var RANGE_STD    = 0; // changes range mode to STANDARD without effecting charge state
 var RANGE_MAX    = 1; // changes range mode to MAX_RANGE without effecting charge state
-function charge_range( vid, range, cb ) {
+function charge_range( params, cb ) {
+	var vid = params.id;
+	var range = params.range;
 	if (range == RANGE_STD || range == "std" || range == "standard" ) { 
 		range = "standard" 
 	};
@@ -216,7 +220,9 @@ exports.honk = honk;
 
 var LOCK_OFF = 0;
 var LOCK_ON  = 1;
-function door_lock( vid, state, cb ) {
+function door_lock( params, cb ) {
+	var vid = params.id;
+	var state = params.lock;
 	if (state == "lock" || state == true || state == "on" || state == "close" ) {
 		request( portal + '/vehicles/' + vid + '/command/door_lock', function (error, response, body) { 
 			var data = JSON.parse(body); 
@@ -245,10 +251,10 @@ exports.LOCK_ON = LOCK_ON;
 
 var TEMP_HI = 32;
 var TEMP_LO = 17;
-function set_temperature( options, cb ) {
-	var dtemp = options.dtemp;
-	var ptemp = options.ptemp;
-	var vid = options.id;
+function set_temperature( params, cb ) {
+	var dtemp = params.dtemp;
+	var ptemp = params.ptemp;
+	var vid = params.id;
 	
 	var temp_str = "";
 	if ( dtemp != undefined && dtemp <= TEMP_HI && dtemp >= TEMP_LO) {
@@ -284,7 +290,9 @@ exports.TEMP_LO = TEMP_LO;
 
 var CLIMATE_OFF = 0;
 var CLIMATE_ON  = 1;
-function auto_conditioning( vid, state, cb ) {
+function auto_conditioning( params, cb ) {
+	var vid = params.id;
+	var state = params.climate;
 	if (state == CLIMATE_ON) { state = true };
 	if (state == CLIMATE_OFF) { state = false };
 	if (state == "start" || state == true || state == "on" ) {
@@ -317,7 +325,9 @@ var ROOF_CLOSE   = 0;
 var ROOF_VENT    = 1;
 var ROOF_COMFORT = 2;
 var ROOF_OPEN    = 3;
-function sun_roof( vid, state, cb ) {
+function sun_roof( params, cb ) {
+	var vid = params.id;
+	var state = params.roof;
 	// add a check that  their is a sunroof on the car??
 	if (state == ROOF_CLOSE) { state = "close" };
 	if (state == ROOF_VENT) { state = "vent" };

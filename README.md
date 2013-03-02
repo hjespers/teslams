@@ -23,40 +23,40 @@ All functions take an optional callback that will be passed the javascript objec
 
 Functions include:
 
-	get_vid() 		- get the "id" of the Model S by logging into the Tesla portal
-	mobile_enabled()  	- check is remote/mobile control is on or off
-	get_charge_state() 	- get the full set of charge state information
-	get_climate_state() 	- get the full set of climate state information 
-	get_drive_state()  	- get the full set of drive state information
-	get_vehicle_state() 	- get the full set of vehicle state information 
-	get_gui_settings() 	- get the GUI setting
-	wake_up() 		- wake up the communication with the car (if dormant) 
-	open_charge_port() 	- open the charge port door 
-	charge_state() 		- set the charging state 
-	charge_range() 		- set the range mode 
-	flash() 		- flash the headlights 
-	honk() 			- honk the horn 
-	door_lock() 		- lock/unlock the doors 
-	set_temperature()  	- set the climate control temperatures
-	auto_conditioning() 	- turn on/off the climate control (HVAC) system
-	sun_roof() 		- control the sun roof 
+	get_vid()               - get the "id" of the Model S by logging into the Tesla portal
+	mobile_enabled()        - check is remote/mobile control is on or off
+	get_charge_state()      - get the full set of charge state information
+	get_climate_state()     - get the full set of climate state information 
+	get_drive_state()       - get the full set of drive state information
+	get_vehicle_state()     - get the full set of vehicle state information 
+	get_gui_settings()      - get the GUI setting
+	wake_up()               - wake up the communication with the car (if dormant) 
+	open_charge_port()      - open the charge port door 
+	charge_state()          - set the charging state 
+	charge_range()          - set the range mode 
+	flash()                 - flash the headlights 
+	honk()                  - honk the horn 
+	door_lock()             - lock/unlock the doors 
+	set_temperature()       - set the climate control temperatures
+	auto_conditioning()     - turn on/off the climate control (HVAC) system
+	sun_roof()              - control the sun roof 
 
 Constants include:
 
-	CHARGE_OFF - turns the charger off
-	CHARGE_ON - turns the charger on
-	RANGE_STD - set the charge mode to standard range
-	RANGE_MAX - set the charge mode to maximum range
-	LOCK_OFF - turns the door locks off (unlock)
-	LOCK_ON - turns the door locks on (locked)
-	TEMP_HI - highest temperature setting on climate control
-	TEMP_LO - lowest temperature setting on climate control
-	CLIMATE_OFF - turns climate control off
-	CLIMATE_ON - turns climate control on
-	ROOF_CLOSE - closes the roof
-	ROOF_VENT - puts the roof in vent position
+	CHARGE_OFF   - turns the charger off
+	CHARGE_ON    - turns the charger on
+	RANGE_STD    - set the charge mode to standard range
+	RANGE_MAX    - set the charge mode to maximum range
+	LOCK_OFF     - turns the door locks off (unlock)
+	LOCK_ON      - turns the door locks on (locked)
+	TEMP_HI      - highest temperature setting on climate control (32C/90F)
+	TEMP_LO      - the lowest temperature setting on climate control (17C/63F)
+	CLIMATE_OFF  - turns climate control off
+	CLIMATE_ON   - turns climate control on
+	ROOF_CLOSE   - closes the roof
+	ROOF_VENT    - puts the roof in vent position
 	ROOF_COMFORT - puts the roof in the 80% open position (for reduced noice)
-	ROOF_OPEN - puts the roof in the 100% open position
+	ROOF_OPEN    - puts the roof in the 100% open position
 
 #example.js
 
@@ -165,11 +165,7 @@ Tokens always expire at one of 4 times, corresponding to the top of the hour (:0
 
 #Requirements
 
-All sample applications requires the 'request' node module. Run "npm install request" once before running the applications.
-
-	npm install request
-
-The example.js and stream.js application require that you edit the credentials in the file "config.json" before running the programs or authentication will fail.
+The example.js and stream.js application require that you edit the credentials in the file "config.json" before running the programs or authentication will fail. All other examples get the username and password from the command line options.
 
 	{
 	"username": "yourMyTeslaLogin@email.com",
