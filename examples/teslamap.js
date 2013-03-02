@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-var request = require('request');
 var util = require('util');
 var open = require('open');
 var teslams = require('../teslams');
@@ -60,38 +59,7 @@ function ds( state ) {
 	} 
 }
 
-//
-// Login, get cookies, and figure out the vehicle ID (vid) for subsequent queries
-//
-var mytesla = request( { method: 'POST',
-     url: teslams.portal + '/login',
-	   form:{
-		"user_session[email]": creds.email, 
-		"user_session[password]": creds.password 
-	   }}, 
-	   function (error, response, body) {
-		if (!error) {
-			request(teslams.portal + '/vehicles', function (error, response, body) 
-				  { 
-					if ( body.substr(0,1) != "[" ) {
-						console.log(' login failed, please edit this program to include valid login/password');
-						process.exit( 1 );
-					}
-					var data = JSON.parse( body.substr(1, body.length - 2 ) ); 
-					if (argv.id) {
-						console.log('Vehicle List:');
-						console.log(data);
-					}
-					mytesla.id = data.id;
-					if (mytesla.id == undefined) {
-						console.log("Error: Undefined vehicle id");
-					} else {
-						teslams.get_drive_state( mytesla.id, ds );
-					}
-				  }
-			)
-		}	
-	   }
-        );
-
+teslams.get_vid( { email: argv.username, password: argv.password }, function ( id ) {
+	teslams.get_drive_state( id , ds ); 
+});
 

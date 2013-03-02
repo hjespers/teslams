@@ -23,22 +23,23 @@ All functions take an optional callback that will be passed the javascript objec
 
 Functions include:
 
-	mobile_enabled( vid, callback )  - check is remote/mobile control is on or off
-	get_charge_state( vid, callback ) - get the full set of charge state information
-	get_climate_state( vid, callback ) - get the full set of climate state information 
-	get_drive_state( vid, callback )  - get the full set of drive state information
-	get_vehicle_state( vid, callback ) - get the full set of vehicle state information 
-	get_gui_settings( vid, callback ) - get the GUI setting
-	wake_up( vid, callback ) - wake up the communication with the car (if dormant). Triggers new tokens needed for streaming API
-	open_charge_port( vid, callback ) - open the charge port door 
-	charge_state( vid, state, callback ) - set the charging state 
-	charge_range( vid, range, callback ) - set the range mode 
-	flash( vid, callback ) - flash the headlights 
-	honk( vid, callback ) - honk the horn 
-	door_lock( vid, state, callback ) - lock/unlock the doors 
-	set_temperature( vid, dtemp, ptemp, callback )  - set the climate control temperatures
-	auto_conditioning( vid, state, callback ) - turn on/off the climate control (HVAC) system
-	sun_roof( vid, state, callback ) - control the sun roof 
+	get_vid() 		- get the "id" of the Model S by logging into the Tesla portal
+	mobile_enabled()  	- check is remote/mobile control is on or off
+	get_charge_state() 	- get the full set of charge state information
+	get_climate_state() 	- get the full set of climate state information 
+	get_drive_state()  	- get the full set of drive state information
+	get_vehicle_state() 	- get the full set of vehicle state information 
+	get_gui_settings() 	- get the GUI setting
+	wake_up() 		- wake up the communication with the car (if dormant) 
+	open_charge_port() 	- open the charge port door 
+	charge_state() 		- set the charging state 
+	charge_range() 		- set the range mode 
+	flash() 		- flash the headlights 
+	honk() 			- honk the horn 
+	door_lock() 		- lock/unlock the doors 
+	set_temperature()  	- set the climate control temperatures
+	auto_conditioning() 	- turn on/off the climate control (HVAC) system
+	sun_roof() 		- control the sun roof 
 
 Constants include:
 
@@ -62,10 +63,6 @@ Constants include:
 A sample application which uses the teslams.js library to call common functions provided in the REST API.
 A valid teslamotors.com login and password is required and must be inserted into the config.json configuration file.
 
-The main.js application requires the 'request' node module. Run "npm install request" once before running the applications.
-
-	npm install request
-
 To execute run: 
 
 	node example
@@ -75,9 +72,8 @@ To execute run:
 A sample application which uses the teslams.js library to determine the car location and optionally launch a browser using Google Maps.
 
 
-To work this program requires the node modules "optimist" in addition to "request" which is required by all applications
+To work this program requires the node module "optimist" 
 	
-	npm install request
 	npm install optimist
 
 
@@ -107,9 +103,8 @@ For help run :
 
 A sample command line application which uses the teslams.js library and takes command line arguments that allow all know REST API functions to be used.
 
-To work this program requires the node modules "optimist" in addition to "request" which is required by all applications
+To work this program requires the node module "optimist" 
 	
-	npm install request
 	npm install optimist
 
 To execute run:

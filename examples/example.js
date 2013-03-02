@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-var request = require('request');
+var util = require('util');
 var teslams = require('../teslams.js');
 
 // edit the config.json file to contain your teslamotors.com login email and password, and the name of the output file
@@ -17,67 +17,47 @@ try {
 	process.exit(1);
 }
 
-//
-// Login, get cookies, and figure out the vehicle ID (vid) for subsequent queries
-//
-var mytesla = request( { method: 'POST',
-     url: teslams.portal + '/login',
-	   form:{
-		"user_session[email]": creds.email, 
-		"user_session[password]": creds.password 
-	   }}, 
-	   function (error, response, body) {
-		if (!error) {
-			request(teslams.portal + '/vehicles', function (error, response, body) 
-				  { 
-					if ( body.substr(0,1) != "[" ) {
-						console.log(' login failed, please edit config.json to include valid login/password');
-						process.exit( 1 );
-					}
-					var data = JSON.parse( body.substr(1, body.length - 2 ) ); 
-					console.log("\nVehicle List:");
-					console.log(data);
-					console.log("REST API\nid :" + data.id);
-					mytesla.id = data.id;
-					if (mytesla.id == undefined) {
-						console.log("Error: Undefined vehicle id");
-					} else {
-						//
-						// Remember NODE is all async non-blocking so all these requests go in parallel
-						//
-						// not needed for REST API but test all known REST functions anyway
-						//
-						teslams.wake_up( mytesla.id );
-						//
-						// get some info
-						//
-						teslams.mobile_enabled( mytesla.id );
-						teslams.get_charge_state( mytesla.id );
-						teslams.get_climate_state( mytesla.id );
-						teslams.get_drive_state( mytesla.id );
-						teslams.get_vehicle_state( mytesla.id );
-						teslams.get_gui_settings( mytesla.id );
-						//
-						//  cute but annoying stuff while debugging
-						//
-						//teslams.flash( mytesla.id ); 
-						//teslams.honk( mytesla.id ); 
-						//teslams.open_charge_port( mytesla.id ) 
-						//
-						// control some stuff
-						//
-						teslams.door_lock( mytesla.id, teslams.LOCK_ON );
-						teslams.sun_roof( mytesla.id, teslams.ROOF_CLOSE );
-						teslams.auto_conditioning( mytesla.id, teslams.CLIMATE_OFF ); 
-						teslams.charge_range( mytesla.id, teslams.RANGE_STD ); 
-						teslams.charge_state( mytesla.id, teslams.CHARGE_ON ); 
-						teslams.set_temperature( mytesla.id, 20); // automatically set passenger to driver setting
-						// teslams.set_temperature( mytesla.id, teslams.TEMP_LO , teslams.TEMP_HI ); 
-					}
-				  }
-			)
-		}	
-	   }
-        );
 
+// Generic callback function to print the return value
+function pr( stuff ) {
+	console.log( util.inspect( stuff ) );
+}
 
+teslams.get_vid( { email: creds.email, password: creds.password }, function ( vid ) {
+	if (vid == undefined) {
+		console.log("Error: Undefined vehicle id");
+	} else {
+		//
+		// Remember NODE is all async non-blocking so all these requests go in parallel
+		//
+		// not needed for REST API but test all known REST functions anyway
+		//
+		teslams.wake_up( vid, pr );
+		//
+		// get some info
+		//
+		teslams.mobile_enabled( vid, pr );
+		teslams.get_charge_state( vid, pr );
+		teslams.get_climate_state( vid, pr );
+		teslams.get_drive_state( vid, pr );
+		teslams.get_vehicle_state( vid, pr );
+		teslams.get_gui_settings( vid, pr );
+		//
+		//  cute but annoying stuff while debugging
+		//
+		//teslams.flash( vid, pr ); 
+		//teslams.honk( vid, pr ); 
+		//teslams.open_charge_port( vid, pr ) 
+		//
+		// control some stuff
+		//
+		teslams.door_lock( vid, teslams.LOCK_ON, pr );
+		teslams.sun_roof( vid, teslams.ROOF_CLOSE, pr );
+		teslams.auto_conditioning( vid, teslams.CLIMATE_OFF, pr ); 
+		teslams.charge_range( vid, teslams.RANGE_STD, pr ); 
+		teslams.charge_state( vid, teslams.CHARGE_ON, pr ); 
+		teslams.set_temperature( { id: vid, dtemp: 20}, pr ); 
+		// teslams.set_temperature( { id: vid, dtemp: teslams.TEMP_LO , ptemp: teslams.TEMP_HI}, pr ); 
+	}
+  }
+);

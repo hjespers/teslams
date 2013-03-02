@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-var request = require('request');
 var util = require('util');
 var teslams = require('../teslams.js');
 var argv = require('optimist')
@@ -49,7 +48,7 @@ var argv = require('optimist')
 
 
 if ( argv.help == true ) {
-	console.log( 'Usage: teslacmd.js -u <username> -p <password> -cdFgHimPtvVw');
+	console.log( 'Usage: teslacmd.js -u <username> -p <password> -cdFgHimPtvw');
 	console.log( '                   -A [on|off] -C [start|stop] -R [std|max]');
 	console.log( '                   -S [close|vent|comfort|open] -L [lock|unlock] -T temp');
 	process.exit(1);
@@ -64,99 +63,71 @@ function pr( stuff ) {
 	console.log( util.inspect(stuff) );
 }
 
-//
-// Login, get cookies, and figure out the vehicle ID (vid) for subsequent queries
-//
-var mytesla = request( { method: 'POST',
-     url: teslams.portal + '/login',
-	   form:{
-		"user_session[email]": creds.email, 
-		"user_session[password]": creds.password 
-	   }}, 
-	   function (error, response, body) {
-		if (!error) {
-			request(teslams.portal + '/vehicles', function (error, response, body) 
-				  { 
-					if ( body.substr(0,1) != "[" ) {
-						console.log(' login failed, please edit this program to include valid login/password');
-						process.exit( 1 );
-					}
-					var data = JSON.parse( body.substr(1, body.length - 2 ) ); 
-					if (argv.id) {
-						console.log('Vehicle List:');
-						console.log(data);
-					}
-					mytesla.id = data.id;
-					if (mytesla.id == undefined) {
-						console.log("Error: Undefined vehicle id");
-					} else {
-						//
-						// Remember NODE is all async non-blocking so all these requests go in parallel
-						//
-						// not needed for REST API but test all known REST functions anyway
-						//
-						if (argv.w) {
-							teslams.wake_up( mytesla.id, pr );
-						}
-						//
-						// get some info
-						//
-						if (argv.m) {
-							teslams.mobile_enabled( mytesla.id, pr );
-						}
-						if (argv.c) {
-							teslams.get_charge_state( mytesla.id, pr );
-						}
-						if (argv.t) {
-							teslams.get_climate_state( mytesla.id, pr );
-						}
-						if (argv.d) {
-							teslams.get_drive_state( mytesla.id, pr );
-						}
-						if (argv.v) {
-							teslams.get_vehicle_state( mytesla.id, pr );
-						}
-						if (argv.g) {
-							teslams.get_gui_settings( mytesla.id, pr );
-						}
-						//
-						//  cute but annoying stuff while debugging
-						//
-						if (argv.F) {
-							teslams.flash( mytesla.id, pr ); 
-						}
-						if (argv.H) {
-							teslams.honk( mytesla.id, pr ); 
-						}
-						if (argv.P) {
-							teslams.open_charge_port( mytesla.id, pr ) 
-						}
-						//
-						// control some stuff
-						//
-						if ( argv.lock == "open" || argv.lock == "close" ) {
-							teslams.door_lock( mytesla.id, argv.lock, pr );
-						}
-						if ( argv.roof == "open" || argv.roof == "close" || argv.roof == "vent" || argv.roof == "comfort" ) {
-							teslams.sun_roof( mytesla.id, argv.roof, pr );
-						}
-						if ( argv.climate == "on" || argv.climate == "off") {
-							teslams.auto_conditioning( mytesla.id, argv.climate, pr ); 
-						}
-						if ( argv.range == "std" || argv.range == "max") {
-							teslams.charge_range( mytesla.id, argv.range, pr ); 
-						}
-						if ( argv.charge == "start" || argv.charge == "stop") {
-							teslams.charge_state( mytesla.id, argv.charge, pr ); 
-						}
-						if ( argv.temp >= teslams.TEMP_LO && argv.temp <= teslams.TEMP_HI) {
-							teslams.set_temperature( mytesla.id, argv.temp, pr); 
-						}
-					}
-				  }
-			)
-		}	
-	   }
-        );
+
+teslams.get_vid( { email: argv.username, password: argv.password }, function ( vid ) {
+	if (vid == undefined) {
+		console.log("Error: Undefined vehicle vid");
+		process.exit(1);
+	} else {
+		// wake up the car's telematics system
+		if (argv.w) {
+			teslams.wake_up( vid, pr );
+		}
+		//
+		// get some info
+		//
+		if (argv.m) {
+			teslams.mobile_enabled( vid, pr );
+		}
+		if (argv.c) {
+			teslams.get_charge_state( vid, pr );
+		}
+		if (argv.t) {
+			teslams.get_climate_state( vid, pr );
+		}
+		if (argv.d) {
+			teslams.get_drive_state( vid, pr );
+		}
+		if (argv.v) {
+			teslams.get_vehicle_state( vid, pr );
+		}
+		if (argv.g) {
+			teslams.get_gui_settings( vid, pr );
+		}
+		//
+		//  cute but annoying stuff while debugging
+		//
+		if (argv.F) {
+			teslams.flash( vid, pr ); 
+		}
+		if (argv.H) {
+			teslams.honk( vid, pr ); 
+		}
+		if (argv.P) {
+			teslams.open_charge_port( vid, pr ) 
+		}
+		//
+		// control some stuff
+		//
+		if ( argv.lock == "open" || argv.lock == "close" ) {
+			teslams.door_lock( vid, argv.lock, pr );
+		}
+		if ( argv.roof == "open" || argv.roof == "close" || argv.roof == "vent" || argv.roof == "comfort" ) {
+			teslams.sun_roof( vid, argv.roof, pr );
+		}
+		if ( argv.climate == "on" || argv.climate == "off") {
+			teslams.auto_conditioning( vid, argv.climate, pr ); 
+		}
+		if ( argv.range == "std" || argv.range == "max") {
+			teslams.charge_range( vid, argv.range, pr ); 
+		}
+		if ( argv.charge == "start" || argv.charge == "stop") {
+			teslams.charge_state( vid, argv.charge, pr ); 
+		}
+		if ( argv.temp >= teslams.TEMP_LO && argv.temp <= teslams.TEMP_HI) {
+			teslams.set_temperature( { id: vid, dtemp: argv.temp}, pr); 
+		}
+	}
+});
 
 

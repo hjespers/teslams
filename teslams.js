@@ -3,8 +3,43 @@ var request = require('request');
 var portal = 'https://portal.vn.teslamotors.com';
 exports.portal = portal;
 
+function get_vid( options, cb ) {
+	request( { method: 'POST',
+     	   url: portal + '/login',
+	   form:{
+		"user_session[email]": options.email, 
+		"user_session[password]": options.password 
+	   }}, 
+	   function (error, response, body) {
+		if (!error) {
+			request(portal + '/vehicles', function (error, response, body) 
+				  { 
+					if ( body.substr(0,1) != "[" ) {
+						console.log(' login failed, please edit this program to include valid login/password');
+						process.exit( 1 );
+					}
+					var data = JSON.parse( body.substr(1, body.length - 2 ) ); 
+					if (data.id == undefined) {
+						console.log("Error: Undefined vehicle id");
+						return;
+					} else if (cb != undefined) {
+						return cb( data.id );
+					} else {
+						return;
+					}
+				  }
+			)
+		} else {
+			return error;	
+		}
+	   }
+        );
+}
+exports.get_vid = get_vid;
+
+
 function mobile_enabled( vid, cb ) {
-  request( portal + '/vehicles/' + vid + '/mobile_enabled', function (error, response, body) { 
+	request( portal + '/vehicles/' + vid + '/mobile_enabled', function (error, response, body) { 
 		var data = JSON.parse(body); 
 		if (cb != undefined) {
 			return cb( data );
@@ -112,7 +147,6 @@ function charge_state( vid, state, cb ) {
 	};
 
 	if (state == "start" || state == "stop" ) {
-		console.log('sending GET to ' + portal + '/vehicles/' + vid + '/command/charge_' + state);
 		request( portal + '/vehicles/' + vid + '/command/charge_' + state, function (error, response, body) { 
 			var data = JSON.parse(body); 
 			if (cb != undefined) {
@@ -211,7 +245,11 @@ exports.LOCK_ON = LOCK_ON;
 
 var TEMP_HI = 32;
 var TEMP_LO = 17;
-function set_temperature( vid, dtemp, ptemp, cb ) {
+function set_temperature( options, cb ) {
+	var dtemp = options.dtemp;
+	var ptemp = options.ptemp;
+	var vid = options.id;
+	
 	var temp_str = "";
 	if ( dtemp != undefined && dtemp <= TEMP_HI && dtemp >= TEMP_LO) {
 		temp_str = 'driver_temp=' + dtemp;
@@ -286,9 +324,7 @@ function sun_roof( vid, state, cb ) {
 	if (state == ROOF_COMFORT) { state = "comfort" };
 	if (state == ROOF_OPEN) { state = "open" };
 	if (state == "open" || state == "close" || state == "comfort" || state == "vent" ) {
-
-		console.log('Sending GET to ' + portal + '/vehicles/' + vid + '/command/sun_roof_control?state=' + state);
-		request( portal +'/vehicles/' + vid + '/command/sun_roof_control?state=' + state, function (error, response, body) { 
+		request( portal +'/vehicles/' + vid + '/command/sun_roof_control?state=' + state, function (error, response, body) {
 			var data = JSON.parse(body); 
 			if (cb != undefined) {
 				return cb( data );
