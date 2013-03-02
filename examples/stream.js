@@ -16,7 +16,7 @@ try {
 	var s_url = config.stream_url;
 	var output_file = config.output_file;
 } catch (err) {
-	
+
 	console.warn("The file 'config.json' does not exist or contains invalid arguments! Exiting...");
 	process.exit(1);
 }
