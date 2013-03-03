@@ -24,6 +24,7 @@ All functions take an optional callback that will be passed the javascript objec
 Functions include:
 
 	get_vid()               - get the "id" of the Model S by logging into the Tesla portal
+	vehicles()              - login to portal and get vehicles list and options data
 	mobile_enabled()        - check is remote/mobile control is on or off
 	get_charge_state()      - get the full set of charge state information
 	get_climate_state()     - get the full set of climate state information 
