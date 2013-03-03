@@ -92,7 +92,7 @@ For help run :
 	  -p, --password  Teslamotors.com password                                                          [required]
 	  -j, --json      Display the drive state info                                                      [boolean]
 	  -m, --map       Open a map in the default browser which displays the current location of the car  [boolean]
- 	  -k, --kml       Print out the location of the car in KML format                         	    [boolean]
+ 	  -k, --kml       Print out the location of the car in KML format                                   [boolean]
 	  -U, --url       Print a URL to google maps on the console                                         [boolean]
 	  -?, --help      Print usage information
 
