@@ -73,7 +73,7 @@ To execute run:
 A sample application which uses the teslams.js library to determine the car location and optionally launch a browser using Google Maps.
 
 
-To work this program requires the node module "optimist" 
+To install this program requires the node module "optimist" 
 	
 	npm install optimist
 
@@ -84,7 +84,7 @@ To execute run:
 
 For help run :
 
-	$ teslamap.js --help
+	$ node teslamap --help
 
 	Usage: teslamap.js -u <username> -p <password> [--json || --url || --kml] [--map]
 
@@ -104,7 +104,7 @@ For help run :
 
 A sample command line application which uses the teslams.js library and takes command line arguments that allow all know REST API functions to be used.
 
-To work this program requires the node module "optimist" 
+To install this program requires the node module "optimist" 
 	
 	npm install optimist
 
@@ -114,7 +114,7 @@ To execute run:
 
 For help run :
 
-	$ teslacmd.js --help
+	$ node teslacmd --help
 
 	Usage: teslacmd.js -u <username> -p <password> -cdFgHimPtvw -A [on|off] -C [start|stop] 
 	                   -R [std|max] -S [close|vent|comfort|open] -L [lock|unlock] -T <temp>
@@ -143,16 +143,39 @@ For help run :
 	
 	Missing required arguments: u, p
 	
-#stream.js 
+#streaming.js 
 
 A sample application which uses the TESLA HTTP Long Polling "STREAMING" API to get continuous telemetry from the Tesla Model S. 
-A valid teslamotors.com login and password is required and must be configured in the config.json file. 
-By default the output goes to a file called "stream_output.txt" which can also be changed in the config.json file. Each time you run the program you will over-write the output file so copy old log data before running the application a second time.
+A valid teslamotors.com login and password is required and must be provided on the command line options. 
 
+By default the output goes to a file called "streamming.out" which can also be changed with command line options. Each time you run the program you will over-write the output file so copy old log data or specify a different output file before running the application a second time.
+
+
+To install this program requires the node module "optimist" 
+	
+	npm install optimist
 
 To execute run:
 
-	node stream
+	node streaming -u <username> -p <password>
+
+For help run :
+
+	node streaming --help
+
+	Usage: node ./streaming -u <username> -p <password> [--file <filename>] [--silent]
+
+	Options:
+		  -u, --username  Teslamotors.com login                  [required]
+		  -p, --password  Teslamotors.com password               [required]
+		  -s, --silent    Silent mode: no output to console      [boolean]
+		  -f, --file      Output file.                           [default: "streaming.out"]
+		  -v, --values    List of values to collect              [default: "speed,odometer,soc,elevation,est_heading,est_lat,est_lng,power,shift_state"]
+		  -?, --help      Print usage information                                            
+
+	Missing required arguments: u, p
+
+
 	
 #Streaming API Security Tokens
 
@@ -166,7 +189,7 @@ Tokens always expire at one of 4 times, corresponding to the top of the hour (:0
 
 #Requirements
 
-The example.js and stream.js application require that you edit the credentials in the file "config.json" before running the programs or authentication will fail. All other examples get the username and password from the command line options.
+The example.js application requires that you edit the credentials in the file "config.json" before running the programs or authentication will fail. All other examples get the username and password from the command line options.
 
 	{
 	"username": "yourMyTeslaLogin@email.com",
