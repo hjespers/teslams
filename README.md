@@ -1,5 +1,7 @@
 #Tesla Model S REST API
 
+<img src=http://farm9.staticflickr.com/8241/8526534730_75643b3247_c.jpg>
+
 An implementation in Node.js of the client side interface to the Tesla Model S API documented at: 
 
 	http://docs.timdorr.apiary.io/
