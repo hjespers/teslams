@@ -163,7 +163,7 @@ For help run :
 
 	node streaming --help
 
-	Usage: node ./streaming -u <username> -p <password> [--file <filename>] [--silent]
+	Usage: node ./streaming -u <username> -p <password> [--file <filename>] [--values <value_list>] [--silent]
 
 	Options:
 		  -u, --username  Teslamotors.com login                  [required]
