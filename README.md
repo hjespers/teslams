@@ -70,6 +70,35 @@ To execute run:
 
 	node example
 
+#chargebar.js 
+
+
+<img src="http://farm9.staticflickr.com/8236/8535066907_f22a61b061_c.jpg">
+
+This application displays the charge state of a Tesla Model S in an ASCII terminal window. 
+
+To install this program requires the node modules "optimist" and "multimeter"
+	
+	npm install optimist multimeter
+
+
+To execute run:
+
+	node chargebar -u <username> -p <password>
+
+For help run :
+
+	$ node chargebar --help
+
+	Usage: chargebar.js -u <username> -p <password> 
+
+	Options:
+	  -u, --username  Teslamotors.com login                                                             [required]
+	  -p, --password  Teslamotors.com password                                                          [required]
+	  -?, --help      Print usage information
+
+	Missing required arguments: u, p
+
 #teslamap.js
 
 A sample application which uses the teslams.js library to determine the car location and optionally launch a browser using Google Maps.
