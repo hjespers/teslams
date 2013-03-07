@@ -85,9 +85,10 @@ teslams.vehicles( { email: creds.email, password: creds.password }, function ( v
 					.write('Time to full : ' + ttfc + '                \n')
 					.up(4);
 				if (cs.charging_state == 'Complete') {
-    					multi.charm.cursor(true);
+    					multi.charm
+						.cursor(true)
+						.position(0,10);
     					multi.write('\n').destroy();
-					console.log('\ncomplete\n');
 					process.exit();
 				}
 			});
