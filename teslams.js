@@ -86,11 +86,16 @@ exports.mobile_enabled = mobile_enabled;
 
 function get_charge_state( vid, cb ) {
 	request( portal + '/vehicles/' + vid + '/command/charge_state', function (error, response, body) { 
-		var data = JSON.parse(body); 
-		if (cb != undefined) {
-			return cb( data );
-		} else {
-			return;
+		try {
+			var data = JSON.parse(body); 
+			if (cb != undefined) {
+				return cb( data );
+			} else {
+				return;
+			}
+		} catch (err) {
+			console.log("Error encountered in get_charge_state() function: " + err);
+			return err;
 		}
 	});
 }
