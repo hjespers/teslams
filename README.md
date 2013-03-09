@@ -77,7 +77,8 @@ To execute run:
 
 This application displays the charge state of a Tesla Model S in an ASCII terminal window. 
 
-To install this program requires the node modules "optimist" and "multimeter"
+This program uses the node modules "optimist" and "multimeter" which should automatically install.
+If these module are not present then install them manually using npm 
 	
 	npm install optimist multimeter
 
@@ -104,7 +105,8 @@ For help run :
 A sample application which uses the teslams.js library to determine the car location and optionally launch a browser using Google Maps.
 
 
-To install this program requires the node module "optimist" 
+To install this program requires the node module "optimist" which should install automatically.
+If this module is not present then install it manually using npm 
 	
 	npm install optimist
 
@@ -135,7 +137,8 @@ For help run :
 
 A sample command line application which uses the teslams.js library and takes command line arguments that allow all know REST API functions to be used.
 
-To install this program requires the node module "optimist" 
+To run this program requires the node module "optimist" which should install automatically. 
+If this module is not present then install it manually using npm 
 	
 	npm install optimist
 
@@ -182,7 +185,8 @@ A valid teslamotors.com login and password is required and must be provided on t
 By default the output goes to a file called "streamming.out" which can also be changed with command line options. Each time you run the program you will over-write the output file so copy old log data or specify a different output file before running the application a second time.
 
 
-To install this program requires the node module "optimist" 
+To run this program requires the node module "optimist" which should install automatically.
+If this module is not present then install it manually using npm 
 	
 	npm install optimist
 
