@@ -18,6 +18,14 @@ Be careful not to send your login and password to anyone other than Tesla or you
 
 Use these programs at your own risk. The author (Hans Jespersen) does not guaranteed the proper functioning of these applications. This code attempts to use the same interfaces used by the official Tesla phone apps. However, it is possible that use of this code may cause unexpected damage for which nobody but you are responsible. Use of these functions can change the settings on your car and may have negative consequences such as (but not limited to) unlocking the doors, opening the sun roof, or reducing the available charge in the battery.
 
+#Installation
+
+To use these programs you must download and install 'node' from http://nodejs.org
+Once node is installed, use the included 'npm' utility to download this module, examples, and all dependent modules
+
+	npm install teslams
+
+
 #teslams.js 
 
 Contains a library of functions and constants which allow the uses the TESLA "REST" API to get and set values on the Tesla Model S. 
