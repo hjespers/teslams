@@ -1,9 +1,12 @@
 {
   "name": "teslams",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "Utilities for the Tesla Model S ",
   "dependencies": {
-    "request": "~2.14.0"
+    "request": "~2.14.0",
+    "optimist": "~0.3.5",
+    "open": "~0.0.3",
+    "multimeter": "~0.1.1"
   },
   "devDependencies": {},
   "scripts": {
@@ -14,6 +17,10 @@
     "url": "https://github.com/hjespers/teslams.git"
   },
   "main": "./teslams.js",
+  "directories": {
+	"lib": ".",
+	"examples": "examples"
+  },
   "keywords": [
     "tesla"
   ],
