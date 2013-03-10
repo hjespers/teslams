@@ -33,7 +33,7 @@ var argv = require('optimist')
 	.alias('R', 'range')
 	.describe('R', 'Charging range mode: "std" or "max"')
 	.alias('S', 'roof')
-	.describe('S', 'Move the car sunroof to: "close", "vent", "comfort", "open"')
+	.describe('S', 'Move the car sunroof to: "close", "vent", "comfort", "open" or any percent')
 	.alias('T', 'temp')
 	.describe('T', 'Set the car climate control temperature (in Celcius)')
 	.alias('L', 'lock')
@@ -50,7 +50,7 @@ var argv = require('optimist')
 if ( argv.help == true ) {
 	console.log( 'Usage: teslacmd.js -u <username> -p <password> -cdFgHimPtvw');
 	console.log( '                   -A [on|off] -C [start|stop] -R [std|max]');
-	console.log( '                   -S [close|vent|comfort|open] -L [lock|unlock] -T temp');
+	console.log( '                   -S [0-100] -S [close|vent|comfort|open] -L [lock|unlock] -T temp');
 	process.exit(1);
 }
 

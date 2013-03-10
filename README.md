@@ -10,7 +10,7 @@ This is unofficial documentation of the Tesla Model S REST API used by the iOS a
 
 These programs and documentation do not come from Tesla Motors Inc.
 
-Be careful when using these programs as they can lock and unlock your car as well as control various functions relating to the charging system, sun_roof, lights, horn, and other subsystems of the car.
+Be careful when using these programs as they can lock and unlock your car as well as control various functions relating to the charging system, sun roof, lights, horn, and other subsystems of the car.
 
 Be careful not to send your login and password to anyone other than Tesla or you are giving away the authentication details required to control your car.
 
@@ -21,12 +21,12 @@ Use these programs at your own risk. The author (Hans Jespersen) does not guaran
 #Installation
 
 To use these programs you must download and install 'node' from http://nodejs.org
-Once node is installed, use the included 'npm' utility to download this module, examples, and all dependent modules
+.Once node is installed, use the included 'npm' utility to download this module, examples, and all dependent modules
 
 	npm install teslams
 
 
-#teslams.js 
+#teslams.js - The main library
 
 Contains a library of functions and constants which allow the uses the TESLA "REST" API to get and set values on the Tesla Model S. 
 All functions take an optional callback that will be passed the javascript object returned from the TESLA API.
@@ -69,16 +69,25 @@ Constants include:
 	ROOF_COMFORT - puts the roof in the 80% open position (for reduced noice)
 	ROOF_OPEN    - puts the roof in the 100% open position
 
-#example.js
+# Example applications and utilities that use 'teslams'
 
-A sample application which uses the teslams.js library to call common functions provided in the REST API.
+#example.js - a hello world app for educational purposes only
+
+A very simple sample application which uses the teslams.js library to call common functions provided in the REST API.
 A valid teslamotors.com login and password is required and must be inserted into the config.json configuration file.
+
+The example.js application requires that you edit the credentials in the file "config.json" before running the programs or authentication will fail. All other examples get the username and password from the command line options.
+
+	{
+	"username": "yourMyTeslaLogin@email.com",
+	"password": "yourPassword",
+	}
 
 To execute run: 
 
 	node example
 
-#chargebar.js 
+#chargebar.js - monitor your car from your desktop 
 
 
 <img src="http://farm9.staticflickr.com/8236/8535066907_f22a61b061_c.jpg">
@@ -108,7 +117,7 @@ For help run :
 
 	Missing required arguments: u, p
 
-#teslamap.js
+#teslamap.js - dude, where's my car?
 
 A sample application which uses the teslams.js library to determine the car location and optionally launch a browser using Google Maps.
 
@@ -141,7 +150,7 @@ For help run :
 	Missing required arguments: u, p
 
 
-#teslacmd.js
+#teslacmd.js - CLI swiss army knife for the REST API. 
 
 A sample command line application which uses the teslams.js library and takes command line arguments that allow all know REST API functions to be used.
 
@@ -185,7 +194,7 @@ For help run :
 	
 	Missing required arguments: u, p
 	
-#streaming.js 
+#streaming.js - Capture and log real-time telemetry while driving the car
 
 A sample application which uses the TESLA HTTP Long Polling "STREAMING" API to get continuous telemetry from the Tesla Model S. 
 A valid teslamotors.com login and password is required and must be provided on the command line options. 
@@ -220,7 +229,7 @@ For help run :
 
 
 	
-#Streaming API Security Tokens
+#Streaming API Security Tokens - just trying to document what I learned about Tesla's Streaming API
 
 Tokens always expire at one of 4 times, corresponding to the top of the hour (:00), or in 15 minutes increments thereafter (:15, :30, :45). New tokens are generated at these 15 minute intervals. 
 
@@ -229,15 +238,6 @@ Tokens always expire at one of 4 times, corresponding to the top of the hour (:0
 - if you check every 15 minutes for a new token then you should see your old one listed as the the second in the token list and you can switch the first token in the list for another 15 minutes.
 - if you ever get undefined tokens, or get an HTTP 401: Unauthorized return code, then call REST API /wake_up, followed by /vehicles, and the last two active tokens will be once again revealed
 
-
-#Requirements
-
-The example.js application requires that you edit the credentials in the file "config.json" before running the programs or authentication will fail. All other examples get the username and password from the command line options.
-
-	{
-	"username": "yourMyTeslaLogin@email.com",
-	"password": "yourPassword",
-	}
 
 #Support
 
