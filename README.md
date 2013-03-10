@@ -150,7 +150,7 @@ For help run :
 	Missing required arguments: u, p
 
 
-#teslacmd.js - CLI swiss army knife for the REST API. 
+#teslacmd.js - CLI swiss army knife for the REST API 
 
 A sample command line application which uses the teslams.js library and takes command line arguments that allow all know REST API functions to be used.
 
@@ -194,7 +194,7 @@ For help run :
 	
 	Missing required arguments: u, p
 	
-#streaming.js - Capture and log real-time telemetry while driving the car
+#streaming.js - Capture and log real-time telemetry while driving
 
 A sample application which uses the TESLA HTTP Long Polling "STREAMING" API to get continuous telemetry from the Tesla Model S. 
 A valid teslamotors.com login and password is required and must be provided on the command line options. 
@@ -229,7 +229,9 @@ For help run :
 
 
 	
-#Streaming API Security Tokens - just trying to document what I learned about Tesla's Streaming API
+#Streaming API Security Tokens 
+
+I am just trying to document what I learned when using Tesla's Streaming API.
 
 Tokens always expire at one of 4 times, corresponding to the top of the hour (:00), or in 15 minutes increments thereafter (:15, :30, :45). New tokens are generated at these 15 minute intervals. 
 
