@@ -1,4 +1,5 @@
 var request = require('request');
+var util = require('util');
 
 var portal = 'https://portal.vn.teslamotors.com';
 exports.portal = portal;
@@ -367,12 +368,13 @@ var ROOF_OPEN    = 3;
 function sun_roof( params, cb ) {
 	var vid = params.id;
 	var state = params.roof;
+	var percent = params.percent;
 	// add a check that  their is a sunroof on the car??
 	if (state == ROOF_CLOSE) { state = "close" };
 	if (state == ROOF_VENT) { state = "vent" };
 	if (state == ROOF_COMFORT) { state = "comfort" };
 	if (state == ROOF_OPEN) { state = "open" };
-	if (state == "open" || state == "close" || state == "comfort" || state == "vent" ) {
+	if (state == "open" || state == "close" || state == "comfort" || state == "vent") {
 		request( portal +'/vehicles/' + vid + '/command/sun_roof_control?state=' + state, function (error, response, body) {
 			var data = JSON.parse(body); 
 			if (cb != undefined) {
@@ -381,9 +383,19 @@ function sun_roof( params, cb ) {
 				return;
 			}
 		});
+	} else if ( (state == "move") && (percent >= 0) && (percent <= 100) ) {
+		
+		request( portal +'/vehicles/' + vid + '/command/sun_roof_control?state=move&percent=' + percent, function (error, response, body) {
+			var data = JSON.parse(body); 
+			if (cb != undefined) {
+				return cb( data );
+			} else {
+				return;
+			}
+		});
 	} else {
-		console.log( 'Error: Invalid sun roof state = ' + state);
-		console.log( 'Valid sun roof states are "open", "close", "comfort", or "vent"');
+		console.log( 'Error: Invalid sun roof state' + util.inspect(params) );
+		return cb( { error: 'Error: Invalid run roof state' } );
 	}
 }
 exports.sun_roof = sun_roof;

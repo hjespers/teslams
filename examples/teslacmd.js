@@ -115,6 +115,9 @@ teslams.get_vid( { email: argv.username, password: argv.password }, function ( v
 		if ( argv.roof == "open" || argv.roof == "close" || argv.roof == "vent" || argv.roof == "comfort" ) {
 			teslams.sun_roof( {id: vid, roof: argv.roof }, pr );
 		}
+		if ( argv.roof >= 0 && argv.roof <= 100 ) {
+			teslams.sun_roof( {id: vid, roof: 'move', percent: argv.roof }, pr );
+		}
 		if ( argv.climate == "on" || argv.climate == "off") {
 			teslams.auto_conditioning( { id: vid, climate: argv.climate}, pr ); 
 		}
