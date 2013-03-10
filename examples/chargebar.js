@@ -32,7 +32,6 @@ multi.on('^C', function () {
 
 multi.charm.cursor(false);  // turn off cursor during bar updating
 
-//console.log('Battery Charging Data\n\n\n'); // make some room for 3 bars and then make them in an array
 multi.charm
 	.erase('screen')
 	.position(0,0)
@@ -73,7 +72,14 @@ teslams.vehicles( { email: creds.email, password: creds.password }, function ( v
 				var p = cs.charger_power;
 				var v = cs.charger_voltage;
 				var i = cs.charger_actual_current + '/' + cs.charger_pilot_current 
-				var ttfc = (cs.time_to_full_charge>1)?cs.time_to_full_charge + ' hours':(cs.time_to_full_charge*60).toPrecision(3) + ' minutes';
+				var ttfc = "";
+				if (cs.time_to_full_charge > 1) {
+					ttfc = cs.time_to_full_charge + ' hours';
+				} else if (cs.time_to_full_charge <= 0) {
+					ttfc = 'N/A'; 
+				} else {
+					ttfc = (cs.time_to_full_charge*60).toPrecision(3) + ' minutes';
+				}
 				var r = (cs.charge_to_max_range == false)?'STANDARD':'MAX RANGE';
 				bars[2].percent( p, msg=' Charger: ' + p + 'kW, ' + v + ' V, ' + i + ' A          ');
 				bars[1].percent( cs.battery_level, msg=' Level: ' + cs.battery_level + '% (' + cs.battery_range + ' ' + gs.gui_range_display + ' miles)         ');
