@@ -119,13 +119,15 @@ For help run :
 
 #teslamap.js - dude, where's my car?
 
+<img src="http://farm9.staticflickr.com/8248/8555931850_c2ae011075_z.jpg">
+
 A sample application which uses the teslams.js library to determine the car location and optionally launch a browser using Google Maps.
 
 
-To install this program requires the node module "optimist" which should install automatically.
-If this module is not present then install it manually using npm 
+This program uses the node modules "optimist" and "open" which should install automatically.
+If these modules are not present then install it manually using npm 
 	
-	npm install optimist
+	npm install optimist open
 
 
 To execute run:
@@ -154,7 +156,7 @@ For help run :
 
 A sample command line application which uses the teslams.js library and takes command line arguments that allow all know REST API functions to be used.
 
-To run this program requires the node module "optimist" which should install automatically. 
+This program uses the node module "optimist" which should install automatically. 
 If this module is not present then install it manually using npm 
 	
 	npm install optimist
@@ -202,7 +204,7 @@ A valid teslamotors.com login and password is required and must be provided on t
 By default the output goes to a file called "streamming.out" which can also be changed with command line options. Each time you run the program you will over-write the output file so copy old log data or specify a different output file before running the application a second time.
 
 
-To run this program requires the node module "optimist" which should install automatically.
+This program uses the node module "optimist" which should install automatically.
 If this module is not present then install it manually using npm 
 	
 	npm install optimist
