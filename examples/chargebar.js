@@ -81,7 +81,11 @@ teslams.vehicles( { email: creds.email, password: creds.password }, function ( v
 					ttfc = (cs.time_to_full_charge*60).toPrecision(3) + ' minutes';
 				}
 				var r = (cs.charge_to_max_range == false)?'STANDARD':'MAX RANGE';
-				bars[2].percent( p, msg=' Charger: ' + p + 'kW, ' + v + ' V, ' + i + ' A          ');
+				if ( cs.fast_charger_present ) {
+					bars[2].percent( p, msg=' Supercharger: ' + Math.abs(p) + 'kW, ' + v + ' V, ' + cs.battery_current + ' A          ');
+				} else {
+					bars[2].percent( p, msg=' Charger: ' + p + 'kW, ' + v + ' V, ' + i + ' A          ');
+				}
 				bars[1].percent( cs.battery_level, msg=' Level: ' + cs.battery_level + '% (' + cs.battery_range + ' ' + gs.gui_range_display + ' miles)         ');
 				bars[0].percent( (cs.charge_rate<0)?0:cs.charge_rate, msg=' Charge Rate: ' + cs.charge_rate + ' ' + gs.gui_charge_rate_units + '           ');
 				multi.charm
