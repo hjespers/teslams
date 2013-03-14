@@ -95,7 +95,7 @@ function get_charge_state( vid, cb ) {
 				return;
 			}
 		} catch (err) {
-			console.log("Error encountered in get_charge_state() function: " + err);
+			// console.log("Error encountered in get_charge_state() function: " + err);
 			return err;
 		}
 	});
