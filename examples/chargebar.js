@@ -24,9 +24,10 @@ var multimeter = require('multimeter');
 var multi = multimeter(process);
 
 // exit nicely and turn cursor back on
-multi.on('^C', function () {
+multi.charm.removeAllListeners('^C');
+multi.charm.on('^C', function () {
     multi.charm.cursor(true);
-    multi.write('\n').destroy();
+    multi.write('\n\n\n').destroy();
     process.exit();
 });
 
