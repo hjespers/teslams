@@ -117,6 +117,33 @@ For help run :
 
 	Missing required arguments: u, p
 
+
+#climatemon.js - monitor the temperature of your car from your desktop 
+
+<img src="http://farm9.staticflickr.com/8099/8573246292_3361647e14_b.jpg">
+
+This application displays and controls the climate control system of a Tesla Model S.
+Colors are white/grey when climate control is off
+Interior temperature bar is blue when cooling and red when heating
+
+To execute run:
+
+	$ node chargebar -u <username> -p <password>
+
+	CTRL-D toggles climate control on/off 
+	CTRL-C to exit
+
+For help run :
+
+	Usage: climatemon.js -u username -p password 
+
+	Options:
+	  -u, --username  Teslamotors.com login     [required]
+	  -p, --password  Teslamotors.com password  [required]
+
+	Missing required arguments: u, p
+
+
 #teslamap.js - dude, where's my car?
 
 <img src="http://farm9.staticflickr.com/8248/8555931850_c2ae011075_z.jpg">
