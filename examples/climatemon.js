@@ -24,10 +24,24 @@ var multimeter = require('multimeter');
 var multi = multimeter(process);
 
 // exit nicely and turn cursor back on
-multi.on('^C', function () {
+multi.charm.removeAllListeners('^C');
+multi.charm.on('^C', function () {
     multi.charm.cursor(true);
-    multi.write('\n').destroy();
+    multi.write('\n\n\n').destroy();
     process.exit();
+});
+
+multi.charm.on('^D', function () {
+    // toggle climate control on/off
+    teslams.vehicles( { email: creds.email, password: creds.password }, function ( vehicles ) {
+	if (vehicles.id == undefined) {
+		// console.log("Error: Undefined vehicle id");
+	} else {
+		teslams.get_climate_state( vehicles.id, function ( cs ) {
+			teslams.auto_conditioning( { id: vehicles.id, climate: !(cs.is_auto_conditioning_on) } ); 
+		});
+	}
+    });
 });
 
 multi.charm.cursor(false);  // turn off cursor during bar updating
@@ -57,9 +71,9 @@ var bar2 = multi.rel(0,3, {
 bars.push(bar0);
 bars.push(bar1);
 bars.push(bar2);
-bars[0].percent( 0, msg='Initializing...' );
-bars[1].percent( 0, msg='Initializing...' );
-bars[2].percent( 0, msg='Initializing...' );
+bars[0].ratio( 0, 120,  msg='Initializing...' );
+bars[1].ratio( 0, 120, msg='Initializing...' );
+bars[2].ratio( 0, 120, msg='Initializing...' );
 
 teslams.vehicles( { email: creds.email, password: creds.password }, function ( vehicles ) {
 	if (vehicles.id == undefined) {
@@ -88,7 +102,11 @@ teslams.vehicles( { email: creds.email, password: creds.password }, function ( v
 				}
 				if (gs.gui_temperature_units == 'F') {
 					var u = ' F';
-					itemp = (itemp * 9/5 + 32).toFixed(1); 
+					if (cs.inside_temp == null ) {
+						itemp = null;
+					} else {
+						itemp = (itemp * 9/5 + 32).toFixed(1); 
+					}
 					if (cs.outside_temp == null ) {
 						otemp = null;
 					} else {
@@ -100,9 +118,9 @@ teslams.vehicles( { email: creds.email, password: creds.password }, function ( v
 					//display in Celcius; 
 					var u = ' C';
 				}
-				bars[2].percent( itemp, msg=' Interior Temp: ' + itemp + u + '          ');
-				bars[1].percent( dtemp, msg=' Climate Setting: ' + dtemp + u + '          ');
-				bars[0].percent( otemp, msg=' Exterior Temp: ' + otemp + u + '          ');
+				bars[2].ratio( itemp, 120, msg=' Interior Temp: ' + itemp + u + '          ');
+				bars[1].ratio( dtemp, 120, msg=' Climate Setting: ' + dtemp + u + '          ');
+				bars[0].ratio( otemp, 120, msg=' Exterior Temp: ' + otemp + u + '          ');
 				multi.charm
 					.down(1)
 					.write(fs + '                                 \n')
