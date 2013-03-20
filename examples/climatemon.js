@@ -55,17 +55,17 @@ multi.charm
 var bars = [];
 var bar0 = multi.rel(0,1, {
 	width: 60, 
-	solid: { text : ' ', foreground : 'white', background: 128}, 
+	solid: { text : ' ', foreground : 'white', background: 'white'}, 
 	empty : { text : ' ' }	
 });
 var bar1 = multi.rel(0,2, {
 	width: 60, 
-	solid: { text : ' ', foreground : 'white', background: 'white'}, 
+	solid: { text : ' ', foreground : 'white', background: 'green'}, 
 	empty : { text : ' ' }	
 	});
 var bar2 = multi.rel(0,3, {
 	width: 60, 
-	solid: { text : ' ', foreground : 'white', background: 128}, 
+	solid: { text : ' ', foreground : 'white', background: 'white'}, 
 	empty : { text : ' ' }	
 });
 bars.push(bar0);
@@ -97,11 +97,12 @@ teslams.vehicles( { email: creds.email, password: creds.password }, function ( v
 					bar1.solid = { text : ' ', foreground : 'white', background: 'green'}; 
 					bar2.solid = { text : ' ', foreground : 'white', background: 'red'}; 
 				} else {
-					bar1.solid = { text : ' ', foreground : 'white', background: 'white'}; 
-					bar2.solid = { text : ' ', foreground : 'white', background: 128}; 
+					bar1.solid = { text : ' ', foreground : 'white', background: 'green'}; 
+					bar2.solid = { text : ' ', foreground : 'white', background: 'white'}; 
 				}
 				if (gs.gui_temperature_units == 'F') {
 					var u = ' F';
+					var ratio = 120;
 					if (cs.inside_temp == null ) {
 						itemp = null;
 					} else {
@@ -117,10 +118,11 @@ teslams.vehicles( { email: creds.email, password: creds.password }, function ( v
 				} else {
 					//display in Celcius; 
 					var u = ' C';
+					var ratio = 50;
 				}
-				bars[2].ratio( itemp, 120, msg=' Interior Temp: ' + itemp + u + '          ');
-				bars[1].ratio( dtemp, 120, msg=' Climate Setting: ' + dtemp + u + '          ');
-				bars[0].ratio( otemp, 120, msg=' Exterior Temp: ' + otemp + u + '          ');
+				bars[2].ratio( itemp, ratio, msg=' Interior Temp: ' + itemp + u + '          ');
+				bars[1].ratio( dtemp, ratio, msg=' Climate Setting: ' + dtemp + u + '          ');
+				bars[0].ratio( otemp, ratio, msg=' Exterior Temp: ' + otemp + u + '          ');
 				multi.charm
 					.down(1)
 					.write(fs + '                                 \n')
