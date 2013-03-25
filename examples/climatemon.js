@@ -71,7 +71,7 @@ var bar2 = multi.rel(0,3, {
 bars.push(bar0);
 bars.push(bar1);
 bars.push(bar2);
-bars[0].ratio( 0, 120,  msg='Initializing...' );
+bars[0].ratio( 0, 120, msg='Initializing...' );
 bars[1].ratio( 0, 120, msg='Initializing...' );
 bars[2].ratio( 0, 120, msg='Initializing...' );
 
@@ -79,8 +79,22 @@ teslams.vehicles( { email: creds.email, password: creds.password }, function ( v
 	if (vehicles.id == undefined) {
 		// console.log("Error: Undefined vehicle id");
 	} else {
+		bars[0].ratio( 60, 120, msg='Initializing...' );
+		bars[1].ratio( 60, 120, msg='Initializing...' );
+		bars[2].ratio( 60, 120, msg='Initializing...' );
 		teslams.get_gui_settings( vehicles.id, function( gs ) {
-		  var iv = setInterval( function () {
+			bars[0].ratio( 120, 120, msg='Initializing...' );
+			bars[1].ratio( 120, 120, msg='Initializing...' );
+			bars[2].ratio( 120, 120, msg='Initializing...' );
+			get_csdata( gs, vehicles );	
+		  	var iv = setInterval( function () {
+				get_csdata( gs, vehicles );	
+		  	}, 10000); // Poll every 10 sec for climate state data
+		});
+	}
+});
+
+function get_csdata( gs, vehicles) {
 			teslams.get_climate_state( vehicles.id, function ( cs ) {
 				var itemp = cs.inside_temp;
 				var otemp = cs.outside_temp;
@@ -130,7 +144,4 @@ teslams.vehicles( { email: creds.email, password: creds.password }, function ( v
 					.write('Defroster: Front (' + fd + '), Rear (' + rd + ')            \n')
 					.up(4);
 			});
-		  }, 10000);
-		});
-	}
-});
+}

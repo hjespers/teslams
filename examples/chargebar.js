@@ -67,8 +67,23 @@ teslams.vehicles( { email: creds.email, password: creds.password }, function ( v
 	if (vehicles.id == undefined) {
 		// console.log("Error: Undefined vehicle id");
 	} else {
+		bars[0].percent( 50, msg='Initializing...' );
+		bars[1].percent( 50, msg='Initializing...' );
+ 		bars[2].percent( 50, msg='Initializing...' );
 		teslams.get_gui_settings( vehicles.id, function( gs ) {
-		  var iv = setInterval( function () {
+			bars[0].percent( 100, msg='Initializing...' );
+			bars[1].percent( 100, msg='Initializing...' );
+ 			bars[2].percent( 100, msg='Initializing...' );
+			get_info( gs, vehicles ); // inital request for data to display 
+		  	var iv = setInterval( function () { 
+				get_info( gs, vehicles ); 
+			}, 10000); // Poll every 10 sec for refreshed data and update of bars
+		});
+	}
+});
+
+
+function get_info( gs, vehicles ) {
 			teslams.get_charge_state( vehicles.id, function ( cs ) {
 				var p = cs.charger_power;
 				var v = cs.charger_voltage;
@@ -103,7 +118,4 @@ teslams.vehicles( { email: creds.email, password: creds.password }, function ( v
 					process.exit();
 				}
 			});
-		  }, 10000);
-		});
-	}
-});
+}
