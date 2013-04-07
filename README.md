@@ -83,8 +83,9 @@ The example.js application requires that you edit the credentials in the file "c
 	"password": "yourPassword",
 	}
 
-To execute run: 
+To execute change into the examples directory to run:
 
+	cd ~/node_modules/teslams/examples
 	node example
 
 #chargebar.js - monitor your car from your desktop 
@@ -94,14 +95,9 @@ To execute run:
 
 This application displays the charge state of a Tesla Model S in an ASCII terminal window. 
 
-This program uses the node modules "optimist" and "multimeter-hj" which should automatically install.
-If these module are not present then install them manually using npm 
+To execute change into the examples directory to run:
 	
-	npm install optimist multimeter-hj
-
-
-To execute run:
-
+	cd ~/node_modules/teslams/examples
 	node chargebar -u <username> -p <password>
 
 For help run :
@@ -123,12 +119,13 @@ For help run :
 <img src="http://farm9.staticflickr.com/8099/8573246292_3361647e14_b.jpg">
 
 This application displays and controls the climate control system of a Tesla Model S.
-Colors are white/grey when climate control is off
+Colors are white/yellow when climate control is off
 Interior temperature bar is blue when cooling and red when heating
 
-To execute run:
-
-	$ node chargebar -u <username> -p <password>
+To execute change into the examples directory to run:
+        
+        cd ~/node_modules/teslams/examples 
+	node climatemon -u <username> -p <password>
 
 	CTRL-D toggles climate control on/off 
 	CTRL-C to exit
@@ -150,15 +147,9 @@ For help run :
 
 A sample application which uses the teslams.js library to determine the car location and optionally launch a browser using Google Maps.
 
-
-This program uses the node modules "optimist" and "open" which should install automatically.
-If these modules are not present then install it manually using npm 
-	
-	npm install optimist open
-
-
 To execute run:
 
+        cd ~/node_modules/teslams/examples 
 	node teslamap -u <username> -p <password>
 
 For help run :
@@ -183,13 +174,9 @@ For help run :
 
 A sample command line application which uses the teslams.js library and takes command line arguments that allow all know REST API functions to be used.
 
-This program uses the node module "optimist" which should install automatically. 
-If this module is not present then install it manually using npm 
-	
-	npm install optimist
-
 To execute run:
 
+        cd ~/node_modules/teslams/examples 
 	node teslacmd -u <username> -p <password>
 
 For help run :
@@ -230,14 +217,9 @@ A valid teslamotors.com login and password is required and must be provided on t
 
 By default the output goes to a file called "streamming.out" which can also be changed with command line options. Each time you run the program you will over-write the output file so copy old log data or specify a different output file before running the application a second time.
 
-
-This program uses the node module "optimist" which should install automatically.
-If this module is not present then install it manually using npm 
-	
-	npm install optimist
-
 To execute run:
 
+        cd ~/node_modules/teslams/examples 
 	node streaming -u <username> -p <password>
 
 For help run :
