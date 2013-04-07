@@ -94,10 +94,10 @@ To execute run:
 
 This application displays the charge state of a Tesla Model S in an ASCII terminal window. 
 
-This program uses the node modules "optimist" and "multimeter" which should automatically install.
+This program uses the node modules "optimist" and "multimeter-hj" which should automatically install.
 If these module are not present then install them manually using npm 
 	
-	npm install optimist multimeter
+	npm install optimist multimeter-hj
 
 
 To execute run:

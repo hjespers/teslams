@@ -20,7 +20,7 @@ var creds = {
 	password: argv.password 
 };
 
-var multimeter = require('multimeter');
+var multimeter = require('multimeter-hj');
 var multi = multimeter(process);
 
 // exit nicely and turn cursor back on
