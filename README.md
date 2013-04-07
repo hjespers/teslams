@@ -124,7 +124,7 @@ Interior temperature bar is blue when cooling and red when heating
 
 To execute change into the examples directory to run:
         
-        cd ~/node_modules/teslams/examples 
+	cd ~/node_modules/teslams/examples 
 	node climatemon -u <username> -p <password>
 
 	CTRL-D toggles climate control on/off 
@@ -149,7 +149,7 @@ A sample application which uses the teslams.js library to determine the car loca
 
 To execute run:
 
-        cd ~/node_modules/teslams/examples 
+	cd ~/node_modules/teslams/examples 
 	node teslamap -u <username> -p <password>
 
 For help run :
@@ -176,7 +176,7 @@ A sample command line application which uses the teslams.js library and takes co
 
 To execute run:
 
-        cd ~/node_modules/teslams/examples 
+	cd ~/node_modules/teslams/examples 
 	node teslacmd -u <username> -p <password>
 
 For help run :
@@ -219,7 +219,7 @@ By default the output goes to a file called "streamming.out" which can also be c
 
 To execute run:
 
-        cd ~/node_modules/teslams/examples 
+	cd ~/node_modules/teslams/examples 
 	node streaming -u <username> -p <password>
 
 For help run :
