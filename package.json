@@ -1,12 +1,12 @@
 {
   "name": "teslams",
-  "version": "0.4.7",
+  "version": "0.4.8",
   "description": "Utilities for the Tesla Model S ",
   "dependencies": {
     "request": "~2.14.0",
     "optimist": "~0.3.5",
     "open": "~0.0.3",
-    "multimeter": "git://github.com/hjespers/node-multimeter.git"
+    "multimeter-hj": "~0.1.2"
   },
   "devDependencies": {},
   "scripts": {
