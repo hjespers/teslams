@@ -1,6 +1,6 @@
 {
   "name": "teslams",
-  "version": "0.4.8",
+  "version": "0.4.9",
   "description": "Utilities for the Tesla Model S ",
   "dependencies": {
     "request": "~2.14.0",
@@ -21,9 +21,19 @@
 	"lib": ".",
 	"example": "examples"
   },
-  "keywords": [
+  "bin" : { 
+    "teslacmd" : "./examples/teslacmd.js",
+    "teslamap" : "./examples/teslamap.js",
+    "streaming" : "./examples/streaming.js",
+    "chargebar" : "./examples/chargebar.js",
+    "climatemon" : "./examples/climatemon.js"
+  },
+  "keywords" : [
     "tesla"
   ],
-  "author": "Hans Jespersen",
-  "license": "BSD"
+  "author" : {
+    "name" : "Hans Jespersen",
+    "email" : "hans.jespersen@gmail.com"
+  },
+  "license" : "BSD"
 }
