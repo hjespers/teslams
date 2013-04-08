@@ -1,6 +1,5 @@
 #Tesla Model S REST API
 
-<img src=http://farm9.staticflickr.com/8241/8526534730_75643b3247_c.jpg>
 
 An implementation in Node.js of the client side interface to the Tesla Model S API documented at: 
 
@@ -21,12 +20,161 @@ Use these programs at your own risk. The author (Hans Jespersen) does not guaran
 #Installation
 
 To use these programs you must download and install 'node' from http://nodejs.org
-.Once node is installed, use the included 'npm' utility to download this module, examples, and all dependent modules
+. Once node is installed, use the included 'npm' utility to download and install the teslams tools and all it's dependent modules
 
-	npm install teslams
+	npm install -g teslams
+
+#chargebar.js - monitor your car from your desktop 
 
 
-#teslams.js - The main library
+<img src="http://farm9.staticflickr.com/8236/8535066907_f22a61b061_c.jpg">
+
+This application displays the charge state of a Tesla Model S in an ASCII terminal window. 
+
+To execute run:
+	
+	chargebar -u <username> -p <password>
+
+For help run :
+
+	chargebar --help
+
+	Usage: chargebar.js -u <username> -p <password> 
+
+	Options:
+	  -u, --username  Teslamotors.com login                                                             [required]
+	  -p, --password  Teslamotors.com password                                                          [required]
+	  -?, --help      Print usage information
+
+	Missing required arguments: u, p
+
+
+#climatemon.js - monitor the temperature of your car from your desktop 
+
+<img src="http://farm9.staticflickr.com/8099/8573246292_3361647e14_b.jpg">
+
+This application displays and controls the climate control system of a Tesla Model S.
+Colors are white/yellow when climate control is off
+Interior temperature bar is blue when cooling and red when heating
+
+To execute run:
+        
+	climatemon -u <username> -p <password>
+
+	CTRL-D toggles climate control on/off 
+	CTRL-C to exit
+
+For help run :
+
+	climatemon --help
+
+	Usage: climatemon.js -u username -p password 
+
+	Options:
+	  -u, --username  Teslamotors.com login     [required]
+	  -p, --password  Teslamotors.com password  [required]
+
+	Missing required arguments: u, p
+
+
+#teslamap.js - dude, where's my car?
+
+<img src="http://farm9.staticflickr.com/8248/8555931850_c2ae011075_z.jpg">
+
+A sample application which uses the teslams.js library to determine the car location and optionally launch a browser using Google Maps.
+
+To execute run:
+
+	teslamap -u <username> -p <password>
+
+For help run :
+
+	teslamap --help
+
+	Usage: teslamap.js -u <username> -p <password> [--json || --url || --kml] [--map]
+
+	Options:
+	  -u, --username  Teslamotors.com login                                                             [required]
+	  -p, --password  Teslamotors.com password                                                          [required]
+	  -j, --json      Display the drive state info                                                      [boolean]
+	  -m, --map       Open a map in the default browser which displays the current location of the car  [boolean]
+ 	  -k, --kml       Print out the location of the car in KML format                                   [boolean]
+	  -U, --url       Print a URL to google maps on the console                                         [boolean]
+	  -?, --help      Print usage information
+
+	Missing required arguments: u, p
+
+
+#teslacmd.js - CLI swiss army knife for the REST API 
+
+A sample command line application which uses the teslams.js library and takes command line arguments that allow all know REST API functions to be used.
+
+To execute run:
+
+	teslacmd -u <username> -p <password>
+
+For help run :
+
+	teslacmd --help
+
+	Usage: teslacmd.js -u <username> -p <password> -cdFgHimPtvw -A [on|off] -C [start|stop] 
+	                   -R [std|max] -S <%open> -S [close|vent|comfort|open] -L [lock|unlock] -T <temp>
+
+	Options:
+	  -u, --username  Teslamotors.com login                                        [required]
+	  -p, --password  Teslamotors.com password                                     [required]
+	  -c              Display the charge state                                     [boolean]
+	  -d, --drive     Display the drive state                                      [boolean]
+	  -F, --flash     Flash the car headlights                                     [boolean]
+	  -g, --gui       Display the GUI settings                                     [boolean]
+	  -H, --honk      Honk the car horn                                            [boolean]
+	  -m, --mobile    Display the mobile state                                     [boolean]
+	  -P, --port      Open charge port door                                        [boolean]
+	  -t              Display the climate/temp state                               [boolean]
+	  -v              Display the vehicle state                                    [boolean]
+	  -i, --id        Print vehicle identification "--no-i" for silent mode        [boolean]  [default: true]
+	  -w, --wake      Wake up the car telemetry                                    [boolean]
+	  -R, --range     Charging range mode: "std" or "max"                        
+	  -S, --roof      Move the car sunroof to any position
+	  -T, --temp      Set the car climate control temperature (in Celcius)       
+	  -L, --lock      Lock/Unlock the car doors                                  
+	  -A, --climate   Turn the air conditioning and heating on/off               
+	  -C, --charge    Turn the charging on/off                                   
+	  -?, --help      Print usage information                                    
+	
+	Missing required arguments: u, p
+	
+#streaming.js - Capture and log real-time telemetry while driving
+
+<img src=http://farm9.staticflickr.com/8241/8526534730_75643b3247_c.jpg>
+
+A sample application which uses the TESLA HTTP Long Polling "STREAMING" API to get continuous telemetry from the Tesla Model S. 
+A valid teslamotors.com login and password is required and must be provided on the command line options. 
+
+By default the output goes to a file called "streamming.out" which can also be changed with command line options. Each time you run the program you will over-write the output file so copy old log data or specify a different output file before running the application a second time.
+
+To execute run:
+
+	streaming -u <username> -p <password>
+
+For help run :
+
+	streaming --help
+
+	Usage: node ./streaming -u <username> -p <password> [--file <filename>] [--values <value_list>] [--silent]
+
+	Options:
+		  -u, --username  Teslamotors.com login                  [required]
+		  -p, --password  Teslamotors.com password               [required]
+		  -s, --silent    Silent mode: no output to console      [boolean]
+		  -f, --file      Output file.                           [default: "streaming.out"]
+		  -v, --values    List of values to collect              [default: "speed,odometer,soc,elevation,est_heading,est_lat,est_lng,power,shift_state"]
+		  -?, --help      Print usage information                                            
+
+	Missing required arguments: u, p
+
+
+#teslams.js - The main library (for javascript programmers)
 
 Contains a library of functions and constants which allow the uses the TESLA "REST" API to get and set values on the Tesla Model S. 
 All functions take an optional callback that will be passed the javascript object returned from the TESLA API.
@@ -69,9 +217,7 @@ Constants include:
 	ROOF_COMFORT - puts the roof in the 80% open position (for reduced noice)
 	ROOF_OPEN    - puts the roof in the 100% open position
 
-# Example applications and utilities that use 'teslams'
-
-#example.js - a hello world app for educational purposes only
+#example.js - a hello world app that uses the "teslams" node module 
 
 A very simple sample application which uses the teslams.js library to call common functions provided in the REST API.
 A valid teslamotors.com login and password is required and must be inserted into the config.json configuration file.
@@ -88,171 +234,8 @@ To execute change into the examples directory to run:
 	cd ~/node_modules/teslams/examples
 	node example
 
-#chargebar.js - monitor your car from your desktop 
 
+#Feedback and Support
 
-<img src="http://farm9.staticflickr.com/8236/8535066907_f22a61b061_c.jpg">
-
-This application displays the charge state of a Tesla Model S in an ASCII terminal window. 
-
-To execute change into the examples directory to run:
-	
-	cd ~/node_modules/teslams/examples
-	node chargebar -u <username> -p <password>
-
-For help run :
-
-	$ node chargebar --help
-
-	Usage: chargebar.js -u <username> -p <password> 
-
-	Options:
-	  -u, --username  Teslamotors.com login                                                             [required]
-	  -p, --password  Teslamotors.com password                                                          [required]
-	  -?, --help      Print usage information
-
-	Missing required arguments: u, p
-
-
-#climatemon.js - monitor the temperature of your car from your desktop 
-
-<img src="http://farm9.staticflickr.com/8099/8573246292_3361647e14_b.jpg">
-
-This application displays and controls the climate control system of a Tesla Model S.
-Colors are white/yellow when climate control is off
-Interior temperature bar is blue when cooling and red when heating
-
-To execute change into the examples directory to run:
-        
-	cd ~/node_modules/teslams/examples 
-	node climatemon -u <username> -p <password>
-
-	CTRL-D toggles climate control on/off 
-	CTRL-C to exit
-
-For help run :
-
-	Usage: climatemon.js -u username -p password 
-
-	Options:
-	  -u, --username  Teslamotors.com login     [required]
-	  -p, --password  Teslamotors.com password  [required]
-
-	Missing required arguments: u, p
-
-
-#teslamap.js - dude, where's my car?
-
-<img src="http://farm9.staticflickr.com/8248/8555931850_c2ae011075_z.jpg">
-
-A sample application which uses the teslams.js library to determine the car location and optionally launch a browser using Google Maps.
-
-To execute run:
-
-	cd ~/node_modules/teslams/examples 
-	node teslamap -u <username> -p <password>
-
-For help run :
-
-	$ node teslamap --help
-
-	Usage: teslamap.js -u <username> -p <password> [--json || --url || --kml] [--map]
-
-	Options:
-	  -u, --username  Teslamotors.com login                                                             [required]
-	  -p, --password  Teslamotors.com password                                                          [required]
-	  -j, --json      Display the drive state info                                                      [boolean]
-	  -m, --map       Open a map in the default browser which displays the current location of the car  [boolean]
- 	  -k, --kml       Print out the location of the car in KML format                                   [boolean]
-	  -U, --url       Print a URL to google maps on the console                                         [boolean]
-	  -?, --help      Print usage information
-
-	Missing required arguments: u, p
-
-
-#teslacmd.js - CLI swiss army knife for the REST API 
-
-A sample command line application which uses the teslams.js library and takes command line arguments that allow all know REST API functions to be used.
-
-To execute run:
-
-	cd ~/node_modules/teslams/examples 
-	node teslacmd -u <username> -p <password>
-
-For help run :
-
-	$ node teslacmd --help
-
-	Usage: teslacmd.js -u <username> -p <password> -cdFgHimPtvw -A [on|off] -C [start|stop] 
-	                   -R [std|max] -S <%open> -S [close|vent|comfort|open] -L [lock|unlock] -T <temp>
-
-	Options:
-	  -u, --username  Teslamotors.com login                                        [required]
-	  -p, --password  Teslamotors.com password                                     [required]
-	  -c              Display the charge state                                     [boolean]
-	  -d, --drive     Display the drive state                                      [boolean]
-	  -F, --flash     Flash the car headlights                                     [boolean]
-	  -g, --gui       Display the GUI settings                                     [boolean]
-	  -H, --honk      Honk the car horn                                            [boolean]
-	  -m, --mobile    Display the mobile state                                     [boolean]
-	  -P, --port      Open charge port door                                        [boolean]
-	  -t              Display the climate/temp state                               [boolean]
-	  -v              Display the vehicle state                                    [boolean]
-	  -i, --id        Print vehicle identification "--no-i" for silent mode        [boolean]  [default: true]
-	  -w, --wake      Wake up the car telemetry                                    [boolean]
-	  -R, --range     Charging range mode: "std" or "max"                        
-	  -S, --roof      Move the car sunroof to any position
-	  -T, --temp      Set the car climate control temperature (in Celcius)       
-	  -L, --lock      Lock/Unlock the car doors                                  
-	  -A, --climate   Turn the air conditioning and heating on/off               
-	  -C, --charge    Turn the charging on/off                                   
-	  -?, --help      Print usage information                                    
-	
-	Missing required arguments: u, p
-	
-#streaming.js - Capture and log real-time telemetry while driving
-
-A sample application which uses the TESLA HTTP Long Polling "STREAMING" API to get continuous telemetry from the Tesla Model S. 
-A valid teslamotors.com login and password is required and must be provided on the command line options. 
-
-By default the output goes to a file called "streamming.out" which can also be changed with command line options. Each time you run the program you will over-write the output file so copy old log data or specify a different output file before running the application a second time.
-
-To execute run:
-
-	cd ~/node_modules/teslams/examples 
-	node streaming -u <username> -p <password>
-
-For help run :
-
-	node streaming --help
-
-	Usage: node ./streaming -u <username> -p <password> [--file <filename>] [--values <value_list>] [--silent]
-
-	Options:
-		  -u, --username  Teslamotors.com login                  [required]
-		  -p, --password  Teslamotors.com password               [required]
-		  -s, --silent    Silent mode: no output to console      [boolean]
-		  -f, --file      Output file.                           [default: "streaming.out"]
-		  -v, --values    List of values to collect              [default: "speed,odometer,soc,elevation,est_heading,est_lat,est_lng,power,shift_state"]
-		  -?, --help      Print usage information                                            
-
-	Missing required arguments: u, p
-
-
-	
-#Streaming API Security Tokens 
-
-I am just trying to document what I learned when using Tesla's Streaming API.
-
-Tokens always expire at one of 4 times, corresponding to the top of the hour (:00), or in 15 minutes increments thereafter (:15, :30, :45). New tokens are generated at these 15 minute intervals. 
-
-- every HTTP Long Poll will timeout in ~2 minutes (121.5 seconds give or take a few milliseconds)
-- if you get a token it will be good for somewhere between 15-30 minutes depending on what time of day it was when you started
-- if you check every 15 minutes for a new token then you should see your old one listed as the the second in the token list and you can switch the first token in the list for another 15 minutes.
-- if you ever get undefined tokens, or get an HTTP 401: Unauthorized return code, then call REST API /wake_up, followed by /vehicles, and the last two active tokens will be once again revealed
-
-
-#Support
-
-For more information, feedback, or community support see the Tesla Motors Club forum at http://www.teslamotorsclub.com/showthread.php/13410-Model-S-REST-API
+For more information, feedback, or community support see the Tesla Motors Club forum at http://www.teslamotorsclub.com/showthread.php/13410-Model-S-REST-API or email the author at hans.jespersen@gmail.com
 
