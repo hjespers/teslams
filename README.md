@@ -23,6 +23,10 @@ To use these programs you must download and install 'node' from http://nodejs.or
 . Once node is installed, use the included 'npm' utility to download and install the teslams tools and all it's dependent modules
 
 	npm install -g teslams
+	
+or if you are not logged in as the root (administrator) use:
+	
+	sudo npm install -g teslams
 
 #chargebar.js - monitor your car from your desktop 
 
