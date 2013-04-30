@@ -33,8 +33,7 @@ function vehicles( options, cb ) {
 		} else {
 			return error;	
 		}
-	   }
-        );
+	});
 }
 exports.vehicles = vehicles;
 
@@ -67,19 +66,26 @@ function get_vid( options, cb ) {
 		} else {
 			return error;	
 		}
-	   }
-        );
+	});
 }
 exports.get_vid = get_vid;
 
 
 function mobile_enabled( vid, cb ) {
 	request( portal + '/vehicles/' + vid + '/mobile_enabled', function (error, response, body) { 
-		var data = JSON.parse(body); 
-		if (cb != undefined) {
-			return cb( data );
-		} else {
-			return;
+		try {
+			var data = JSON.parse(body); 
+			if (cb != undefined) {
+				return cb( data );
+			} else {
+				return;
+			}
+		} catch (err) {
+			if (cb != undefined) {
+				return cb( err );
+			} else {
+				return err;
+			}
 		}
 	});
 }
@@ -95,8 +101,11 @@ function get_charge_state( vid, cb ) {
 				return;
 			}
 		} catch (err) {
-			// console.log("Error encountered in get_charge_state() function: " + err);
-			return err;
+			if (cb != undefined) {
+				return cb( err );
+			} else {
+				return err;
+			}
 		}
 	});
 }
@@ -180,11 +189,12 @@ var CHARGE_ON    = 1; // changes charge state to OFF without effecting range mod
 function charge_state( params, cb ) {
 	var vid = params.id;
 	var state = params.charge;
+	console.log ('state = ' + params.charge);
 	// Change the range mode if necessary
-	if (state == CHARGE_ON  || state == "on" || state == "start" || state == true) { 
+	if (state == CHARGE_ON  || state == "on" || state == "start" || state == true ) { 
 		state = "start"; 
 	};
-	if (state == CHARGE_OFF || state == "off" || state == "stop" || state == false) { 
+	if (state == CHARGE_OFF || state == "off" || state == "stop" || state == false ) { 
 		state = "stop" 
 	};
 
@@ -198,7 +208,12 @@ function charge_state( params, cb ) {
 			}
 		});
 	} else {
-		console.log( "Error: Invalid charge state = " + state);
+		if (cb != undefined) {
+			var err = new Error("Invalid charge state = " + state);
+			return cb( err );
+		} else {
+			return err;
+		}
 	} 
 }
 exports.charge_state = charge_state;
@@ -216,7 +231,7 @@ function charge_range( params, cb ) {
 	if (range == RANGE_MAX || range == "max" || range == "max_range") {
 		range = "max_range"
 	};
-	if (range == "standard" || "max_range" ) {
+	if (range == "standard" || range == "max_range" ) {
 		request( portal + '/vehicles/' + vid + '/command/charge_' + range, function (error, response, body) { 
 			var data = JSON.parse(body); 
 			if (cb != undefined) {
@@ -226,8 +241,12 @@ function charge_range( params, cb ) {
 			}
 		});
 	} else {
-		console.log( "Error: Invalid charge range = " + range);
-		return false;
+		if (cb != undefined) {
+			var err = new Error("Invalid charge range = " + range);
+			return cb( err );
+		} else {
+			return err;
+		}
 	} 
 }
 exports.charge_range = charge_range;
@@ -282,7 +301,12 @@ function door_lock( params, cb ) {
 			}
 		});
 	} else {
-		console.log( "Error: Invalid door lock state = " + state);
+		if (cb != undefined) {
+			var err = new Error("Invalid door lock state = " + state);
+			return cb( err );
+		} else {
+			return err;
+		}
 	}
 }
 exports.door_lock = door_lock;
@@ -321,7 +345,12 @@ function set_temperature( params, cb ) {
 			}
 		});
 	} else {
-		console.log('\nError: Invalid temperature setting (' + dtemp + 'C), Passenger (' + ptemp + 'C)');
+		if (cb != undefined) {
+			var err = new Error('Invalid temperature setting (' + dtemp + 'C), Passenger (' + ptemp + 'C)');
+			return cb( err );
+		} else {
+			return err;
+		}
 	}
 }
 exports.set_temperature = set_temperature;
@@ -354,7 +383,12 @@ function auto_conditioning( params, cb ) {
 			}
 		});
 	} else {
-		console.log( "Error: Invalid auto conditining state = " + state);
+		if (cb != undefined) {
+			var err = new Error("Invalid auto conditioning state = " + state);
+			return cb( err );
+		} else {
+			return err;
+		}
 	}
 }
 exports.auto_conditioning = auto_conditioning;
@@ -394,8 +428,12 @@ function sun_roof( params, cb ) {
 			}
 		});
 	} else {
-		console.log( 'Error: Invalid sun roof state' + util.inspect(params) );
-		return cb( { error: 'Error: Invalid run roof state' } );
+		if (cb != undefined) {
+			var err = new Error("Invalid sun roof state " + util.inspect(params));
+			return cb( err );
+		} else {
+			return err;
+		}
 	}
 }
 exports.sun_roof = sun_roof;

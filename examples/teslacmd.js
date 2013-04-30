@@ -109,26 +109,40 @@ teslams.get_vid( { email: argv.username, password: argv.password }, function ( v
 		//
 		// control some stuff
 		//
-		if ( argv.lock == "open" || argv.lock == "close" ) {
+		if ( argv.lock != undefined ) {
 			teslams.door_lock( {id: vid, lock: argv.lock }, pr );
 		}
-		if ( argv.roof == "open" || argv.roof == "close" || argv.roof == "vent" || argv.roof == "comfort" ) {
-			teslams.sun_roof( {id: vid, roof: argv.roof }, pr );
+		if ( argv.roof != undefined ) {
+			if ( argv.roof >= 0 && argv.roof <= 100 ) {
+				teslams.sun_roof( {id: vid, roof: 'move', percent: argv.roof }, pr );
+			} else if (argv.roof == "open" || argv.roof == "close" || argv.roof == "comfort" || argv.roof == "vent") {
+				teslams.sun_roof( {id: vid, roof: argv.roof }, pr );
+			} else {
+				var err = new Error("Invalid sun roof state. Specify 0-100 percent, 'open', 'close', 'comfort' or 'vent'");
+				return pr( err );			
+			}
 		}
-		if ( argv.roof >= 0 && argv.roof <= 100 ) {
-			teslams.sun_roof( {id: vid, roof: 'move', percent: argv.roof }, pr );
-		}
-		if ( argv.climate == "on" || argv.climate == "off") {
+		if ( argv.climate != undefined ) {
 			teslams.auto_conditioning( { id: vid, climate: argv.climate}, pr ); 
 		}
-		if ( argv.range == "std" || argv.range == "max") {
-			teslams.charge_range( { id: vid, range: argv.range }, pr ); 
+		if ( argv.range != undefined ) {
+				teslams.charge_range( { id: vid, range: argv.range }, pr ); 
 		}
-		if ( argv.charge == "start" || argv.charge == "stop") {
-			teslams.charge_state( { id: vid, charge: argv.charge }, pr ); 
+		if ( argv.charge != undefined ) {
+			if (argv.charge == "start" || argv.charge == "stop" ) {
+				teslams.charge_state( { id: vid, charge: argv.charge }, pr ); 
+			} else {
+				var err = new Error("Invalid charge state. Use 'start' or 'stop'");
+				return pr( err );
+			}
 		}
-		if ( argv.temp >= teslams.TEMP_LO && argv.temp <= teslams.TEMP_HI) {
-			teslams.set_temperature( { id: vid, dtemp: argv.temp}, pr); 
+		if ( argv.temp != undefined ) {
+			if ( argv.temp <= teslams.TEMP_HI && argv.temp >= teslams.TEMP_LO) {
+				teslams.set_temperature( { id: vid, dtemp: argv.temp}, pr); 
+			} else {
+				var err = new Error("Invalid temperature. Valid range is " + teslams.TEMP_LO + " - " + teslams.TEMP_HI + " C" );
+				return pr( err );
+			}
 		}
 	}
 });

@@ -103,7 +103,7 @@ function get_info( gs, vehicles ) {
 					bars[2].percent( p, msg=' Charger: ' + p + 'kW, ' + v + ' V, ' + i + ' A          ');
 				}
 				bars[1].percent( cs.battery_level, msg=' Level: ' + cs.battery_level + '% (' + cs.battery_range + ' ' + gs.gui_range_display + ' miles)         ');
-				bars[0].percent( (cs.charge_rate<0)?0:cs.charge_rate, msg=' Charge Rate: ' + cs.charge_rate + ' ' + gs.gui_charge_rate_units + '           ');
+				bars[0].percent( (cs.charge_rate<0)?0:cs.charge_rate, msg=' Charge Rate: ' + cs.charge_rate + ' ' + gs.gui_distance_units + '           ');
 				multi.charm
 					.down(1)
 					.write('Charging State: ' + cs.charging_state + '              \n')
