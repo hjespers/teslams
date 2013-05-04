@@ -189,7 +189,6 @@ var CHARGE_ON    = 1; // changes charge state to OFF without effecting range mod
 function charge_state( params, cb ) {
 	var vid = params.id;
 	var state = params.charge;
-	console.log ('state = ' + params.charge);
 	// Change the range mode if necessary
 	if (state == CHARGE_ON  || state == "on" || state == "start" || state == true ) { 
 		state = "start"; 
