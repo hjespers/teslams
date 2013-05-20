@@ -36,6 +36,7 @@ function tsla_poll( vid, long_vid, token ) {
 		console.log('Exiting...');
 		process.exit(1);
 	} else {
+		//need to handle timeout condition for request
 	   request( 
 		{ 
 			'uri': s_url + long_vid +'/?values=' + argv.values, 
@@ -43,20 +44,22 @@ function tsla_poll( vid, long_vid, token ) {
 			'auth': {
 				'user': argv.username,
 				'pass': token
-			}
+			},
+			'timeout' : 125000 // bit more that 2 minutes
 		},  
 		function( error, response, body) {
-			if (!error && response.statusCode == 200) {
+			if ( error ) {
+				if (!argv.silent) { console.log( error ); }
+				tsla_poll( vid, long_vid, token ); // keep calling again and again
+			} else if (response.statusCode == 200) {
 				if (!argv.silent) { console.log(body); }
 				tsla_poll( vid, long_vid, token ); // keep calling again and again
-        		} 
-        		else if ( response.statusCode == 401) {
+        	} else if ( response.statusCode == 401) {
 				if (!argv.silent) {
 					console.log('WARN: HTTP 401: Unauthorized - token has likely expired, getting a new one');
 				}
 				initstream();
-			} 
-			else {
+			} else {
 				if (!argv.silent) {
                				console.log('Problem with request:'); 
                				console.log('	Response status code = ' + response.statusCode );
@@ -64,7 +67,7 @@ function tsla_poll( vid, long_vid, token ) {
 					console.log('Polling again...');
 				}
 				tsla_poll( vid, long_vid, token ); // keep calling again and again
-         		}	
+         	}	
 		}
 	   ).pipe(fs.createWriteStream( argv.file, {'flags': 'a'} ));
 	} 
