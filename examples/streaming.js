@@ -20,10 +20,7 @@ var argv = require('optimist')
 	.alias('v', 'values')
 	.describe('v', 'List of values to collect')
 	.default('v', 'speed,odometer,soc,elevation,est_heading,est_lat,est_lng,power,shift_state,range,est_range')
-<<<<<<< HEAD
-=======
 	//.default('v', 'speed,odometer,soc,elevation,est_heading,est_lat,est_lng,power,shift_state,range,est_range,heading')
->>>>>>> 93d8dba290d8530f6c5e2f15344468f00859ebf5
 	.alias('?', 'help')
 	.describe('?', 'Print usage information')
 	.argv;
