@@ -71,9 +71,9 @@ var bar2 = multi.rel(0,3, {
 bars.push(bar0);
 bars.push(bar1);
 bars.push(bar2);
-bars[0].ratio( 0, 120, msg='Initializing...' );
-bars[1].ratio( 0, 120, msg='Initializing...' );
-bars[2].ratio( 0, 120, msg='Initializing...' );
+bars[0].ratio( 0, 140, msg='Initializing...' );
+bars[1].ratio( 0, 140, msg='Initializing...' );
+bars[2].ratio( 0, 140, msg='Initializing...' );
 
 teslams.vehicles( { email: creds.email, password: creds.password }, function ( vehicles ) {
 	if (vehicles.id == undefined) {
