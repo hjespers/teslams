@@ -19,7 +19,7 @@ var argv = require('optimist')
 	.default('f', 'streaming.out')
 	.alias('v', 'values')
 	.describe('v', 'List of values to collect')
-	.default('v', 'speed,odometer,soc,elevation,est_heading,est_lat,est_lng,power,shift_state')
+	.default('v', 'speed,odometer,soc,elevation,est_heading,est_lat,est_lng,power,shift_state,range,est_range')
 	.alias('?', 'help')
 	.describe('?', 'Print usage information')
 	.argv;
@@ -36,8 +36,7 @@ function tsla_poll( vid, long_vid, token ) {
 		console.log('Exiting...');
 		process.exit(1);
 	} else {
-		//need to handle timeout condition for request
-	   request( 
+		request( 
 		{ 
 			'uri': s_url + long_vid +'/?values=' + argv.values, 
 			'method' : 'GET',
@@ -45,31 +44,37 @@ function tsla_poll( vid, long_vid, token ) {
 				'user': argv.username,
 				'pass': token
 			},
-			'timeout' : 125000 // bit more that 2 minutes
+			'timeout' : 125000 // a bit more than the expected 2 minute max long poll
 		},  
 		function( error, response, body) {
-			if ( error ) {
+			if ( error ) { // HTTP Error
 				if (!argv.silent) { console.log( error ); }
-				tsla_poll( vid, long_vid, token ); // keep calling again and again
-			} else if (response.statusCode == 200) {
+				// put short delay to avoid stack overflow
+				setTimeout(function() { 
+					tsla_poll( vid, long_vid, token ); // poll again
+				}, 1000);
+			} else if (response.statusCode == 200) { // HTTP OK
 				if (!argv.silent) { console.log(body); }
-				tsla_poll( vid, long_vid, token ); // keep calling again and again
-        	} else if ( response.statusCode == 401) {
+					tsla_poll( vid, long_vid, token ); // poll again
+			} else if ( response.statusCode == 401) { // HTTP AUTH Failed
 				if (!argv.silent) {
 					console.log('WARN: HTTP 401: Unauthorized - token has likely expired, getting a new one');
 				}
 				initstream();
 			} else {
 				if (!argv.silent) {
-               				console.log('Problem with request:'); 
-               				console.log('	Response status code = ' + response.statusCode );
-               				console.log('	Error code = ' + error);
+					console.log('Problem with request:'); 
+					console.log('	Response status code = ' + response.statusCode );
+					console.log('	Error code = ' + error);
 					console.log('Polling again...');
 				}
-				tsla_poll( vid, long_vid, token ); // keep calling again and again
-         	}	
+				// put short delay to avoid stack overflow
+				setTimeout(function() { 
+					tsla_poll( vid, long_vid, token ); // poll again 
+				}, 1000);
+			}	
 		}
-	   ).pipe(fs.createWriteStream( argv.file, {'flags': 'a'} ));
+		).pipe(fs.createWriteStream( argv.file, {'flags': 'a'} ));
 	} 
 }
 

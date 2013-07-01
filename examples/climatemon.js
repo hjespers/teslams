@@ -79,9 +79,9 @@ teslams.vehicles( { email: creds.email, password: creds.password }, function ( v
 	if (vehicles.id == undefined) {
 		// console.log("Error: Undefined vehicle id");
 	} else {
-		bars[0].ratio( 60, 120, msg='Initializing...' );
-		bars[1].ratio( 60, 120, msg='Initializing...' );
-		bars[2].ratio( 60, 120, msg='Initializing...' );
+		bars[0].ratio( 60, 140, msg='Initializing...' );
+		bars[1].ratio( 60, 140, msg='Initializing...' );
+		bars[2].ratio( 60, 140, msg='Initializing...' );
 		teslams.get_gui_settings( vehicles.id, function( gs ) {
 			bars[0].ratio( 120, 120, msg='Initializing...' );
 			bars[1].ratio( 120, 120, msg='Initializing...' );
