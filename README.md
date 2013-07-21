@@ -220,6 +220,7 @@ Functions include:
 
 	get_vid()               - get the "id" of the Model S by logging into the Tesla portal
 	vehicles()              - login to portal and get vehicles list and options data
+	all()                   - get array of all vehicles (if more than one, we salute you!)
 	mobile_enabled()        - check is remote/mobile control is on or off
 	get_charge_state()      - get the full set of charge state information
 	get_climate_state()     - get the full set of climate state information 
@@ -236,6 +237,7 @@ Functions include:
 	set_temperature()       - set the climate control temperatures
 	auto_conditioning()     - turn on/off the climate control (HVAC) system
 	sun_roof()              - control the sun roof 
+	stream()                - low-level interface to streaming service
 
 Constants include:
 
