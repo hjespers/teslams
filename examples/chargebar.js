@@ -97,10 +97,13 @@ function get_info( gs, vehicles ) {
 					ttfc = (cs.time_to_full_charge*60).toPrecision(3) + ' minutes';
 				}
 				var r = (cs.charge_to_max_range == false)?'STANDARD':'MAX RANGE';
+				if ( cs.charge_limit_soc != null ) {
+					r = cs.charge_limit_soc + '% limit set';
+				}
 				if ( cs.fast_charger_present ) {
-					bars[2].percent( p, msg=' Supercharger: ' + Math.abs(p) + 'kW, ' + v + ' V, ' + cs.battery_current + ' A          ');
+					bars[2].percent( p, msg=' Supercharger: ' + Math.abs(p) + 'kW, ' + v + ' V, ' + cs.battery_current + ' A                ');
 				} else {
-					bars[2].percent( p, msg=' Charger: ' + p + 'kW, ' + v + ' V, ' + i + ' A          ');
+					bars[2].percent( p, msg=' Charger: ' + p + 'kW, ' + v + ' V, ' + i + ' A               ');
 				}
 				bars[1].percent( cs.battery_level, msg=' Level: ' + cs.battery_level + '% (' + cs.battery_range + ' ' + gs.gui_range_display + ' miles)         ');
 				bars[0].percent( (cs.charge_rate<0)?0:cs.charge_rate, msg=' Charge Rate: ' + cs.charge_rate + ' ' + gs.gui_distance_units + '           ');

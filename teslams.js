@@ -197,7 +197,7 @@ function charge_state( params, cb ) {
 		});
 	} else {
 		if (cb !== undefined) {
-			var err = new Error("Invalid charge state = " + state);
+			var err = new Error("Invalid charge state = " + state + " or percent = " + percent);
 			return cb( err );
 		} else {
 			return;
@@ -213,6 +213,7 @@ var RANGE_MAX    = 1; // changes range mode to MAX_RANGE without effecting charg
 function charge_range( params, cb ) {
 	var vid = params.id;
 	var range = params.range;
+	var percent = params.percent;
 	if (range == RANGE_STD || range == "std" || range == "standard" ) { 
 		range = "standard";
 	}
@@ -221,6 +222,16 @@ function charge_range( params, cb ) {
 	}
 	if (range == "standard" || range == "max_range" ) {
 		request( portal + '/vehicles/' + vid + '/command/charge_' + range, function (error, response, body) { 
+			if ((!!error) || (response.statusCode !== 200)) return report(error, response, body, cb);
+			var data = JSON.parse(body); 
+			if (cb !== undefined) {
+				return cb( data );
+			} else {
+				return true;
+			}
+		});
+	} else if ( range == "set" && (percent >= 50) && (percent <= 100) ) {
+		request( portal + '/vehicles/' + vid + '/command/set_charge_limit?state=set&percent='  + percent, function (error, response, body) { 
 			if ((!!error) || (response.statusCode !== 200)) return report(error, response, body, cb);
 			var data = JSON.parse(body); 
 			if (cb !== undefined) {

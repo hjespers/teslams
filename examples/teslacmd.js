@@ -2,7 +2,7 @@
 var util = require('util');
 var teslams = require('../teslams.js');
 var argv = require('optimist')
-	.usage('Usage: $0 -u <username> -p <password> -cdFgHimPtvw -A [on|off] -C [start|stop] -R [std|max] -S [close|vent|comfort|open] -L [lock|unlock] -T temp')
+	.usage('Usage: $0 -u <username> -p <password> -cdFgHimPtvw -A [on|off] -C [start|stop] -R [std|max|50-100] -S [close|vent|comfort|open|0-100] -L [lock|unlock] -T temp')
 	.alias('u', 'username')
 	.describe('u', 'Teslamotors.com login')
 	.demand('u')
@@ -49,8 +49,29 @@ var argv = require('optimist')
 
 if ( argv.help == true ) {
 	console.log( 'Usage: teslacmd.js -u <username> -p <password> -cdFgHimPtvw');
-	console.log( '                   -A [on|off] -C [start|stop] -R [std|max]');
-	console.log( '                   -S [0-100] -S [close|vent|comfort|open] -L [lock|unlock] -T temp');
+	console.log( '                   -A [on|off] -C [start|stop] -R [std|max|50-100]');
+	console.log( '                   -S [close|vent|comfort|open|0-100] -L [lock|unlock] -T temp');
+	console.log( '\nOptions:');
+	console.log( '  -u, --username  Teslamotors.com login                                                       [required]');
+	console.log( '  -p, --password  Teslamotors.com password                                                    [required]');
+	console.log( '  -c              Display the charge state                                                    [boolean]');
+	console.log( '  -d, --drive     Display the drive state                                                     [boolean]');
+	console.log( '  -F, --flash     Flash the car headlights                                                    [boolean]');
+	console.log( '  -g, --gui       Display the GUI settings                                                    [boolean]');
+	console.log( '  -H, --honk      Honk the car horn                                                           [boolean]');
+	console.log( '  -m, --mobile    Display the mobile state                                                    [boolean]');
+	console.log( '  -P, --port      Open charge port door                                                       [boolean]');
+	console.log( '  -t              Display the climate/temp state                                              [boolean]');
+	console.log( '  -v              Display the vehicle state                                                   [boolean]');
+	console.log( '  -i, --id        Print vehicle identification "--no-i" for silent mode                       [boolean]  [default: true]');
+	console.log( '  -w, --wake      Wake up the car telemetry                                                   [boolean]');
+	console.log( '  -R, --range     Charging range mode: "std" or "max" or any percent from 50-100            ');
+	console.log( '  -S, --roof      Move the car sunroof to: "close", "vent", "comfort", "open" or any percent');
+	console.log( '  -T, --temp      Set the car climate control temperature (in Celcius)                      ');
+	console.log( '  -L, --lock      Lock/Unlock the car doors                                                 ');
+	console.log( '  -A, --climate   Turn the air conditioning and heating on/off                              ');
+	console.log( '  -C, --charge    Turn the charging on/off                                                  ');
+	console.log( '  -?, --help      Print usage information                                                   ');
 	process.exit(1);
 }
 
@@ -126,7 +147,11 @@ teslams.get_vid( { email: argv.username, password: argv.password }, function ( v
 			teslams.auto_conditioning( { id: vid, climate: argv.climate}, pr ); 
 		}
 		if ( argv.range != undefined ) {
+			if ( argv.range >= 50 && argv.range <= 100 ) {
+				teslams.charge_range( { id: vid, range: 'set', percent: argv.range }, pr );
+			} else {
 				teslams.charge_range( { id: vid, range: argv.range }, pr ); 
+			}
 		}
 		if ( argv.charge != undefined ) {
 			if (argv.charge == "start" || argv.charge == "stop" ) {
