@@ -1,0 +1,52 @@
+
+<!DOCTYPE html><html><head>
+<meta name='viewport' content='initial-scale=1.0, user-scalable=no' />
+<style type='text/css'> html { height: 100% } body { height: 100%; margin: 0; padding: 0 } #map-canvas { height: 90% } </style>
+<script src='http://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js'></script>
+<script type='text/javascript' src='https://maps.googleapis.com/maps/api/js?key=MAGIC_APIKEY&sensor=true'></script>
+<script type='text/javascript'>
+var myLatlng; var map; var marker; var infoWindow;
+function hex(num) { var s = '#0' + num.toString(16) + ''; return s.substring(s.length - 2); }
+function getColor(speed) { 
+	var wl = speed*2+440; if(wl>640){wl=640;}
+	var r=Math.round(35+(wl-510)*3.14); if(r<55){r=55} if(r>255){r=255}
+	var b=35+(510-wl)*11;if(b<55){b=55;} if(b>255){b=255}
+	var g=(wl<580) ? Math.round(35+(wl-440)*4.4) : Math.round(35+(640-wl)*3.66); if(g<55){g=55} if(g>255){g=255}
+	return '#'+hex(r)+hex(g)+hex(b);
+}
+function getMore() { 
+	$.getJSON('MAGIC_UPDATE_URL', function (d, textStatus, jqXHR) { 
+		if (d.length == 0) { return; }
+		for (var i = 0; i < d.length; i++) { 
+			var nextLatlng = new google.maps.LatLng(d[i][6],d[i][7]);
+			var points = [myLatlng,nextLatlng];
+			var color = getColor(d[i][1]);
+			var opacity = (d[i][0] - getMore.lastTimestamp > 5000) ? 0.1 : 0.9;
+			var path = new google.maps.Polyline({path:points,strokeColor:color,strokeOpacity:opacity,strokeWeight:4});
+			path.setMap(map);
+			if (i == d.length - 1) {
+				var cStr = '<div id="content">';
+				marker.setPosition(nextLatlng);
+				if (d[i][9] == 'D' || d[i][9] == 'R'){cStr+='going '+d[i][1]+' mph'}
+				else if (d[i][8] < 0){cStr+='parked and charging ~ '+(-d[i][8])+'kW'}
+				else {cStr+='parked'}
+				cStr+='<br>odometer '+d[i][2]+'<br>range '+d[i][10]+'</div>';
+				infoWindow.setContent(cStr);
+			}
+			myLatlng = nextLatlng;
+		}
+	}); }
+function initialize() { 
+	myLatlng = new google.maps.LatLng(MAGIC_FIRST_LOC);
+	var mapOptions = { center: myLatlng, zoom: 16, mapTypeId: google.maps.MapTypeId.ROADMAP };
+	map = new google.maps.Map(document.getElementById('map-canvas'), mapOptions);
+	marker = new google.maps.Marker({ position: myLatlng, map: map, title: 'Tesla Model S'});
+	infoWindow = new google.maps.InfoWindow({content: cStr});
+	infoWindow.open(map, marker);
+	getMore();
+	setInterval(getMore, 2000);
+}
+google.maps.event.addDomListener(window, 'load', initialize);
+</script>
+</head> <body> <div id='map-canvas'/> </body> </html>
+
