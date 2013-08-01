@@ -1,0 +1,35 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Tesla Energy Chart</title>
+<script src='http://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js'></script>
+<script language="javascript" type="text/javascript" src="jquery.flot.js"></script>
+<script type="text/javascript">
+$(function() {
+	var d1 = [MAGIC_ENERGY];
+	var d2 = [MAGIC_SPEED];
+	var data = [{ data: d1, bars: { show: true, barWidth: 0.5, fill: 0.9 },
+			xaxis: { ticks: [], autoscaleMargin: 0.02 },
+			yaxis: { min: -70 },
+			label: "Energy (kW)", color: "#a33"},
+		    { data: d2, lines: { show: true },
+			yaxis: { min: -70 },
+			label: "Speed (mph)", color: "#33a"}];
+	var chart = $("#chart");
+	var plot = $.plot(chart, data);
+	var o = plot.pointOffset({ x: 0, y: -60});
+});
+</script>
+</head>
+<body>
+	<div id="header">
+		<h2>Energy Chart</h2>
+	</div>
+	<div id="content">
+		<center><div class="container">
+			<div id="chart" style="height:450px; width:90%"></div>
+			<div id="explanation" style="width:70%">Energy and speed plot, starting MAGIC_START.<br>
+								X axis is labeled in seconds since start.</div>
+		</div><center>
+	</div>
+</body>
+</html>

@@ -217,7 +217,7 @@ For help run :
 
 	Missing required arguments: u, p
 
-#visualize.js - Display historical or realtime streaming data in a browser using Google Maps
+#visualize.js - Display historical or realtime streaming data in a browser using Google Maps and provide an energy/speed graph
 
 A sample application that uses streaming data collected in MongoDB by the streaming.js app and makes it visible in a browser. 
 
@@ -238,6 +238,10 @@ For help run:
 	          -?, --help     Print usage information
 
 	        Missing required arguments: d
+
+Point your browser to http://localhost:8766 to view the map.
+
+Visiting http://localhost:8766/energy?from=<year>-<month>-<day>-<hour>-<minute>&to=<year>-<month>-<day>-<hour>-<minute> displays a speed / energy graph for the given time period. For example http://localhost:8766/energy?from=2013-08-01-7-08&to=2013-08-01-7-52 for your data from 7:08 until 7:52 in the morning of August 1st.
 
 #teslams.js - The main library (for javascript programmers)
 
