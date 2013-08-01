@@ -139,6 +139,12 @@ http.createServer(function(req, res) {
 				if (err) throw err;
 				res.end(data, "utf-8");
 			});
+		} else if (req.url == "/favicon.ico") {
+			res.setHeader("Content-Type", "text/javascript");
+			fs.readFile("./tesla-graphs-favicon.ico", function(err, data) {
+				if (err) throw err;
+				res.end(data);
+			});
 		}
 	}
 }).listen(argv.port);
