@@ -27,7 +27,7 @@
     "teslamap" : "./examples/teslamap.js",
     "streaming" : "./examples/streaming.js",
     "chargebar" : "./examples/chargebar.js",
-    "climatemon" : "./examples/climatemon.js"
+    "climatemon" : "./examples/climatemon.js",
     "visualize" : "./examples/visualize.js"
   },
   "keywords" : [
