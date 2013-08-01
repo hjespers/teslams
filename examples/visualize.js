@@ -7,23 +7,30 @@
 // You need a valid Google Maps v3 API key to use this script
 //	https://developers.google.com/maps/documentation/javascript/tutorial#api_key
 //
-var apiKey = 'YOU NEED AN API KEY';
+var apiKey = 'AIzaSyAtYQ9xjedv3B6_2HwsDVMY7oHlbNs-cvk';
 
 var argv = require('optimist')
-	.usage('Usage: $0 [--db <MongoDB database>] [--replay <number of minutes>] [--silent] [--verbose]')
+	.usage('Usage: $0 --db <MongoDB database> [--port <http listen port>] [--replay <number of minutes>] [--silent] [--verbose]')
+	.alias('p', 'port')
+	.describe('p', 'Listen port for the local http server')
+	.default('p', 8766)
 	.alias('r', 'replay')
 	.describe('r', 'number of minutes ago that the replay should start')
 	.default('r', 5)
 	.alias('d', 'db')
 	.describe('d', 'MongoDB database name')
+	.demand('d')
 	.alias('s', 'silent')
 	.describe('s', 'Silent mode: no output to console')
 	.boolean(['s'])
+	.alias('v', 'verbose')
+	.describe('v', 'Verbose mode: more output to console')
+	.boolean(['v'])
 	.alias('?', 'help')
 	.describe('?', 'Print usage information')
 	.argv;
 if ( argv.help == true ) {
-	console.log( 'Usage: visualize.js [--db <MongoDB database>] [--replay <number of minutes>] [--silent] [--verbose]');
+	console.log( 'Usage: visualize.js --db <MongoDB database> [--replay <number of minutes>] [--silent] [--verbose]');
 	process.exit(1);
 }
 var MongoClient = require('mongodb').MongoClient;
@@ -97,7 +104,7 @@ http.createServer(function(req, res) {
 						"	return '#'+hex(r)+hex(g)+hex(b);\n" +
 						"}\n" +
 						"function getMore() { \n" +
-						"	$.getJSON('http://mail.hohndel.org:8766/update', function (d, textStatus, jqXHR) { \n" +
+						"	$.getJSON('http://localhost:" + argv.port + "/update', function (d, textStatus, jqXHR) { \n" +
 						"		if (d.length == 0) { return; }\n" +
 						"		for (var i = 0; i < d.length; i++) { \n" +
 						"			var nextLatlng = new google.maps.LatLng(d[i][6],d[i][7]);\n" +
@@ -138,7 +145,7 @@ http.createServer(function(req, res) {
 		});
 		if (!argv.silent) console.log('done sending the initial page');
 	}
-}).listen(8766, "mail.hohndel.org");
+}).listen(argv.port);
 
 if (!argv.silent) console.log("Server running");
 
