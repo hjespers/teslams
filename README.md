@@ -159,7 +159,7 @@ For help run :
 	teslacmd --help
 
 	Usage: teslacmd.js -u <username> -p <password> -cdFgHimPtvw -A [on|off] -C [start|stop] 
-	                   -R [std|max] -S <%open> -S [close|vent|comfort|open] -L [lock|unlock] -T <temp>
+	                   -R [std|max|50-100] -S [close|vent|comfort|open|0-100] -L [lock|unlock] -T <temp>
 
 	Options:
 	  -u, --username  Teslamotors.com login                                        [required]
@@ -175,8 +175,8 @@ For help run :
 	  -v              Display the vehicle state                                    [boolean]
 	  -i, --id        Print vehicle identification "--no-i" for silent mode        [boolean]  [default: true]
 	  -w, --wake      Wake up the car telemetry                                    [boolean]
-	  -R, --range     Charging range mode: "std" or "max"                        
-	  -S, --roof      Move the car sunroof to any position
+	  -R, --range     Charging range mode: "std", "max", or %limit (50% or more)                       
+	  -S, --roof      Move the car sunroof to any position or %open
 	  -T, --temp      Set the car climate control temperature (in Celcius)       
 	  -L, --lock      Lock/Unlock the car doors                                  
 	  -A, --climate   Turn the air conditioning and heating on/off               
@@ -192,28 +192,52 @@ For help run :
 A sample application which uses the TESLA HTTP Long Polling "STREAMING" API to get continuous telemetry from the Tesla Model S. 
 A valid teslamotors.com login and password is required and must be provided on the command line options. 
 
-By default the output goes to a file called "streamming.out" which can also be changed with command line options. Each time you run the program you will over-write the output file so copy old log data or specify a different output file before running the application a second time.
+By default the output goes to a file called "streaming.out" which can also be changed with command line options. Each time you run the program you will over-write the output file so copy old log data or specify a different output file before running the application a second time.
+
+Data can be stored in MongoDB using the --db flag. This requires that you separately download, install, and start mongodb on your local host (see http://www.mongodb.org/downloads).
 
 To execute run:
 
-	streaming -u <username> -p <password>
+	streaming -u <username> -p <password> 
 
 For help run :
 
 	streaming --help
 
-	Usage: node ./streaming -u <username> -p <password> [--file <filename>] [--values <value_list>] [--silent]
+	Usage: node ./streaming -u <username> -p <password> [--file <filename>] [--db <MongoDB database>] [--values <value_list>] [--silent]
 
 	Options:
 		  -u, --username  Teslamotors.com login                  [required]
 		  -p, --password  Teslamotors.com password               [required]
 		  -s, --silent    Silent mode: no output to console      [boolean]
 		  -f, --file      Output file.                           [default: "streaming.out"]
+                  -d, --db        MongoDB database location
 		  -v, --values    List of values to collect              [default: "speed,odometer,soc,elevation,est_heading,est_lat,est_lng,power,shift_state"]
 		  -?, --help      Print usage information                                            
 
 	Missing required arguments: u, p
 
+#visualize.js - Display historical or realtime streaming data in a browser using Google Maps
+
+A sample application that uses streaming data collected in MongoDB by the streaming.js app and makes it visible in a browser. 
+
+To execute run:
+
+For help run:
+
+	visualize --help
+
+        Usage: node visualize.js --db <MongoDB database> [--port <http listen port>] [--replay <number of minutes>] [--silent] [--verbose]
+
+        Options:
+                  -p, --port     Listen port for the local http server               [default: 8766]
+                  -r, --replay   number of minutes ago that the replay should start  [default: 5]
+                  -d, --db       MongoDB database name                               [required]
+                  -s, --silent   Silent mode: no output to console                   [boolean]
+	          -v, --verbose  Verbose mode: more output to console                [boolean]
+	          -?, --help     Print usage information
+
+	        Missing required arguments: d
 
 #teslams.js - The main library (for javascript programmers)
 
