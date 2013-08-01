@@ -95,6 +95,51 @@ http.createServer(function(req, res) {
 			});
 		});
 		if (!argv.silent) console.log('done sending the initial page');
+	} else {
+		console.log(req.url);
+		if (/^\/energy/.test(req.url)) {
+			var query = url.parse(req.url, "true").query;
+			if (!query.to || !query.from) {
+				res.end("<html><head></head><body>Invalid query format</body></html>", "utf-8");
+				return;
+			}
+			fromParts = (query.from + "-0").split("-");
+			toParts = (query.to + "-59").split("-");
+			from = new Date(fromParts[0], fromParts[1] - 1, fromParts[2], fromParts[3], fromParts[4], fromParts[5]);
+			to = new Date(toParts[0], toParts[1] - 1, toParts[2], toParts[3], toParts[4], toParts[5]);
+			var outputE = "", outputS = "", comma = "", firstDate = 0, lastDate = 0;
+			MongoClient.connect("mongodb://127.0.0.1:27017/" + argv.db, function(err, db) {
+				if(!err) {
+					res.setHeader("Content-Type", "text/html");
+					collection = db.collection("tesla_stream");
+					collection.find({"ts": {$gte: +from, $lte: +to}}).toArray(function(err,docs) {
+						docs.forEach(function(doc) {
+							if (firstDate == 0) firstDate = doc.ts;
+							if (doc.ts > lastDate) {
+								lastDate = doc.ts;
+								outputE += comma + "[" + (doc.ts - firstDate) / 1000 + "," + doc.record.toString().replace(",,",",0,").split(",")[8] + "]";
+								outputS += comma + "[" + (doc.ts - firstDate) / 1000 + "," + doc.record.toString().replace(",,",",0,").split(",")[1] + "]";
+								comma = ",";
+							}
+						});
+						db.close();
+						fs.readFile("./energy.html", "utf-8", function(err, data) {
+							if (err) throw err;
+							var response = data.replace("MAGIC_ENERGY", outputE)
+										.replace("MAGIC_SPEED", outputS)
+										.replace("MAGIC_START", new Date(firstDate).toString());
+							res.end(response, "utf-8");
+						});
+					});
+				}
+			});
+		} else if (req.url == "/jquery.flot.js") {
+			res.setHeader("Content-Type", "text/javascript");
+			fs.readFile("." + req.url, "utf-8", function(err, data) {
+				if (err) throw err;
+				res.end(data, "utf-8");
+			});
+		}
 	}
 }).listen(argv.port);
 
