@@ -48,7 +48,11 @@ Be careful not to send your login and password to anyone other than Tesla or you
 
 #Disclaimer
 
-Use these programs at your own risk. The author (Hans Jespersen) does not guaranteed the proper functioning of these applications. This code attempts to use the same interfaces used by the official Tesla phone apps. However, it is possible that use of this code may cause unexpected damage for which nobody but you are responsible. Use of these functions can change the settings on your car and may have negative consequences such as (but not limited to) unlocking the doors, opening the sun roof, or reducing the available charge in the battery.
+Use these programs at your own risk. The authors do not guaranteed the proper functioning of these applications. This code attempts to use the same interfaces used by the official Tesla phone apps. However, it is possible that use of this code may cause unexpected damage for which nobody but you are responsible. Use of these functions can change the settings on your car and may have negative consequences such as (but not limited to) unlocking the doors, opening the sun roof, or reducing the available charge in the battery.
+
+#Contributors
+Marshall Rose (https://github.com/mrose17)
+Dirk Hohndel (https://github.com/dirkhh)
 
 #Installation
 
@@ -276,5 +280,5 @@ To execute change into the examples directory to run:
 
 #Feedback and Support
 
-For more information, feedback, or community support see the Tesla Motors Club forum at http://www.teslamotorsclub.com/showthread.php/13410-Model-S-REST-API or email the author at hans.jespersen@gmail.com
+For more information, feedback, or community support see the Tesla Motors Club forum at http://www.teslamotorsclub.com/showthread.php/13410-Model-S-REST-API or email hans.jespersen@gmail.com
 
