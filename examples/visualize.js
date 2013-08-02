@@ -117,23 +117,25 @@ http.createServer(function(req, res) {
 							if (firstDate == 0) firstDate = doc.ts;
 							if (doc.ts > lastDate) {
 								lastDate = doc.ts;
-								outputE += comma + "[" + (doc.ts - firstDate) / 1000 + "," + doc.record.toString().replace(",,",",0,").split(",")[8] + "]";
-								outputS += comma + "[" + (doc.ts - firstDate) / 1000 + "," + doc.record.toString().replace(",,",",0,").split(",")[1] + "]";
+								outputE += comma + "[" + doc.ts  + "," + doc.record.toString().replace(",,",",0,").split(",")[8] + "]";
+								outputS += comma + "[" + doc.ts  + "," + doc.record.toString().replace(",,",",0,").split(",")[1] + "]";
 								comma = ",";
 							}
 						});
 						db.close();
 						fs.readFile("./energy.html", "utf-8", function(err, data) {
 							if (err) throw err;
+							var fD = new Date(firstDate);
+							var startDate = (fD.getMonth() + 1) + "/" + fD.getDate() + "/" + fD.getFullYear();
 							var response = data.replace("MAGIC_ENERGY", outputE)
 										.replace("MAGIC_SPEED", outputS)
-										.replace("MAGIC_START", new Date(firstDate).toString());
+										.replace("MAGIC_START", startDate);
 							res.end(response, "utf-8");
 						});
 					});
 				}
 			});
-		} else if (req.url == "/jquery.flot.js") {
+		} else if (req.url == "/jquery.flot.js" || req.url == "/jquery.flot.time.min.js") {
 			res.setHeader("Content-Type", "text/javascript");
 			fs.readFile("." + req.url, "utf-8", function(err, data) {
 				if (err) throw err;
