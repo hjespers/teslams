@@ -3,6 +3,7 @@
 <title>Tesla Energy Chart</title>
 <script src='http://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js'></script>
 <script language="javascript" type="text/javascript" src="jquery.flot.js"></script>
+<script language="javascript" type="text/javascript" src="jquery.flot.time.min.js"></script>
 <script type="text/javascript">
 $(function() {
 	var d1 = [MAGIC_ENERGY];
@@ -19,7 +20,10 @@ $(function() {
 					for (var y = 50; y < axis.max; y += 50)
 						ticks.push(y);
 				 	return ticks;
-				}}};
+				}},
+			xaxis: { mode: "time", timezone: "browser"
+				}
+			};
 	var chart = $("#chart");
 	var plot = $.plot(chart, data, options);
 	var o = plot.pointOffset({ x: 0, y: -60});
@@ -33,8 +37,7 @@ $(function() {
 	<div id="content">
 		<center><div class="container">
 			<div id="chart" style="height:450px; width:90%"></div>
-			<div id="explanation" style="width:70%">Energy and speed plot, starting MAGIC_START.<br>
-								X axis is labeled in seconds since start.</div>
+			<div id="explanation" style="width:70%">Energy and speed plot, starting MAGIC_START.</div>
 		</div><center>
 	</div>
 </body>
