@@ -135,7 +135,7 @@ http.createServer(function(req, res) {
 					});
 				}
 			});
-		} else if (req.url == "/jquery.flot.js" || req.url == "/jquery.flot.time.min.js") {
+		} else if (req.url == "/jquery.flot.js" || req.url == "/jquery.flot.time.min.js" || req.url == "/jquery.flot.threshold.min.js") {
 			res.setHeader("Content-Type", "text/javascript");
 			fs.readFile("." + req.url, "utf-8", function(err, data) {
 				if (err) throw err;

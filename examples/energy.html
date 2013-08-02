@@ -4,14 +4,15 @@
 <script src='http://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js'></script>
 <script language="javascript" type="text/javascript" src="jquery.flot.js"></script>
 <script language="javascript" type="text/javascript" src="jquery.flot.time.min.js"></script>
+<script language="javascript" type="text/javascript" src="jquery.flot.threshold.min.js"></script>
 <script type="text/javascript">
 $(function() {
 	var d1 = [MAGIC_ENERGY];
 	var d2 = [MAGIC_SPEED];
-	var data = [{ data: d1, bars: { show: true, barWidth: 0.5, fill: 0.9 },
-			label: "Energy (kW)", color: "#a33"},
+	var data = [{ data: d1, bars: { show: true, barWidth: 250, fill: 0.9 },
+			label: "Energy (kW)", color: "#D07F27", threshold: { below: 0, color: "#008000" }},
 		    { data: d2, lines: { show: true },
-			label: "Speed (mph)", color: "#33a"}];
+			label: "Speed (mph)", color: "#0a9fd9"}];
 	var options = {yaxis: { ticks: function (axis) {
 					var ticks = [];
 					var bottomy = Math.floor(axis.min / 10) * 10;
