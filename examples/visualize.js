@@ -73,10 +73,12 @@ http.createServer(function(req, res) {
 		});
 	} else if (req.url == "/") {
 		MongoClient.connect("mongodb://127.0.0.1:27017/" + argv.db, function(err, db) {
+			if (argv.verbose) console.log("connected to db");
 			if(err) throw err;
 			collection = db.collection("tesla_stream");
 			var startTime = + date.getTime() - argv.replay * 60 * 1000; // go back 'replay' minutes
 			collection.find({"ts": {$gte: startTime}}).limit(1).toArray(function(err,docs) {
+				if (argv.verbose) console.log("got datasets:", docs.length);
 				docs.forEach(function(doc) {
 					var record = doc.record;
 					var vals = record.toString().replace(",,",",0,").split(/[,\n\r]/);
@@ -96,7 +98,7 @@ http.createServer(function(req, res) {
 		});
 		if (!argv.silent) console.log('done sending the initial page');
 	} else {
-		console.log(req.url);
+		if (argv.verbose) console.log("request for", req.url);
 		if (/^\/energy/.test(req.url)) {
 			var query = url.parse(req.url, "true").query;
 			if (!query.to || !query.from) {

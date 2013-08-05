@@ -9,25 +9,38 @@
 $(function() {
 	var d1 = [MAGIC_ENERGY];
 	var d2 = [MAGIC_SPEED];
-	var data = [{ data: d1, bars: { show: true, barWidth: 250, fill: 0.9 },
-			label: "Energy (kW)", color: "#D07F27", threshold: { below: 0, color: "#008000" }},
-		    { data: d2, lines: { show: true },
-			label: "Speed (mph)", color: "#0a9fd9"}];
-	var options = {yaxis: { ticks: function (axis) {
-					var ticks = [];
-					var bottomy = Math.floor(axis.min / 10) * 10;
-					for (var y = bottomy; y < 0; y += 10)
-						ticks.push(y);
-					for (var y = 50; y < axis.max; y += 50)
-						ticks.push(y);
-				 	return ticks;
-				}},
-			xaxis: { mode: "time", timezone: "browser"
-				}
-			};
-	var chart = $("#chart");
-	var plot = $.plot(chart, data, options);
-	var o = plot.pointOffset({ x: 0, y: -60});
+	var data = [{
+		data: d1,
+		bars: { show: true,
+			barWidth: 250,
+			fill: 0.9 },
+		label: "Energy (kW)",
+		color: "#D07F27",
+		threshold: { below: 0, color: "#008000" }
+	},{
+		data: d2,
+		lines: { show: true },
+		label: "Speed (mph)",
+		color: "#0a9fd9"
+	}];
+	var options = {
+		yaxis: {
+			ticks: function (axis) {
+				var ticks = [];
+				var bottomy = Math.floor(axis.min / 10) * 10;
+				for (var y = bottomy; y < 0; y += 10)
+					ticks.push(y);
+				for (var y = 50; y < axis.max; y += 50)
+					ticks.push(y);
+				return ticks;
+			}},
+		xaxis: {
+			mode: "time",
+			timezone: "browser"
+		}
+	};
+	var eschart = $("#eschart");
+	$.plot(eschart, data, options);
 });
 </script>
 </head>
@@ -37,7 +50,7 @@ $(function() {
 	</div>
 	<div id="content">
 		<center><div class="container">
-			<div id="chart" style="height:450px; width:90%"></div>
+			<div id="eschart" style="height:450px; width:90%"></div>
 			<div id="explanation" style="width:70%">Energy and speed plot, starting MAGIC_START.</div>
 		</div><center>
 	</div>
