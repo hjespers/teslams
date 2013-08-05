@@ -109,7 +109,7 @@ http.createServer(function(req, res) {
 			toParts = (query.to + "-59").split("-");
 			from = new Date(fromParts[0], fromParts[1] - 1, fromParts[2], fromParts[3], fromParts[4], fromParts[5]);
 			to = new Date(toParts[0], toParts[1] - 1, toParts[2], toParts[3], toParts[4], toParts[5]);
-			var outputE = "", outputS = "", comma = "", firstDate = 0, lastDate = 0;
+			var outputE = "", outputS = "", outputSOC = "", comma = "", firstDate = 0, lastDate = 0;
 			MongoClient.connect("mongodb://127.0.0.1:27017/" + argv.db, function(err, db) {
 				if(!err) {
 					res.setHeader("Content-Type", "text/html");
@@ -121,6 +121,7 @@ http.createServer(function(req, res) {
 								lastDate = doc.ts;
 								outputE += comma + "[" + doc.ts  + "," + doc.record.toString().replace(",,",",0,").split(",")[8] + "]";
 								outputS += comma + "[" + doc.ts  + "," + doc.record.toString().replace(",,",",0,").split(",")[1] + "]";
+								outputSOC += comma + "[" + doc.ts  + "," + doc.record.toString().replace(",,",",0,").split(",")[3] + "]";
 								comma = ",";
 							}
 						});
@@ -131,13 +132,17 @@ http.createServer(function(req, res) {
 							var startDate = (fD.getMonth() + 1) + "/" + fD.getDate() + "/" + fD.getFullYear();
 							var response = data.replace("MAGIC_ENERGY", outputE)
 										.replace("MAGIC_SPEED", outputS)
+										.replace("MAGIC_SOC", outputSOC)
 										.replace("MAGIC_START", startDate);
 							res.end(response, "utf-8");
 						});
 					});
 				}
 			});
-		} else if (req.url == "/jquery.flot.js" || req.url == "/jquery.flot.time.min.js" || req.url == "/jquery.flot.threshold.min.js") {
+		} else if (req.url == "/jquery.min.js" ||
+			   req.url == "/jquery.flot.js" ||
+			   req.url == "/jquery.flot.time.min.js" ||
+			   req.url == "/jquery.flot.threshold.min.js") {
 			res.setHeader("Content-Type", "text/javascript");
 			fs.readFile("." + req.url, "utf-8", function(err, data) {
 				if (err) throw err;
