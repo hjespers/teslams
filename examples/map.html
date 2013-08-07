@@ -41,7 +41,7 @@ function initialize() {
 	var mapOptions = { center: myLatlng, zoom: 16, mapTypeId: google.maps.MapTypeId.ROADMAP };
 	map = new google.maps.Map(document.getElementById('map-canvas'), mapOptions);
 	marker = new google.maps.Marker({ position: myLatlng, map: map, title: 'Tesla Model S'});
-	infoWindow = new google.maps.InfoWindow({content: cStr});
+	infoWindow = new google.maps.InfoWindow({content: ""});
 	infoWindow.open(map, marker);
 	getMore();
 	setInterval(getMore, 2000);

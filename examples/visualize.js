@@ -40,6 +40,7 @@ var url = require('url');
 var fs = require('fs');
 var lastTime = 0;
 var started = false;
+var to;
 http.createServer(function(req, res) {
 	if (argv.verbose) { console.log("====>request is: ", req.url, req.headers, req.method) }
 	if (req.url == "/update") {
@@ -50,7 +51,11 @@ http.createServer(function(req, res) {
 			if(!err) {
 				collection = db.collection("tesla_stream");
 				// get no more than 10 minutes or 240 samples, whichever is smaller
-				collection.find({"ts": {$gt: lastTime, $lte: lastTime + 600000}}, { limit: 240}).toArray(function(err,docs) {
+				var endTime = lastTime + 600000;
+				if (to && endTime > to)
+					endTime = to;
+				collection.find({"ts": {$gt: lastTime, $lte: endTime}}, { limit: 240}).toArray(function(err,docs) {
+					if (argv.verbose) console.log("got datasets:", docs.length);
 					res.setHeader("Content-Type", "application/json"); 
 					res.write("[", "utf-8");
 					var comma = "";
@@ -71,13 +76,26 @@ http.createServer(function(req, res) {
 				});
 			}
 		});
-	} else if (req.url == "/") {
+	} else if (req.url == "/" || /^\/\?/.test(req.url)) {
+		if (argv.verbose) console.log("request for", req.url);
+		var query = url.parse(req.url, "true").query;
+		var fromParts = (query.from + "-0").split("-");
+		var toParts = (query.to + "-59").split("-");
+		if (fromParts[5])
+			from = new Date(fromParts[0], fromParts[1] - 1, fromParts[2], fromParts[3], fromParts[4], fromParts[5]);
+		if (toParts[5])
+			to = new Date(toParts[0], toParts[1] - 1, toParts[2], toParts[3], toParts[4], toParts[5]);
 		MongoClient.connect("mongodb://127.0.0.1:27017/" + argv.db, function(err, db) {
 			if (argv.verbose) console.log("connected to db");
 			if(err) throw err;
 			collection = db.collection("tesla_stream");
-			var startTime = + date.getTime() - argv.replay * 60 * 1000; // go back 'replay' minutes
-			collection.find({"ts": {$gte: startTime}}).limit(1).toArray(function(err,docs) {
+			var startTime = (from) ? from : date.getTime() - argv.replay * 60 * 1000; // go back 'replay' minutes
+			var searchString;
+			if (!toParts[5])
+				searchString = {$gte: +startTime};
+			else
+				searchString = {$gte: +startTime, $lte: +to};
+			collection.find({"ts": searchString}).limit(1).toArray(function(err,docs) {
 				if (argv.verbose) console.log("got datasets:", docs.length);
 				docs.forEach(function(doc) {
 					var record = doc.record;
