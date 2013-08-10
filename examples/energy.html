@@ -23,20 +23,20 @@ $(function() {
 	$("#frompicker").datetimepicker({
 		dateFormat: "yy-mm-dd",
 		timeFormat: "HH-mm-ss",
+		separator: "-",
 		onClose: function(dateText, inst) {
 			if (dateText.length > 10) {
-				fromS = dateText.replace(" ","-");
-				self.location = "http://localhost:8766/energy?from=" + fromS + "&to=" + toS
+				self.location = "http://localhost:8766/energy?from=" + dateText + "&to=" + toS
 			}
 		}
 	});
 	$("#topicker").datetimepicker({
 		dateFormat: "yy-mm-dd",
 		timeFormat: "HH-mm-ss",
+		separator: "-",
 		onClose: function(dateText, inst) {
 			if (dateText.length > 10) {
-				toS = dateText.replace(" ","-");
-				self.location = "http://localhost:8766/energy?from=" + fromS + "&to=" + toS
+				self.location = "http://localhost:8766/energy?from=" + fromS + "&to=" + dateText
 			}
 		}
 	});
