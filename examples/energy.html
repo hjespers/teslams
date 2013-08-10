@@ -22,23 +22,18 @@ function sameTime(a, b) {
 	console.log("true");
 	return true;
 }
+
 $(function() {
 	var fromQ = $.url("?from") + "-00";
-	var fs = fromQ.split("-");
-	var fromA = new Date(fs[0], fs[1] - 1, fs[2], fs[3], fs[4], fs[5]);
-	var fromS = fromA.getFullYear() + "-" + (fromA.getMonth() + 1) + "-" + fromA.getDate() + "-" + fromA.getHours() + "-" + fromA.getMinutes() + "-" + fromA.getSeconds();
 	var toQ = $.url("?to") + "-00";
-	var ts = toQ.split("-");
-	var toA = new Date(ts[0], ts[1] - 1, ts[2], ts[3], ts[4], ts[5]);
-	var toS = toA.getFullYear() + "-" + (toA.getMonth() + 1) + "-" + toA.getDate() + "-" + toA.getHours() + "-" + toA.getMinutes() + "-" + toA.getSeconds();
 	$("#frompicker").datetimepicker({
 		dateFormat: "yy-mm-dd",
 		timeFormat: "HH-mm-ss",
 		separator: "-",
-		defaultValue: fromS,
+		defaultValue: fromQ,
 		onClose: function(dateText, inst) {
 			if (dateText.length > 10 && sameTime(dateText, fromQ) == false) {
-				self.location = "http://localhost:8766/energy?from=" + dateText + "&to=" + toS
+				self.location = "http://localhost:8766/energy?from=" + dateText + "&to=" + toQ
 			}
 		}
 	});
@@ -46,10 +41,10 @@ $(function() {
 		dateFormat: "yy-mm-dd",
 		timeFormat: "HH-mm-ss",
 		separator: "-",
-		defaultValue: toS,
+		defaultValue: toQ,
 		onClose: function(dateText, inst) {
 			if (dateText.length > 10 && sameTime(dateText, toQ) == false) {
-				self.location = "http://localhost:8766/energy?from=" + fromS + "&to=" + dateText
+				self.location = "http://localhost:8766/energy?from=" + fromQ + "&to=" + dateText
 			}
 		}
 	});
