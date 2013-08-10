@@ -100,7 +100,7 @@ http.createServer(function(req, res) {
 				docs.forEach(function(doc) {
 					var record = doc.record;
 					var vals = record.toString().replace(",,",",0,").split(/[,\n\r]/);
-					if (lastTime == 0) { lastTime = +vals[0]; }
+					lastTime = +vals[0];
 					res.setHeader("Content-Type", "text/html"); 
 					fs.readFile("./map.html", "utf-8", function(err, data) {
 						if (err) throw err;
