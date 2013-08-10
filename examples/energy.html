@@ -11,6 +11,17 @@
 <link rel="stylesheet" media="all" type="text/css" href="jquery-ui.css" />
 <script language="javascript" type="text/javascript" src="url.min.js"></script>
 <script type="text/javascript">
+function sameTime(a, b) {
+	console.log(a,b);
+	var as = (a+"-0").split("-");
+	var bs = (b+"-0").split("-");
+	for (var i = 0; i < 6; i++) {
+		if (+as[i] != +bs[i])
+			return false;
+	}
+	console.log("true");
+	return true;
+}
 $(function() {
 	var fromQ = $.url("?from") + "-00";
 	var fs = fromQ.split("-");
@@ -26,7 +37,7 @@ $(function() {
 		separator: "-",
 		defaultValue: fromS,
 		onClose: function(dateText, inst) {
-			if (dateText.length > 10) {
+			if (dateText.length > 10 && sameTime(dateText, fromQ) == false) {
 				self.location = "http://localhost:8766/energy?from=" + dateText + "&to=" + toS
 			}
 		}
@@ -37,7 +48,7 @@ $(function() {
 		separator: "-",
 		defaultValue: toS,
 		onClose: function(dateText, inst) {
-			if (dateText.length > 10) {
+			if (dateText.length > 10 && sameTime(dateText, toQ) == false) {
 				self.location = "http://localhost:8766/energy?from=" + fromS + "&to=" + dateText
 			}
 		}
