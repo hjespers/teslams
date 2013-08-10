@@ -157,17 +157,29 @@ http.createServer(function(req, res) {
 					});
 				}
 			});
-		} else if (req.url == "/jquery.min.js" ||
+		} else if (req.url == "/jquery-1.9.1.js" ||
+			   req.url == "/jquery-ui.css" ||
+			   req.url == "/jquery-ui-1.10.3.custom.min.js" ||
+			   req.url == "/jquery-ui-timepicker-addon.js" ||
+			   req.url == "/jquery-ui-timepicker-addon.css" ||
+			   req.url == "/jquery.flot.js" ||
 			   req.url == "/jquery.flot.js" ||
 			   req.url == "/jquery.flot.time.min.js" ||
-			   req.url == "/jquery.flot.threshold.min.js") {
-			res.setHeader("Content-Type", "text/javascript");
+			   req.url == "/jquery.flot.threshold.min.js" ||
+			   req.url == "/url.min.js" ||
+			   (/^\/images.*png$/.test(req.url))) {
+			if (argv.verbose) console.log("delivering file", req.url);
+			if (/.js$/.test(req.url))
+				res.setHeader("Content-Type", "text/javascript");
+			else if (/.png$/.test(req.url))
+				res.setHeader("Content-Type", "image/png");
+			else
+				res.setHeader("Content-Type", "text/css");
 			fs.readFile("." + req.url, "utf-8", function(err, data) {
 				if (err) throw err;
 				res.end(data, "utf-8");
 			});
 		} else if (req.url == "/favicon.ico") {
-			res.setHeader("Content-Type", "text/javascript");
 			fs.readFile("./tesla-graphs-favicon.ico", function(err, data) {
 				if (err) throw err;
 				res.end(data);
