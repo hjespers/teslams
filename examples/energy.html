@@ -24,16 +24,20 @@ $(function() {
 		dateFormat: "yy-mm-dd",
 		timeFormat: "HH-mm-ss",
 		onClose: function(dateText, inst) {
-			fromS = dateText.replace(" ","-");
-			self.location = "http://localhost:8766/energy?from=" + fromS + "&to=" + toS
+			if (dateText.length > 10) {
+				fromS = dateText.replace(" ","-");
+				self.location = "http://localhost:8766/energy?from=" + fromS + "&to=" + toS
+			}
 		}
 	});
 	$("#topicker").datetimepicker({
 		dateFormat: "yy-mm-dd",
 		timeFormat: "HH-mm-ss",
 		onClose: function(dateText, inst) {
-			toS = dateText.replace(" ","-");
-			self.location = "http://localhost:8766/energy?from=" + fromS + "&to=" + toS
+			if (dateText.length > 10) {
+				toS = dateText.replace(" ","-");
+				self.location = "http://localhost:8766/energy?from=" + fromS + "&to=" + toS
+			}
 		}
 	});
 	var d1 = [MAGIC_ENERGY];
