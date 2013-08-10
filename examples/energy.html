@@ -24,6 +24,7 @@ $(function() {
 		dateFormat: "yy-mm-dd",
 		timeFormat: "HH-mm-ss",
 		separator: "-",
+		defaultValue: fromS,
 		onClose: function(dateText, inst) {
 			if (dateText.length > 10) {
 				self.location = "http://localhost:8766/energy?from=" + dateText + "&to=" + toS
@@ -34,6 +35,7 @@ $(function() {
 		dateFormat: "yy-mm-dd",
 		timeFormat: "HH-mm-ss",
 		separator: "-",
+		defaultValue: toS,
 		onClose: function(dateText, inst) {
 			if (dateText.length > 10) {
 				self.location = "http://localhost:8766/energy?from=" + fromS + "&to=" + dateText
