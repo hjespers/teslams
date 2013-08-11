@@ -54,8 +54,13 @@ function getMore() {
 		}
 	}); }
 function initialize() { 
-	var fromQ = $.url("?from") + "-00";
-	var toQ = $.url("?to") + "-00";
+	var fromQ = $.url("?from");
+	if (fromQ.split("-").length == 5) fromQ += "-00";
+	var toQ = $.url("?to");
+	if (toQ.split("-").length == 5) toQ += "-00";
+	$("#frompicker").val(fromQ);
+	$("#topicker").val(toQ);
+	$("#energylink").attr("href", "http://localhost:8766/energy?from=" + fromQ + "&to=" + toQ);
 	$("#frompicker").datetimepicker({
 		dateFormat: "yy-mm-dd",
 		timeFormat: "HH-mm-ss",
@@ -91,11 +96,10 @@ function initialize() {
 google.maps.event.addDomListener(window, 'load', initialize);
 </script>
 </head> <body>
-	<div id="header">
-		<h2>Tesla Tracker</h2>
-	</div>
+	<h2>Tesla Tracker <small>(switch to <a id="energylink" href="">Energy Chart</a>)</small></h2>
 	<div id="dates">
-		<input id="frompicker" type="text"> <input id="topicker" type="text">
+		<label>Start time</label><input id="frompicker" type="text">
+		<label>End time</label><input id="topicker" type="text">
 	</div>
 	<div id='map-canvas'/>
 </body> </html>
