@@ -24,13 +24,15 @@ function sameTime(a, b) {
 }
 
 $(function() {
+	var myUrl = $.url('protocol') + "://" + $.url('auth') + (($.url('auth').length > 0) ? "@" : "") +
+		$.url('hostname') + ":" + $.url('port');
 	var fromQ = $.url("?from");
 	if (fromQ.split("-").length == 5) fromQ += "-00";
 	var toQ = $.url("?to");
 	if (toQ.split("-").length == 5) toQ += "-00";
 	$("#frompicker").val(fromQ);
 	$("#topicker").val(toQ);
-	$("#maplink").attr("href", "http://localhost:8766/?from=" + fromQ + "&to=" + toQ);
+	$("#maplink").attr("href", myUrl + "/?from=" + fromQ + "&to=" + toQ);
 	$("#frompicker").datetimepicker({
 		dateFormat: "yy-mm-dd",
 		timeFormat: "HH-mm-ss",
@@ -38,7 +40,7 @@ $(function() {
 		defaultValue: fromQ,
 		onClose: function(dateText, inst) {
 			if (dateText.length > 10 && sameTime(dateText, fromQ) == false) {
-				self.location = "http://localhost:8766/energy?from=" + dateText + "&to=" + toQ
+				self.location = myUrl + "/energy?from=" + dateText + "&to=" + toQ
 			}
 		}
 	});
@@ -49,7 +51,7 @@ $(function() {
 		defaultValue: toQ,
 		onClose: function(dateText, inst) {
 			if (dateText.length > 10 && sameTime(dateText, toQ) == false) {
-				self.location = "http://localhost:8766/energy?from=" + fromQ + "&to=" + dateText
+				self.location = myUrl + "/energy?from=" + fromQ + "&to=" + dateText
 			}
 		}
 	});
