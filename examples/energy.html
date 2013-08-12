@@ -1,12 +1,58 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
 <html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 <title>Tesla Energy Chart</title>
-<script src='http://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js'></script>
+<script language="javascript" type="text/javascript" src="jquery-1.9.1.js"></script>
 <script language="javascript" type="text/javascript" src="jquery.flot.js"></script>
 <script language="javascript" type="text/javascript" src="jquery.flot.time.min.js"></script>
 <script language="javascript" type="text/javascript" src="jquery.flot.threshold.min.js"></script>
+<script language="javascript" type="text/javascript" src="jquery-ui-1.10.3.custom.min.js"></script>
+<script language="javascript" type="text/javascript" src="jquery-ui-timepicker-addon.js"></script>
+<link rel="stylesheet" media="all" type="text/css" href="jquery-ui-timepicker-addon.css" />
+<link rel="stylesheet" media="all" type="text/css" href="jquery-ui.css" />
+<script language="javascript" type="text/javascript" src="url.min.js"></script>
 <script type="text/javascript">
+function sameTime(a, b) {
+	console.log(a,b);
+	var as = (a+"-0").split("-");
+	var bs = (b+"-0").split("-");
+	for (var i = 0; i < 6; i++) {
+		if (+as[i] != +bs[i])
+			return false;
+	}
+	console.log("true");
+	return true;
+}
+
 $(function() {
+	var fromQ = $.url("?from");
+	if (fromQ.split("-").length == 5) fromQ += "-00";
+	var toQ = $.url("?to");
+	if (toQ.split("-").length == 5) toQ += "-00";
+	$("#frompicker").val(fromQ);
+	$("#topicker").val(toQ);
+	$("#maplink").attr("href", "http://localhost:8766/?from=" + fromQ + "&to=" + toQ);
+	$("#frompicker").datetimepicker({
+		dateFormat: "yy-mm-dd",
+		timeFormat: "HH-mm-ss",
+		separator: "-",
+		defaultValue: fromQ,
+		onClose: function(dateText, inst) {
+			if (dateText.length > 10 && sameTime(dateText, fromQ) == false) {
+				self.location = "http://localhost:8766/energy?from=" + dateText + "&to=" + toQ
+			}
+		}
+	});
+	$("#topicker").datetimepicker({
+		dateFormat: "yy-mm-dd",
+		timeFormat: "HH-mm-ss",
+		separator: "-",
+		defaultValue: toQ,
+		onClose: function(dateText, inst) {
+			if (dateText.length > 10 && sameTime(dateText, toQ) == false) {
+				self.location = "http://localhost:8766/energy?from=" + fromQ + "&to=" + dateText
+			}
+		}
+	});
 	var d1 = [MAGIC_ENERGY];
 	var d2 = [MAGIC_SPEED];
 	var data = [{
@@ -63,8 +109,10 @@ $(function() {
 </script>
 </head>
 <body>
-	<div id="header">
-		<h2>Energy Chart</h2>
+	<h2>Energy Chart <small>(switch to <a id="maplink" href="">Map</a>)</small></h2>
+	<div id="dates">
+		<label>Start time</label><input id="frompicker" type="text">
+		<label>End time</label><input id="topicker" type="text">
 	</div>
 	<div id="content">
 		<center><div class="container">
