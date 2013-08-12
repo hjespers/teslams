@@ -31,8 +31,12 @@ function getColor(speed) {
 	return '#'+hex(r)+hex(g)+hex(b);
 }
 function getMore() {
-	$.getJSON('MAGIC_UPDATE_URL', function (d, textStatus, jqXHR) { 
-		if (d.length == 0) { return; }
+	$.getJSON('MAGIC_UPDATE_URL', function (d, textStatus, jqXHR) {
+		if (d.length == 0) {
+			if (getMore.endTimestamp - getMore.lastTimestamp < 2000)
+				clearInterval(getMore.ID);
+			return;
+		}
 		for (var i = 0; i < d.length; i++) { 
 			var nextLatlng = new google.maps.LatLng(d[i][6],d[i][7]);
 			var points = [myLatlng,nextLatlng];
@@ -57,7 +61,8 @@ function initialize() {
 	var fromQ = $.url("?from");
 	if (fromQ.split("-").length == 5) fromQ += "-00";
 	var toQ = $.url("?to");
-	if (toQ.split("-").length == 5) toQ += "-00";
+	var toP = toQ.split("-");
+	if (toP.length == 5) { toQ += "-00"; toP[5] = 0 }
 	$("#frompicker").val(fromQ);
 	$("#topicker").val(toQ);
 	$("#energylink").attr("href", "http://localhost:8766/energy?from=" + fromQ + "&to=" + toQ);
@@ -90,8 +95,9 @@ function initialize() {
 	infoWindow = new google.maps.InfoWindow({content: ""});
 	infoWindow.open(map, marker);
 	getMore.lastTimestamp = 0;
+	getMore.endTimestamp = new Date(toP[0], toP[1] - 1, toP[2], toP[3], toP[4], toP[5]);
 	getMore();
-	setInterval(getMore, 2000);
+	getMore.ID = setInterval(getMore, 2000);
 }
 google.maps.event.addDomListener(window, 'load', initialize);
 </script>
