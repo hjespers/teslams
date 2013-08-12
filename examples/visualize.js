@@ -54,7 +54,7 @@ http.createServer(function(req, res) {
 				var endTime = lastTime + 600000;
 				if (to && endTime > to)
 					endTime = to;
-				collection.find({"ts": {$gt: lastTime, $lte: endTime}}, { limit: 240}).toArray(function(err,docs) {
+				collection.find({"ts": {"$gt": +lastTime, "$lte": +endTime}}).toArray(function(err,docs) {
 					if (argv.verbose) console.log("got datasets:", docs.length);
 					res.setHeader("Content-Type", "application/json"); 
 					res.write("[", "utf-8");
