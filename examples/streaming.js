@@ -41,6 +41,7 @@ var p_url = 'https://portal.vn.teslamotors.com/vehicles/';
 var s_url = 'https://streaming.vn.teslamotors.com/stream/';
 var nFields = argv.values.length;
 var collectionS, collectionA;
+var startedAuxPoll = false;
 
 if (argv.db) {
 	console.log("database name", argv.db);
@@ -121,6 +122,10 @@ function tsla_poll( vid, long_vid, token ) {
 }
 
 function getAux() {
+	// make absolutely sure we don't overwhelm the API
+	if (new Date().getTime() - getAux.lastTime < 30000)
+		return;
+
 	teslams.get_charge_state( getAux.vid, function(data) {
 		if (data.charging_state == "Charging") {
 			var doc = { 'ts': new Date().getTime(), 'chargeState': data };
@@ -139,6 +144,7 @@ function getAux() {
 			});
 		}
 	});
+	getAux.lastTime = new Date().getTime();
 }
 
 function initstream() {
@@ -154,9 +160,13 @@ function initstream() {
 			});
                 } else {
                      	tsla_poll( vehicles.id, vehicles.vehicle_id, vehicles.tokens[0] ); 
-			getAux.vid = vehicles.id;
-			getAux();
-			setInterval(getAux, 60000); // also get non-streaming data every 60 seconds
+			if (startedAuxPoll == false) {
+				startedAuxPoll = true;
+				getAux.vid = vehicles.id;
+				getAux.lastTime = 0;
+				getAux();
+				setInterval(getAux, 60000); // also get non-streaming data every 60 seconds
+			}
 		}
         });
 }
