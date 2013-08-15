@@ -41,6 +41,12 @@ var fs = require('fs');
 var lastTime = 0;
 var started = false;
 var to;
+
+// HACK HACK HACK HACK
+//
+
+var capacity = 60;
+
 http.createServer(function(req, res) {
 	if (argv.verbose) { console.log("====>request is: ", req.url, req.headers, req.method) }
 	if (req.url == "/update") {
@@ -151,6 +157,77 @@ http.createServer(function(req, res) {
 							var response = data.replace("MAGIC_ENERGY", outputE)
 										.replace("MAGIC_SPEED", outputS)
 										.replace("MAGIC_SOC", outputSOC)
+										.replace("MAGIC_START", startDate);
+							res.end(response, "utf-8");
+						});
+					});
+				}
+			});
+		} else if (/^\/stats/.test(req.url)) {
+			var query = url.parse(req.url, "true").query;
+			if (!query.to || !query.from) {
+				res.end("<html><head></head><body>Invalid query format</body></html>", "utf-8");
+				return;
+			}
+			fromParts = (query.from + "-0").split("-");
+			toParts = (query.to + "-59").split("-");
+			from = new Date(fromParts[0], fromParts[1] - 1, fromParts[2], 0, 0, 0);
+			to = new Date(toParts[0], toParts[1] - 1, toParts[2], 23, 59, 59);
+			var outputD = "", outputC = "", outputA = "", comma = "", firstDate = 0, lastDay = 0, lastDate = 0;
+			var startOdo = 0, charge = 0, minSOC = 101, maxSOC = -1, increment = 0;
+			MongoClient.connect("mongodb://127.0.0.1:27017/" + argv.db, function(err, db) {
+				if(!err) {
+					res.setHeader("Content-Type", "text/html");
+					collection = db.collection("tesla_stream");
+					collection.find({"ts": {$gte: +from, $lte: +to}}).toArray(function(err,docs) {
+						docs.forEach(function(doc) {
+							var day = new Date(doc.ts).getDay();
+							var vals = doc.record.toString().replace(",,",",0,").split(",");
+							if (firstDate == 0) {
+								firstDate = doc.ts;
+								lastDay = day;
+								startOdo = vals[2];
+								minSOC = 101;
+								maxSOC = -1;
+							}
+							if (doc.ts > lastDate) {
+								if (day == lastDay) {
+									if (vals[9] != 'R' && vals[9] != 'D' && vals[8] < 0) {
+										if (vals[3] < minSOC) minSOC = vals[3];
+										if (vals[3] > maxSOC) maxSOC = vals[3];
+										increment = maxSOC - minSOC;
+									} else {
+										if (increment > 0) {
+											charge += increment * capacity / 100;
+											increment = 0;
+											minSOC = 101;
+											maxSOC = -1;
+										}
+									}
+								} else {
+									lastDay = day;
+									var dist = +vals[2] - startOdo;
+									var ts = new Date(doc.ts);
+									var midday = new Date(ts.getFullYear(), ts.getMonth(), ts.getDate(), 12, 0, 0);
+									outputD += comma + "[" + +ts  + "," + dist + "]";
+									outputC += comma + "[" + +ts  + "," + charge + "]";
+									outputA += comma + "[" + +midday  + "," + 1000 * charge / dist + "]";
+									startOdo = vals[2];
+									charge = 0;
+									minSOC = 101;
+									comma = ",";
+								}
+								lastDate = doc.ts;
+							}
+						});
+						db.close();
+						fs.readFile("./stats.html", "utf-8", function(err, data) {
+							if (err) throw err;
+							var fD = new Date(firstDate);
+							var startDate = (fD.getMonth() + 1) + "/" + fD.getDate() + "/" + fD.getFullYear();
+							var response = data.replace("MAGIC_DISTANCE", outputD)
+										.replace("MAGIC_CHARGE", outputC)
+										.replace("MAGIC_AVERAGE", outputA)
 										.replace("MAGIC_START", startDate);
 							res.end(response, "utf-8");
 						});

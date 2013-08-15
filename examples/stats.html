@@ -1,0 +1,120 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Tesla Stats</title>
+<script language="javascript" type="text/javascript" src="jquery-1.9.1.js"></script>
+<script language="javascript" type="text/javascript" src="jquery.flot.js"></script>
+<script language="javascript" type="text/javascript" src="jquery.flot.time.min.js"></script>
+<script language="javascript" type="text/javascript" src="jquery.flot.threshold.min.js"></script>
+<script language="javascript" type="text/javascript" src="jquery-ui-1.10.3.custom.min.js"></script>
+<script language="javascript" type="text/javascript" src="jquery-ui-timepicker-addon.js"></script>
+<link rel="stylesheet" media="all" type="text/css" href="jquery-ui-timepicker-addon.css" />
+<link rel="stylesheet" media="all" type="text/css" href="jquery-ui.css" />
+<script language="javascript" type="text/javascript" src="url.min.js"></script>
+<script type="text/javascript">
+function sameDate(a, b) {
+	console.log(a,b);
+	var as = a.split("-");
+	var bs = b.split("-");
+	for (var i = 0; i < 3; i++) {
+		if (+as[i] != +bs[i])
+			return false;
+	}
+	return true;
+}
+
+$(function() {
+	var myUrl = $.url('protocol') + "://" + $.url('auth') + (($.url('auth').length > 0) ? "@" : "") +
+		$.url('hostname') + ":" + $.url('port');
+	var fromQ = $.url("?from");
+	if (fromQ.split("-").length == 5) fromQ += "-00";
+	var toQ = $.url("?to");
+	if (toQ.split("-").length == 5) toQ += "-00";
+	$("#frompicker").val(fromQ);
+	$("#topicker").val(toQ);
+	$("#maplink").attr("href", myUrl + "/?from=" + fromQ + "&to=" + toQ);
+	$("#energylink").attr("href", myUrl + "/energy?from=" + fromQ + "&to=" + toQ);
+	$("#frompicker").datepicker({
+		dateFormat: "yy-mm-dd",
+		defaultValue: fromQ,
+		onClose: function(dateText, inst) {
+			if (dateText.length > 7 && sameDate(dateText, fromQ) == false) {
+				self.location = myUrl + "/stats?from=" + dateText + "&to=" + toQ
+			}
+		}
+	});
+	$("#topicker").datepicker({
+		dateFormat: "yy-mm-dd",
+		defaultValue: toQ,
+		onClose: function(dateText, inst) {
+			if (dateText.length > 7 && sameDate(dateText, toQ) == false) {
+				self.location = myUrl + "/stats?from=" + fromQ + "&to=" + dateText
+			}
+		}
+	});
+	var d1 = [MAGIC_DISTANCE];
+	var d2 = [MAGIC_CHARGE];
+	var d3 = [MAGIC_AVERAGE];
+	var data = [{
+		data: d1,
+		bars: { show: true,
+			barWidth: 24 * 3600 * 1000,
+			fill: 0.9 },
+		label: "Distance (miles)",
+		color: "#D07F27",
+		threshold: { below: 0, color: "#008000" }
+	},{
+		data: d2,
+		bars: { show: true,
+			barWidth: 24 * 3600 * 1000,
+			fill: 0.2 },
+		label: "Charge (kWh)",
+		color: "#0a9fd9"
+	},{
+		data: d3,
+		lines: { show: true },
+		label: "Average (Wh/mile)",
+		color: "#0a9f0a"
+	}];
+	var options = {
+		yaxis: {
+			ticks: function (axis) {
+				var ticks = [];
+				var bottomy = Math.floor(axis.min / 10) * 10;
+				for (var y = bottomy; y < 0; y += 10)
+					ticks.push(y);
+				for (var y = 50; y < axis.max; y += 50)
+					ticks.push(y);
+				return ticks;
+			}},
+		xaxis: {
+			mode: "time",
+			minTickSize: [12, "hour"],
+			timezone: "browser",
+			tickFormatter: function (v, axis) {
+				var s = new Date(v);
+				if (s.getHours() == 12)
+					return (s.getMonth()+1) + '/' + s.getDate();
+				else
+					return "";
+			}
+		}
+	};
+	var eschart = $("#dcachart");
+	$.plot(dcachart, data, options);
+});
+</script>
+</head>
+<body>
+	<h2>Trip Chart <small>(switch to <a id="maplink" href="">Map</a>, <a id="energylink" href="">Energy Chart</a>)</small></h2>
+	<div id="dates">
+		<label>Start time</label><input id="frompicker" type="text">
+		<label>End time</label><input id="topicker" type="text">
+	</div>
+	<div id="content">
+		<center><div class="container">
+			<div id="dcachart" style="height:450px; width:90%;"></div>
+			<div id="explanation" style="width:70%">Daily distance, charge and Wh/mile plot, starting MAGIC_START.</div>
+		</div><center>
+	</div>
+</body>
+</html>
