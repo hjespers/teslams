@@ -40,12 +40,15 @@ if ( argv.help == true ) {
 var p_url = 'https://portal.vn.teslamotors.com/vehicles/';
 var s_url = 'https://streaming.vn.teslamotors.com/stream/';
 var nFields = argv.values.length;
-var collection;
+var collectionS, collectionA;
+
 if (argv.db) {
+	console.log("database name", argv.db);
 	var MongoClient = require('mongodb').MongoClient;
 	MongoClient.connect('mongodb://127.0.0.1:27017/' + argv.db, function(err, db) {
 		if(err) throw err;
-		collection = db.collection('tesla_stream');
+		collectionS = db.collection('tesla_stream');
+		collectionA = db.collection('tesla_aux');
 	});
 } else {
 	var stream = fs.createWriteStream(argv.file);
@@ -102,9 +105,9 @@ function tsla_poll( vid, long_vid, token ) {
 				for (var i = 0; i < vals.length; i += nFields) {
 					var record = vals.slice(i, nFields);
 					var doc = { 'ts': +vals[i], 'record': record };
-					collection.find({ 'ts': +vals[i]}).toArray(function(err, exist){
+					collectionS.find({ 'ts': +vals[i]}).toArray(function(err, exist){
 						if (exist.length == 0) { // only write entry if it doesn't already exist
-							collection.insert(doc, { 'safe': true }, function(err,docs) {
+							collectionS.insert(doc, { 'safe': true }, function(err,docs) {
 								if(err) throw err;
 							});
 						}
@@ -115,6 +118,27 @@ function tsla_poll( vid, long_vid, token ) {
 			}
 		});
 	} 
+}
+
+function getAux() {
+	teslams.get_charge_state( getAux.vid, function(data) {
+		if (data.charging_state == "Charging") {
+			var doc = { 'ts': new Date().getTime(), 'chargeState': data };
+			collectionA.insert(doc, { 'safe': true }, function(err,docs) {
+				if(err) throw err;
+			});
+		}
+	});
+	teslams.get_climate_state( getAux.vid, function(data) {
+		var ds = JSON.stringify(data);
+		if (ds.length > 2 && ds != JSON.stringify(getAux.climate)) {
+			getAux.climate = data;
+			var doc = { 'ts': new Date().getTime(), 'climateState': data };
+			collectionA.insert(doc, { 'safe': true }, function(err,docs) {
+				if(err) throw err;
+			});
+		}
+	});
 }
 
 function initstream() {
@@ -130,6 +154,9 @@ function initstream() {
 			});
                 } else {
                      	tsla_poll( vehicles.id, vehicles.vehicle_id, vehicles.tokens[0] ); 
+			getAux.vid = vehicles.id;
+			getAux();
+			setInterval(getAux, 60000); // also get non-streaming data every 60 seconds
 		}
         });
 }
