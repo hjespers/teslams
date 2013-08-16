@@ -88,6 +88,7 @@ $(function() {
 			}},
 		xaxis: {
 			mode: "time",
+			show: true,
 			minTickSize: [12, "hour"],
 			timezone: "browser",
 			tickFormatter: function (v, axis) {
@@ -114,6 +115,7 @@ $(function() {
 		<center><div class="container">
 			<div id="dcachart" style="height:450px; width:90%;"></div>
 			<div id="explanation" style="width:70%">Daily distance, charge and Wh/mile plot, starting MAGIC_START.</div>
+			<div id="maxima" style="width:70%">Maximum charge voltage / current: MAGIC_MAX_VOLT/MAGIC_MAX_AMP (MAGIC_MAX_MPH miles/hour)</div>
 		</div><center>
 	</div>
 </body>

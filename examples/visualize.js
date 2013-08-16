@@ -207,11 +207,17 @@ http.createServer(function(req, res) {
 								} else {
 									lastDay = day;
 									var dist = +vals[2] - startOdo;
-									var ts = new Date(doc.ts);
+									var ts = new Date(lastDate);
+									// in order for lines and bars to line up nicely it looks better if the
+									// bars start at midnight, but the lines are setup to have their values
+									// at midday
+									var midnight = new Date(ts.getFullYear(), ts.getMonth(), ts.getDate(), 0, 0, 0);
 									var midday = new Date(ts.getFullYear(), ts.getMonth(), ts.getDate(), 12, 0, 0);
-									outputD += comma + "[" + +ts  + "," + dist + "]";
-									outputC += comma + "[" + +ts  + "," + charge + "]";
-									outputA += comma + "[" + +midday  + "," + 1000 * charge / dist + "]";
+									outputD += comma + "[" + +midnight  + "," + dist + "]";
+									outputC += comma + "[" + +midnight  + "," + charge + "]";
+									console.log(midnight.getMonth()+1, midnight.getDate(), "dist " + dist + " charge " + charge);
+									if (dist > 0)
+										outputA += comma + "[" + +midday  + "," + 1000 * charge / dist + "]";
 									startOdo = vals[2];
 									charge = 0;
 									minSOC = 101;
@@ -220,16 +226,34 @@ http.createServer(function(req, res) {
 								lastDate = doc.ts;
 							}
 						});
-						db.close();
-						fs.readFile("./stats.html", "utf-8", function(err, data) {
-							if (err) throw err;
-							var fD = new Date(firstDate);
-							var startDate = (fD.getMonth() + 1) + "/" + fD.getDate() + "/" + fD.getFullYear();
-							var response = data.replace("MAGIC_DISTANCE", outputD)
+						collection = db.collection("tesla_aux");
+						var maxAmp = 0, maxVolt = 0, maxMph = 0;
+						collection.find({"ts": {$gte: +from, $lte: +to}}).toArray(function(err,docs) {
+							console.log("Found " + docs.length + " entries in aux DB");
+							docs.forEach(function(doc) {
+								if(typeof doc.chargeState !== 'undefined') {
+									if (doc.chargeState.charger_voltage > maxVolt)
+										maxVolt = doc.chargeState.charger_voltage;
+									if (doc.chargeState.charger_actual_current > maxAmp)
+										maxAmp = doc.chargeState.charger_actual_current;
+									if (doc.chargeState.charge_rate > maxMph)
+										maxMph = doc.chargeState.charge_rate;
+								}
+							});
+							db.close();
+							fs.readFile("./stats.html", "utf-8", function(err, data) {
+								if (err) throw err;
+								var fD = new Date(firstDate);
+								var startDate = (fD.getMonth() + 1) + "/" + fD.getDate() + "/" + fD.getFullYear();
+								var response = data.replace("MAGIC_DISTANCE", outputD)
 										.replace("MAGIC_CHARGE", outputC)
 										.replace("MAGIC_AVERAGE", outputA)
-										.replace("MAGIC_START", startDate);
-							res.end(response, "utf-8");
+										.replace("MAGIC_START", startDate)
+										.replace("MAGIC_MAX_VOLT", maxVolt)
+										.replace("MAGIC_MAX_AMP", maxAmp)
+										.replace("MAGIC_MAX_MPH", maxMph);
+								res.end(response, "utf-8");
+							});
 						});
 					});
 				}
