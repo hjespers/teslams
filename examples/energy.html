@@ -32,6 +32,7 @@ $(function() {
 	$("#frompicker").val(fromQ);
 	$("#topicker").val(toQ);
 	$("#maplink").attr("href", myUrl + "/?from=" + fromQ + "&to=" + toQ);
+	$("#statslink").attr("href", myUrl + "/stats?from=" + fromQ + "&to=" + toQ);
 	$("#frompicker").datetimepicker({
 		dateFormat: "yy-mm-dd",
 		timeFormat: "HH-mm-ss",
@@ -110,7 +111,7 @@ $(function() {
 </script>
 </head>
 <body>
-	<h2>Energy Chart <small>(switch to <a id="maplink" href="">Map</a>)</small></h2>
+	<h2>Energy Chart <small>(switch to <a id="maplink" href="">Map</a>, <a id="statslink" href="">Stats Chart</a>)</small></h2>
 	<div id="dates">
 		<label>Start time</label><input id="frompicker" type="text">
 		<label>End time</label><input id="topicker" type="text">

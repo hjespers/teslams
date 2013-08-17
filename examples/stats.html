@@ -26,9 +26,10 @@ $(function() {
 	var myUrl = $.url('protocol') + "://" + $.url('auth') + (($.url('auth').length > 0) ? "@" : "") +
 		$.url('hostname') + ":" + $.url('port');
 	var fromQ = $.url("?from");
-	if (fromQ.split("-").length == 5) fromQ += "-00";
+	if (fromQ.split("-").length == 3) fromQ += "-00-00-00";
 	var toQ = $.url("?to");
-	if (toQ.split("-").length == 5) toQ += "-00";
+	if (toQ.split("-").length == 3) toQ += "-23-59-59";
+	if (toQ.split("-").length < 6) toQ += "-59-59";
 	$("#frompicker").val(fromQ);
 	$("#topicker").val(toQ);
 	$("#maplink").attr("href", myUrl + "/?from=" + fromQ + "&to=" + toQ);
