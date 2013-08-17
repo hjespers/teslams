@@ -129,24 +129,50 @@ http.createServer(function(req, res) {
 				res.end("<html><head></head><body>Invalid query format</body></html>", "utf-8");
 				return;
 			}
-			fromParts = (query.from + "-0").split("-");
-			toParts = (query.to + "-59").split("-");
+			// make ranges work with and without time component
+			fromParts = (query.from + "-0-0-0").split("-");
+			if (query.to.split("-").length == 3) {
+				toParts = (query.to + "23-59-59").split("-");
+			} else {
+				toParts = (query.to + "-59-59").split("-");
+			}
 			from = new Date(fromParts[0], fromParts[1] - 1, fromParts[2], fromParts[3], fromParts[4], fromParts[5]);
 			to = new Date(toParts[0], toParts[1] - 1, toParts[2], toParts[3], toParts[4], toParts[5]);
+			// don't deliver more than 10000 data points (that's one BIG screen)
+			var halfIncrement =  Math.round((+to - +from) / 20000);
+			var increment = 2 + halfIncrement;
 			var outputE = "", outputS = "", outputSOC = "", comma = "", firstDate = 0, lastDate = 0;
+			var minE = 1000, minS = 1000, minSOC = 1000;
+			var maxE = -1000, maxS = -1000, maxSOC = -1000;
 			MongoClient.connect("mongodb://127.0.0.1:27017/" + argv.db, function(err, db) {
 				if(!err) {
 					res.setHeader("Content-Type", "text/html");
 					collection = db.collection("tesla_stream");
 					collection.find({"ts": {$gte: +from, $lte: +to}}).toArray(function(err,docs) {
 						docs.forEach(function(doc) {
-							if (firstDate == 0) firstDate = doc.ts;
+							if (firstDate == 0) firstDate = lastDate = doc.ts;
 							if (doc.ts > lastDate) {
-								lastDate = doc.ts;
-								outputE += comma + "[" + doc.ts  + "," + doc.record.toString().replace(",,",",0,").split(",")[8] + "]";
-								outputS += comma + "[" + doc.ts  + "," + doc.record.toString().replace(",,",",0,").split(",")[1] + "]";
-								outputSOC += comma + "[" + doc.ts  + "," + doc.record.toString().replace(",,",",0,").split(",")[3] + "]";
-								comma = ",";
+								var vals = doc.record.toString().replace(",,",",0,").split(",");
+								if (doc.ts > lastDate + increment) {
+									if (maxE != -1000) {
+										outputE += comma + "[" + (+lastDate + halfIncrement) + "," + maxE + "]";
+										outputE += ",[" + (+lastDate + increment) + "," + minE + "]";
+									}
+									if (maxS != -1000)
+										outputS += comma + "[" + (+lastDate + halfIncrement) + "," + (+maxS + +minS) / 2 + "]";
+									if (maxSOC != -1000)
+										outputSOC += comma + "[" + (+lastDate + halfIncrement)  + "," + (+maxSOC + +minSOC) / 2 + "]";
+									comma = ",";
+									lastDate = doc.ts;
+									maxE = maxS = maxSOC = -1000;
+									minE = minS = minSOC = 1000;
+								}
+								if (vals[8] > maxE) maxE = vals[8];
+								if (vals[8] < minE) minE = vals[8];
+								if (vals[1] > maxS) maxS = vals[1];
+								if (vals[1] < minS) minS = vals[1];
+								if (vals[3] > maxSOC) maxSOC = vals[3];
+								if (vals[3] < minSOC) minSOC = vals[3];
 							}
 						});
 						db.close();
@@ -159,6 +185,7 @@ http.createServer(function(req, res) {
 										.replace("MAGIC_SOC", outputSOC)
 										.replace("MAGIC_START", startDate);
 							res.end(response, "utf-8");
+							if (argv.verbose) console.log("delivered", outputSOC.length,"records and", response.length, "bytes");
 						});
 					});
 				}
