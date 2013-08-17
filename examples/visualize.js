@@ -244,6 +244,7 @@ http.createServer(function(req, res) {
 									// at midday
 									var midnight = new Date(ts.getFullYear(), ts.getMonth(), ts.getDate(), 0, 0, 0);
 									var midday = new Date(ts.getFullYear(), ts.getMonth(), ts.getDate(), 12, 0, 0);
+									charge += increment;
 									outputD += comma + "[" + +midnight  + "," + dist + "]";
 									outputC += comma + "[" + +midnight  + "," + charge + "]";
 									if (dist > 0) {
@@ -264,6 +265,7 @@ http.createServer(function(req, res) {
 						var ts = new Date(lastDate);
 						var midnight = new Date(ts.getFullYear(), ts.getMonth(), ts.getDate(), 0, 0, 0);
 						var midday = new Date(ts.getFullYear(), ts.getMonth(), ts.getDate(), 12, 0, 0);
+						charge += increment;
 						outputD += comma + "[" + +midnight  + "," + dist + "]";
 						outputC += comma + "[" + +midnight  + "," + charge + "]";
 						if (dist > 0) {
@@ -273,7 +275,7 @@ http.createServer(function(req, res) {
 						collection = db.collection("tesla_aux");
 						var maxAmp = 0, maxVolt = 0, maxMph = 0;
 						collection.find({"ts": {$gte: +from, $lte: +to}}).toArray(function(err,docs) {
-							console.log("Found " + docs.length + " entries in aux DB");
+							if (argv.verbose) console.log("Found " + docs.length + " entries in aux DB");
 							docs.forEach(function(doc) {
 								if(typeof doc.chargeState !== 'undefined') {
 									if (doc.chargeState.charger_voltage > maxVolt)
