@@ -173,16 +173,17 @@ http.createServer(function(req, res) {
 			toParts = (query.to + "-59").split("-");
 			from = new Date(fromParts[0], fromParts[1] - 1, fromParts[2], 0, 0, 0);
 			to = new Date(toParts[0], toParts[1] - 1, toParts[2], 23, 59, 59);
-			var outputD = "", outputC = "", outputA = "", comma = "", firstDate = 0, lastDay = 0, lastDate = 0;
+			var outputD = "", outputC = "", outputA = "", comma = "", commaD = "", firstDate = 0, lastDay = 0, lastDate = 0;
 			var startOdo = 0, charge = 0, minSOC = 101, maxSOC = -1, increment = 0;
 			MongoClient.connect("mongodb://127.0.0.1:27017/" + argv.db, function(err, db) {
 				if(!err) {
+					var vals = [];
 					res.setHeader("Content-Type", "text/html");
 					collection = db.collection("tesla_stream");
 					collection.find({"ts": {$gte: +from, $lte: +to}}).toArray(function(err,docs) {
 						docs.forEach(function(doc) {
 							var day = new Date(doc.ts).getDay();
-							var vals = doc.record.toString().replace(",,",",0,").split(",");
+							vals = doc.record.toString().replace(",,",",0,").split(",");
 							if (firstDate == 0) {
 								firstDate = doc.ts;
 								lastDay = day;
@@ -190,8 +191,11 @@ http.createServer(function(req, res) {
 								minSOC = 101;
 								maxSOC = -1;
 							}
-							if (doc.ts > lastDate) {
+							if (doc.ts > lastDate) { // we don't want to go back in time
 								if (day == lastDay) {
+									// still the same day - accumulate stats for charging
+									// this is crude - it would be much better to get this from
+									// the aux databased and use the actual charge info
 									if (vals[9] != 'R' && vals[9] != 'D' && vals[8] < 0) {
 										if (vals[3] < minSOC) minSOC = vals[3];
 										if (vals[3] > maxSOC) maxSOC = vals[3];
@@ -215,17 +219,30 @@ http.createServer(function(req, res) {
 									var midday = new Date(ts.getFullYear(), ts.getMonth(), ts.getDate(), 12, 0, 0);
 									outputD += comma + "[" + +midnight  + "," + dist + "]";
 									outputC += comma + "[" + +midnight  + "," + charge + "]";
-									console.log(midnight.getMonth()+1, midnight.getDate(), "dist " + dist + " charge " + charge);
-									if (dist > 0)
-										outputA += comma + "[" + +midday  + "," + 1000 * charge / dist + "]";
+									if (dist > 0) {
+										outputA += commaD + "[" + +midday  + "," + 1000 * charge / dist + "]";
+										commaD = ",";
+									}
 									startOdo = vals[2];
 									charge = 0;
 									minSOC = 101;
+									maxSOC = -1;
 									comma = ",";
 								}
 								lastDate = doc.ts;
 							}
 						});
+						// we still need to add the last day
+						var dist = +vals[2] - startOdo;
+						var ts = new Date(lastDate);
+						var midnight = new Date(ts.getFullYear(), ts.getMonth(), ts.getDate(), 0, 0, 0);
+						var midday = new Date(ts.getFullYear(), ts.getMonth(), ts.getDate(), 12, 0, 0);
+						outputD += comma + "[" + +midnight  + "," + dist + "]";
+						outputC += comma + "[" + +midnight  + "," + charge + "]";
+						if (dist > 0) {
+							outputA += commaD + "[" + +midday  + "," + 1000 * charge / dist + "]";
+							commaD = ",";
+						}
 						collection = db.collection("tesla_aux");
 						var maxAmp = 0, maxVolt = 0, maxMph = 0;
 						collection.find({"ts": {$gte: +from, $lte: +to}}).toArray(function(err,docs) {
