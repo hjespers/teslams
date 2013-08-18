@@ -10,6 +10,7 @@
 <script type='text/javascript' src='https://maps.googleapis.com/maps/api/js?key=MAGIC_APIKEY&sensor=true'></script>
 <script type='text/javascript'>
 var myLatlng; var map; var marker; var infoWindow;
+var myUrl = "";
 function sameTime(a, b) {
 	console.log(a,b);
 	var as = (a+"-0").split("-");
@@ -29,7 +30,9 @@ function getColor(speed) {
 	return '#'+hex(r)+hex(g)+hex(b);
 }
 function getMore() {
-	$.getJSON('MAGIC_UPDATE_URL', function (d, textStatus, jqXHR) {
+	if (myUrl.length == 0)
+		return;
+	$.getJSON(myUrl + "/update", function (d, textStatus, jqXHR) {
 		if (d.length == 0) {
 			if (getMore.endTimestamp - getMore.lastTimestamp < 120000)
 				clearInterval(getMore.ID);
@@ -56,7 +59,7 @@ function getMore() {
 		}
 	}); }
 function initialize() { 
-	var myUrl = $.url('protocol') + "://" + $.url('auth') + (($.url('auth').length > 0) ? "@" : "") +
+	myUrl = $.url('protocol') + "://" + $.url('auth') + (($.url('auth').length > 0) ? "@" : "") +
 		$.url('hostname') + ":" + $.url('port');
 	var fromQ = $.url("?from");
 	if (fromQ.split("-").length == 5) fromQ += "-00";

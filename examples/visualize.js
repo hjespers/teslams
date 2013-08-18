@@ -111,7 +111,6 @@ http.createServer(function(req, res) {
 					fs.readFile("./map.html", "utf-8", function(err, data) {
 						if (err) throw err;
 						var response = data.replace("MAGIC_APIKEY", apiKey)
-									.replace("MAGIC_UPDATE_URL", "http://localhost:" + argv.port + "/update")
 									.replace("MAGIC_FIRST_LOC", vals[6] + "," + vals[7]);
 						res.end(response, "utf-8");
 					});
