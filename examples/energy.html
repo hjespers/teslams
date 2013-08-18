@@ -69,10 +69,14 @@ $(function() {
 		data: d2,
 		lines: { show: true },
 		label: "Speed (mph)",
-		color: "#0a9fd9"
+		color: "rgba(10,159,217,0.4)",
+		yaxis: 2
 	}];
 	var options = {
-		yaxis: {
+		yaxes: [{
+			axisLabel: "Energy",
+			min: MAGIC_MIN_ENG,
+			max: MAGIC_MAX_ENG,
 			ticks: function (axis) {
 				var ticks = [];
 				var bottomy = Math.floor(axis.min / 10) * 10;
@@ -82,10 +86,22 @@ $(function() {
 					ticks.push(y);
 				return ticks;
 			}},
-		xaxis: {
+			{
+			axisLabel: "Speed",
+			min: MAGIC_MIN_SPD,
+			max: MAGIC_MAX_SPD,
+			position: 'right',
+			alignTicksWithAxis: 1,
+			tickFormatter: function (val, axis) {
+				if  (val >= 0)
+					return val.toFixed(0);
+				else
+						return "";
+			}}],
+		xaxes: [{
 			mode: "time",
 			timezone: "browser"
-		}
+			}]
 	};
 	var eschart = $("#eschart");
 	$.plot(eschart, data, options);

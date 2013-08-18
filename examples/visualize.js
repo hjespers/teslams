@@ -143,6 +143,8 @@ http.createServer(function(req, res) {
 			var outputE = "", outputS = "", outputSOC = "", comma = "", firstDate = 0, lastDate = 0;
 			var minE = 1000, minS = 1000, minSOC = 1000;
 			var maxE = -1000, maxS = -1000, maxSOC = -1000;
+			var gMaxE = -1000, gMaxS = -1000;
+			var gMinE = 1000, gMinS = 1000;
 			MongoClient.connect("mongodb://127.0.0.1:27017/" + argv.db, function(err, db) {
 				if(!err) {
 					res.setHeader("Content-Type", "text/html");
@@ -150,7 +152,7 @@ http.createServer(function(req, res) {
 					collection.find({"ts": {$gte: +from, $lte: +to}}).toArray(function(err,docs) {
 						docs.forEach(function(doc) {
 							if (firstDate == 0) firstDate = lastDate = doc.ts;
-							if (doc.ts > lastDate) {
+							if (doc.ts >= lastDate) {
 								var vals = doc.record.toString().replace(",,",",0,").split(",");
 								if (doc.ts > lastDate + increment) {
 									if (maxE != -1000) {
@@ -163,15 +165,18 @@ http.createServer(function(req, res) {
 										outputSOC += comma + "[" + (+lastDate + halfIncrement)  + "," + (+maxSOC + +minSOC) / 2 + "]";
 									comma = ",";
 									lastDate = doc.ts;
+									if (+maxE > +gMaxE) gMaxE = maxE;
+									if (+minE < +gMinE) gMinE = minE;
+									if (+maxS > +gMaxS) gMaxS = maxS;
 									maxE = maxS = maxSOC = -1000;
 									minE = minS = minSOC = 1000;
 								}
-								if (vals[8] > maxE) maxE = vals[8];
-								if (vals[8] < minE) minE = vals[8];
-								if (vals[1] > maxS) maxS = vals[1];
-								if (vals[1] < minS) minS = vals[1];
-								if (vals[3] > maxSOC) maxSOC = vals[3];
-								if (vals[3] < minSOC) minSOC = vals[3];
+								if (+vals[8] > +maxE) maxE = vals[8];
+								if (+vals[8] < +minE) minE = vals[8];
+								if (+vals[1] > +maxS) maxS = vals[1];
+								if (+vals[1] < +minS) minS = vals[1];
+								if (+vals[3] > +maxSOC) maxSOC = vals[3];
+								if (+vals[3] < +minSOC) minSOC = vals[3];
 							}
 						});
 						db.close();
@@ -179,10 +184,23 @@ http.createServer(function(req, res) {
 							if (err) throw err;
 							var fD = new Date(firstDate);
 							var startDate = (fD.getMonth() + 1) + "/" + fD.getDate() + "/" + fD.getFullYear();
+							gMinE = +gMinE - 10;
+							gMaxE = +gMaxE + 10;
+							if (2 * gMaxS > +gMaxE) {
+								gMaxS = +gMaxS + 5;
+								gMaxE = 2 * gMaxS;
+							} else {
+								gMaxS = gMaxE / 2;
+							}
+							gMinS = gMinE / 2;
 							var response = data.replace("MAGIC_ENERGY", outputE)
 										.replace("MAGIC_SPEED", outputS)
 										.replace("MAGIC_SOC", outputSOC)
-										.replace("MAGIC_START", startDate);
+										.replace("MAGIC_START", startDate)
+										.replace("MAGIC_MAX_ENG", gMaxE)
+										.replace("MAGIC_MIN_ENG", gMinE)
+										.replace("MAGIC_MAX_SPD", gMaxS)
+										.replace("MAGIC_MIN_SPD", gMinS);
 							res.end(response, "utf-8");
 							if (argv.verbose) console.log("delivered", outputSOC.length,"records and", response.length, "bytes");
 						});
