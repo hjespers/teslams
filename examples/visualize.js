@@ -9,8 +9,14 @@
 //
 var apiKey = 'AIzaSyAtYQ9xjedv3B6_2HwsDVMY7oHlbNs-cvk';
 
+
+function argchecker( argv ) {
+	if (argv.db == true) throw 'MongoDB database name is unspecified. Use -d dbname or --db dbname';
+}
+
 var argv = require('optimist')
 	.usage('Usage: $0 --db <MongoDB database> [--port <http listen port>] [--replay <number of minutes>] [--silent] [--verbose]')
+	.check( argchecker )
 	.alias('p', 'port')
 	.describe('p', 'Listen port for the local http server')
 	.default('p', 8766)

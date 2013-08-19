@@ -8,9 +8,15 @@ var request = require('request');
 var teslams = require('../teslams.js');
 var fs = require('fs');
 var util = require('util');
+
+function argchecker( argv ) {
+	if (argv.db == true) throw 'MongoDB database name is unspecified. Use -d dbname or --db dbname';
+}
+
 var argv = require('optimist')
 	.usage('Usage: $0 -u <username> -p <password> [--file <filename>] [--db <MongoDB database>] [--silent] \n' +
 		'# if --db <MongoDB database> argument is given, store data in MongoDB, otherwise in a flat file')
+	.check(argchecker)
 	.alias('u', 'username')
 	.describe('u', 'Teslamotors.com login')
 	.demand('u')
@@ -32,11 +38,13 @@ var argv = require('optimist')
 	.alias('?', 'help')
 	.describe('?', 'Print usage information')
 	.argv;
+
 if ( argv.help == true ) {
 	console.log( 'Usage: streaming.js -u <username> -p <password> [--file <filename>] [--db <MongoDB database>] [--silent] \n' +
 		'# if --db <MongoDB database> argument is given, store data in MongoDB, otherwise in a flat file');
 	process.exit(1);
 }
+
 var p_url = 'https://portal.vn.teslamotors.com/vehicles/';
 var s_url = 'https://streaming.vn.teslamotors.com/stream/';
 var nFields = argv.values.length;
