@@ -308,5 +308,5 @@ To execute change into the examples directory to run:
 
 #Feedback and Support
 
-For more information, feedback, or community support see the Tesla Motors Club forum at http://www.teslamotorsclub.com/showthread.php/13410-Model-S-REST-API or email hans.jespersen@gmail.com
+For more information, feedback, or community support see the Tesla Motors Club forum at http://www.teslamotorsclub.com/showthread.php/13410-Model-S-REST-API or email teslams@googlegroups.com
 
