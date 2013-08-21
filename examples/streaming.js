@@ -106,13 +106,22 @@ function tsla_poll( vid, long_vid, token ) {
 				for (var i = 0; i < vals.length; i += nFields) {
 					var record = vals.slice(i, nFields);
 					var doc = { 'ts': +vals[i], 'record': record };
-					collectionS.find({ 'ts': +vals[i]}).toArray(function(err, exist){
-						if (exist.length == 0) { // only write entry if it doesn't already exist
-							collectionS.insert(doc, { 'safe': true }, function(err,docs) {
-								if(err) throw err;
-							});
-						}
+					collectionS.insert(doc, { 'safe': true }, function(err,docs) {
+						if(err) console.log(err);
 					});
+//					collectionS.find({ 'ts': +vals[i]}).toArray(function(err, exist){
+//						try {
+//							if (err || exist == null || exist.length == 0) { // only write entry if it doesn't already exist
+//								collectionS.insert(doc, { 'safe': true }, function(err,docs) {
+//									if(err) console.log(err);
+//								});
+//							} else {
+//								console.log("had data, not writing it");
+//							}
+//						} catch (innerError) {
+//							console.dir(innerError);
+//						}
+//					});
 				}
 			} else {
 				stream.write(data);
@@ -150,7 +159,7 @@ function getAux() {
 function initstream() {
 	teslams.vehicles( { email: argv.username, password: argv.password }, function ( vehicles ) {
 		if (!argv.silent) { console.log( util.inspect( vehicles) ); }
-		if ( vehicles.tokens[0] == undefined ) {
+		if ( typeof vehicles == "undefined" || typeof vehicles.tokens == "undefined" || vehicles.tokens[0] == undefined ) {
 			if (!argv.silent) {
 				console.log('Warn: no tokens returned, calling wake_up then trying again');
 			}
