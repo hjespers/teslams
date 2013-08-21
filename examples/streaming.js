@@ -48,12 +48,16 @@ if ( argv.help == true ) {
 var p_url = 'https://portal.vn.teslamotors.com/vehicles/';
 var s_url = 'https://streaming.vn.teslamotors.com/stream/';
 var nFields = argv.values.length;
-var collection;
+var collectionS, collectionA;
+var startedAuxPoll = false;
+
 if (argv.db) {
+	console.log("database name", argv.db);
 	var MongoClient = require('mongodb').MongoClient;
 	MongoClient.connect('mongodb://127.0.0.1:27017/' + argv.db, function(err, db) {
 		if(err) throw err;
-		collection = db.collection('tesla_stream');
+		collectionS = db.collection('tesla_stream');
+		collectionA = db.collection('tesla_aux');
 	});
 } else {
 	var stream = fs.createWriteStream(argv.file);
@@ -110,13 +114,22 @@ function tsla_poll( vid, long_vid, token ) {
 				for (var i = 0; i < vals.length; i += nFields) {
 					var record = vals.slice(i, nFields);
 					var doc = { 'ts': +vals[i], 'record': record };
-					collection.find({ 'ts': +vals[i]}).toArray(function(err, exist){
-						if (exist.length == 0) { // only write entry if it doesn't already exist
-							collection.insert(doc, { 'safe': true }, function(err,docs) {
-								if(err) throw err;
-							});
-						}
+					collectionS.insert(doc, { 'safe': true }, function(err,docs) {
+						if(err) console.log(err);
 					});
+//					collectionS.find({ 'ts': +vals[i]}).toArray(function(err, exist){
+//						try {
+//							if (err || exist == null || exist.length == 0) { // only write entry if it doesn't already exist
+//								collectionS.insert(doc, { 'safe': true }, function(err,docs) {
+//									if(err) console.log(err);
+//								});
+//							} else {
+//								console.log("had data, not writing it");
+//							}
+//						} catch (innerError) {
+//							console.dir(innerError);
+//						}
+//					});
 				}
 			} else {
 				stream.write(data);
@@ -125,10 +138,36 @@ function tsla_poll( vid, long_vid, token ) {
 	} 
 }
 
+function getAux() {
+	// make absolutely sure we don't overwhelm the API
+	if (new Date().getTime() - getAux.lastTime < 30000)
+		return;
+
+	teslams.get_charge_state( getAux.vid, function(data) {
+		if (data.charging_state == "Charging") {
+			var doc = { 'ts': new Date().getTime(), 'chargeState': data };
+			collectionA.insert(doc, { 'safe': true }, function(err,docs) {
+				if(err) throw err;
+			});
+		}
+	});
+	teslams.get_climate_state( getAux.vid, function(data) {
+		var ds = JSON.stringify(data);
+		if (ds.length > 2 && ds != JSON.stringify(getAux.climate)) {
+			getAux.climate = data;
+			var doc = { 'ts': new Date().getTime(), 'climateState': data };
+			collectionA.insert(doc, { 'safe': true }, function(err,docs) {
+				if(err) throw err;
+			});
+		}
+	});
+	getAux.lastTime = new Date().getTime();
+}
+
 function initstream() {
 	teslams.vehicles( { email: argv.username, password: argv.password }, function ( vehicles ) {
 		if (!argv.silent) { console.log( util.inspect( vehicles) ); }
-		if ( vehicles.tokens[0] == undefined ) {
+		if ( typeof vehicles == "undefined" || typeof vehicles.tokens == "undefined" || vehicles.tokens[0] == undefined ) {
 			if (!argv.silent) {
 				console.log('Warn: no tokens returned, calling wake_up then trying again');
 			}
@@ -138,6 +177,13 @@ function initstream() {
 			});
                 } else {
                      	tsla_poll( vehicles.id, vehicles.vehicle_id, vehicles.tokens[0] ); 
+			if (startedAuxPoll == false) {
+				startedAuxPoll = true;
+				getAux.vid = vehicles.id;
+				getAux.lastTime = 0;
+				getAux();
+				setInterval(getAux, 60000); // also get non-streaming data every 60 seconds
+			}
 		}
         });
 }

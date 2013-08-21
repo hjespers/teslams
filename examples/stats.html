@@ -1,6 +1,6 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
 <html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<title>Tesla Energy Chart</title>
+<title>Tesla Stats</title>
 <script language="javascript" type="text/javascript" src="jquery-1.9.1.js"></script>
 <script language="javascript" type="text/javascript" src="jquery.flot.js"></script>
 <script language="javascript" type="text/javascript" src="jquery.flot.time.min.js"></script>
@@ -11,11 +11,11 @@
 <link rel="stylesheet" media="all" type="text/css" href="jquery-ui.css" />
 <script language="javascript" type="text/javascript" src="url.min.js"></script>
 <script type="text/javascript">
-function sameTime(a, b) {
+function sameDate(a, b) {
 	console.log(a,b);
-	var as = (a+"-0").split("-");
-	var bs = (b+"-0").split("-");
-	for (var i = 0; i < 6; i++) {
+	var as = a.split("-");
+	var bs = b.split("-");
+	for (var i = 0; i < 3; i++) {
 		if (+as[i] != +bs[i])
 			return false;
 	}
@@ -26,57 +26,58 @@ $(function() {
 	var myUrl = $.url('protocol') + "://" + $.url('auth') + (($.url('auth').length > 0) ? "@" : "") +
 		$.url('hostname') + ":" + $.url('port');
 	var fromQ = $.url("?from");
-	if (fromQ.split("-").length == 5) fromQ += "-00";
+	if (fromQ.split("-").length == 3) fromQ += "-00-00-00";
 	var toQ = $.url("?to");
-	if (toQ.split("-").length == 5) toQ += "-00";
+	if (toQ.split("-").length == 3) toQ += "-23-59-59";
+	if (toQ.split("-").length < 6) toQ += "-59-59";
 	$("#frompicker").val(fromQ);
 	$("#topicker").val(toQ);
 	$("#maplink").attr("href", myUrl + "/?from=" + fromQ + "&to=" + toQ);
-	$("#statslink").attr("href", myUrl + "/stats?from=" + fromQ + "&to=" + toQ);
-	$("#frompicker").datetimepicker({
+	$("#energylink").attr("href", myUrl + "/energy?from=" + fromQ + "&to=" + toQ);
+	$("#frompicker").datepicker({
 		dateFormat: "yy-mm-dd",
-		timeFormat: "HH-mm-ss",
-		separator: "-",
 		defaultValue: fromQ,
 		onClose: function(dateText, inst) {
-			if (dateText.length > 10 && sameTime(dateText, fromQ) == false) {
-				self.location = myUrl + "/energy?from=" + dateText + "&to=" + toQ
+			if (dateText.length > 7 && sameDate(dateText, fromQ) == false) {
+				self.location = myUrl + "/stats?from=" + dateText + "&to=" + toQ
 			}
 		}
 	});
-	$("#topicker").datetimepicker({
+	$("#topicker").datepicker({
 		dateFormat: "yy-mm-dd",
-		timeFormat: "HH-mm-ss",
-		separator: "-",
 		defaultValue: toQ,
 		onClose: function(dateText, inst) {
-			if (dateText.length > 10 && sameTime(dateText, toQ) == false) {
-				self.location = myUrl + "/energy?from=" + fromQ + "&to=" + dateText
+			if (dateText.length > 7 && sameDate(dateText, toQ) == false) {
+				self.location = myUrl + "/stats?from=" + fromQ + "&to=" + dateText
 			}
 		}
 	});
-	var d1 = [MAGIC_ENERGY];
-	var d2 = [MAGIC_SPEED];
+	var d1 = [MAGIC_DISTANCE];
+	var d2 = [MAGIC_CHARGE];
+	var d3 = [MAGIC_AVERAGE];
 	var data = [{
 		data: d1,
 		bars: { show: true,
-			barWidth: 250,
+			barWidth: 24 * 3600 * 1000,
 			fill: 0.9 },
-		label: "Energy (kW)",
+		label: "Distance (miles)",
 		color: "#D07F27",
 		threshold: { below: 0, color: "#008000" }
 	},{
 		data: d2,
+		bars: { show: true,
+			barWidth: 24 * 3600 * 1000,
+			fill: 0.2 },
+		label: "Charge (kWh)",
+		color: "#0a9fd9"
+	},{
+		data: d3,
 		lines: { show: true },
-		label: "Speed (mph)",
-		color: "rgba(10,159,217,0.4)",
-		yaxis: 2
+		label: "Average (Wh/mile)",
+		color: "#0a9f0a"
 	}];
 	var options = {
-		yaxes: [{
-			axisLabel: "Energy",
-			min: MAGIC_MIN_ENG,
-			max: MAGIC_MAX_ENG,
+		yaxis: {
 			ticks: function (axis) {
 				var ticks = [];
 				var bottomy = Math.floor(axis.min / 10) * 10;
@@ -86,57 +87,36 @@ $(function() {
 					ticks.push(y);
 				return ticks;
 			}},
-			{
-			axisLabel: "Speed",
-			min: MAGIC_MIN_SPD,
-			max: MAGIC_MAX_SPD,
-			position: 'right',
-			alignTicksWithAxis: 1,
-			tickFormatter: function (val, axis) {
-				if  (val >= 0)
-					return val.toFixed(0);
-				else
-						return "";
-			}}],
-		xaxes: [{
+		xaxis: {
 			mode: "time",
-			timezone: "browser"
-			}]
+			show: true,
+			minTickSize: [12, "hour"],
+			timezone: "browser",
+			tickFormatter: function (v, axis) {
+				var s = new Date(v);
+				if (s.getHours() == 12)
+					return (s.getMonth()+1) + '/' + s.getDate();
+				else
+					return "";
+			}
+		}
 	};
-	var eschart = $("#eschart");
-	$.plot(eschart, data, options);
-	var d3 = [MAGIC_SOC];
-	var socData = [{
-		data: d3,
-		lines: { show: true,
-			 fill: 0.9 },
-		label: "SOC (%)",
-		color: "#008000",
-		fillColor: { colors: [{ opacity: 0.8 }, { opacity: 0.1 }] },
-		threshold: [{below: 101, color: "#c02020"},{below: 91, color: "#008000"}, {below: 10, color: "#FF2020"}]
-	}];
-	var socOptions = {
-		yaxis: { max: 119 },
-		xaxis: { mode: "time",
-			 timezone: "browser"}
-	};
-	var socchart = $("#socchart");
-
-	$.plot(socchart, socData, socOptions);
+	var eschart = $("#dcachart");
+	$.plot(dcachart, data, options);
 });
 </script>
 </head>
 <body>
-	<h2>Energy Chart <small>(switch to <a id="maplink" href="">Map</a>, <a id="statslink" href="">Stats Chart</a>)</small></h2>
+	<h2>Trip Chart <small>(switch to <a id="maplink" href="">Map</a>, <a id="energylink" href="">Energy Chart</a>)</small></h2>
 	<div id="dates">
 		<label>Start time</label><input id="frompicker" type="text">
 		<label>End time</label><input id="topicker" type="text">
 	</div>
 	<div id="content">
 		<center><div class="container">
-			<div id="eschart" style="height:450px; width:90%"></div>
-			<div id="socchart" style="height:300px; width:90%"></div>
-			<div id="explanation" style="width:70%">Energy, speed and SOC plot, starting MAGIC_START.</div>
+			<div id="dcachart" style="height:450px; width:90%;"></div>
+			<div id="explanation" style="width:70%">Daily distance, charge and Wh/mile plot, starting MAGIC_START.</div>
+			<div id="maxima" style="width:70%">Maximum charge voltage / current: MAGIC_MAX_VOLT/MAGIC_MAX_AMP (MAGIC_MAX_MPH miles/hour)</div>
 		</div><center>
 	</div>
 </body>

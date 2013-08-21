@@ -10,15 +10,14 @@
 <script type='text/javascript' src='https://maps.googleapis.com/maps/api/js?key=MAGIC_APIKEY&sensor=true'></script>
 <script type='text/javascript'>
 var myLatlng; var map; var marker; var infoWindow;
+var myUrl = "";
 function sameTime(a, b) {
-	console.log(a,b);
 	var as = (a+"-0").split("-");
 	var bs = (b+"-0").split("-");
 	for (var i = 0; i < 6; i++) {
 		if (+as[i] != +bs[i])
 			return false;
 	}
-	console.log("true");
 	return true;
 }
 function hex(num) { var s = '#0' + num.toString(16) + ''; return s.substring(s.length - 2); }
@@ -30,34 +29,49 @@ function getColor(speed) {
 	return '#'+hex(r)+hex(g)+hex(b);
 }
 function getMore() {
-	$.getJSON('MAGIC_UPDATE_URL', function (d, textStatus, jqXHR) {
-		if (d.length == 0) {
-			if (getMore.endTimestamp - getMore.lastTimestamp < 2000)
+	if (myUrl.length == 0)
+		return;
+	// this gets us an array of arrays - there is always at least one dummy
+	// entry that gives us the last timestamp that was considered in this batch
+	$.getJSON(myUrl + "/update", { 'last': +getMore.lastTimestamp })
+	.done(function (d, textStatus, jqXHR) {
+		console.log("length", d.length, "end", +getMore.endTimestamp, "last", +getMore.lastTimestamp);
+		if (d.length == 1) { // that's just the fake entry
+			getMore.lastTimestamp = +d[0][0];
+			console.log("do we need to stop?", "end", +getMore.endTimestamp, "last", +getMore.lastTimestamp);
+			if (+getMore.endTimestamp - +getMore.lastTimestamp < 120000)
 				clearInterval(getMore.ID);
 			return;
 		}
 		for (var i = 0; i < d.length; i++) { 
+			if (d[i][6] == 0 && d[i][7] == 0)
+				continue; // no line to GPS (0,0)
+			if (Math.abs(d[i][0] - getMore.lastTimestamp) > 5000) {
+				myLatlng = new google.maps.LatLng(d[i][6],d[i][7]);
+				getMore.lastTimestamp = +d[i][0];
+				continue; // no lines if there is a jump in the time series
+			}
 			var nextLatlng = new google.maps.LatLng(d[i][6],d[i][7]);
 			var points = [myLatlng,nextLatlng];
 			var color = getColor(d[i][1]);
-			var opacity = (d[i][0] - getMore.lastTimestamp > 5000) ? 0.9 : 0.1;
-			var path = new google.maps.Polyline({path:points,strokeColor:color,strokeOpacity:opacity,strokeWeight:4});
+			var path = new google.maps.Polyline({path:points,strokeColor:color,strokeWeight:4});
 			path.setMap(map);
-			if (i == d.length - 1) {
-				var cStr = '<div id="content">';
-				marker.setPosition(nextLatlng);
-				if (d[i][9] == 'D' || d[i][9] == 'R'){cStr+='going '+d[i][1]+' mph'}
-				else if (d[i][8] < 0){cStr+='parked and charging ~ '+(-d[i][8])+'kW'}
-				else {cStr+='parked'}
-				cStr+='<br>odometer '+d[i][2]+'<br>range '+d[i][10]+'</div>';
-				infoWindow.setContent(cStr);
-				getMore.lastTimestamp = d[i][0];
-			}
 			myLatlng = nextLatlng;
+			getMore.lastTimestamp = d[i][0];
 		}
-	}); }
+		var cStr = '<div id="content">';
+		marker.setPosition(nextLatlng);
+		var i = d.length - 1; // last spot
+		if (d[i][9] == 'D' || d[i][9] == 'R'){cStr+='going '+d[i][1]+' mph'}
+		else if (d[i][8] < 0){cStr+='parked and charging ~ '+(-d[i][8])+'kW'}
+		else {cStr+='parked'}
+		cStr+='<br>odometer '+d[i][2]+'<br>range '+d[i][10]+'</div>';
+		infoWindow.setContent(cStr);
+	})
+	.fail(function(jqXHR, textStatus, errorThrown) { console.log(myUrl + "/update : ajax fail", textStatus, errorThrown); }) 
+}
 function initialize() { 
-	var myUrl = $.url('protocol') + "://" + $.url('auth') + (($.url('auth').length > 0) ? "@" : "") +
+	myUrl = $.url('protocol') + "://" + $.url('auth') + (($.url('auth').length > 0) ? "@" : "") +
 		$.url('hostname') + ":" + $.url('port');
 	var fromQ = $.url("?from");
 	if (fromQ.split("-").length == 5) fromQ += "-00";
@@ -67,6 +81,7 @@ function initialize() {
 	$("#frompicker").val(fromQ);
 	$("#topicker").val(toQ);
 	$("#energylink").attr("href", myUrl + "/energy?from=" + fromQ + "&to=" + toQ);
+	$("#statslink").attr("href", myUrl + "/stats?from=" + fromQ + "&to=" + toQ);
 	$("#frompicker").datetimepicker({
 		dateFormat: "yy-mm-dd",
 		timeFormat: "HH-mm-ss",
@@ -103,7 +118,7 @@ function initialize() {
 google.maps.event.addDomListener(window, 'load', initialize);
 </script>
 </head> <body>
-	<h2>Tesla Tracker <small>(switch to <a id="energylink" href="">Energy Chart</a>)</small></h2>
+	<h2>Tesla Tracker <small>(switch to <a id="energylink" href="">Energy Chart</a>, <a id="statslink" href="">Stats Chart</a>)</small></h2>
 	<div id="dates">
 		<label>Start time</label><input id="frompicker" type="text">
 		<label>End time</label><input id="topicker" type="text">
