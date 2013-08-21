@@ -12,7 +12,6 @@
 var myLatlng; var map; var marker; var infoWindow;
 var myUrl = "";
 function sameTime(a, b) {
-	console.log(a,b);
 	var as = (a+"-0").split("-");
 	var bs = (b+"-0").split("-");
 	for (var i = 0; i < 6; i++) {
@@ -32,9 +31,15 @@ function getColor(speed) {
 function getMore() {
 	if (myUrl.length == 0)
 		return;
-	$.getJSON(myUrl + "/update", function (d, textStatus, jqXHR) {
-		if (d.length == 0) {
-			if (getMore.endTimestamp - getMore.lastTimestamp < 120000)
+	// this gets us an array of arrays - there is always at least one dummy
+	// entry that gives us the last timestamp that was considered in this batch
+	$.getJSON(myUrl + "/update", { 'last': +getMore.lastTimestamp })
+	.done(function (d, textStatus, jqXHR) {
+		console.log("length", d.length, "end", +getMore.endTimestamp, "last", +getMore.lastTimestamp);
+		if (d.length == 1) { // that's just the fake entry
+			getMore.lastTimestamp = +d[0][0];
+			console.log("do we need to stop?", "end", +getMore.endTimestamp, "last", +getMore.lastTimestamp);
+			if (+getMore.endTimestamp - +getMore.lastTimestamp < 120000)
 				clearInterval(getMore.ID);
 			return;
 		}
@@ -43,7 +48,7 @@ function getMore() {
 				continue; // no line to GPS (0,0)
 			if (Math.abs(d[i][0] - getMore.lastTimestamp) > 5000) {
 				myLatlng = new google.maps.LatLng(d[i][6],d[i][7]);
-				getMore.lastTimestamp = d[i][0];
+				getMore.lastTimestamp = +d[i][0];
 				continue; // no lines if there is a jump in the time series
 			}
 			var nextLatlng = new google.maps.LatLng(d[i][6],d[i][7]);
@@ -62,7 +67,9 @@ function getMore() {
 		else {cStr+='parked'}
 		cStr+='<br>odometer '+d[i][2]+'<br>range '+d[i][10]+'</div>';
 		infoWindow.setContent(cStr);
-	}); }
+	})
+	.fail(function(jqXHR, textStatus, errorThrown) { console.log(myUrl + "/update : ajax fail", textStatus, errorThrown); }) 
+}
 function initialize() { 
 	myUrl = $.url('protocol') + "://" + $.url('auth') + (($.url('auth').length > 0) ? "@" : "") +
 		$.url('hostname') + ":" + $.url('port');
