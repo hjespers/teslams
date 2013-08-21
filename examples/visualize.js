@@ -64,6 +64,8 @@ http.createServer(function(req, res) {
 					endTime = to;
 				collection.find({"ts": {"$gt": +lastTime, "$lte": +endTime}}).toArray(function(err,docs) {
 					if (argv.verbose) console.log("got datasets:", docs.length);
+					if (docs.length == 0)
+						lastTime = +lastTime + 600000; // skip these ten minutes
 					res.setHeader("Content-Type", "application/json"); 
 					res.write("[", "utf-8");
 					var comma = "";
