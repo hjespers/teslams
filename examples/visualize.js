@@ -48,10 +48,36 @@ var lastTime = 0;
 var started = false;
 var to;
 
-// HACK HACK HACK HACK
-//
-
-var capacity = 60;
+var capacity;
+MongoClient.connect("mongodb://127.0.0.1:27017/" + argv.db, function(err, db) {
+	if(err) throw(err);
+	var collectionA = db.collection("tesla_aux");
+	// get the last stored entry that describes the vehicles
+	var query = {'vehicles': { '$exists': true } };
+	var options = { 'sort': [['ts', 'desc']], 'limit': 1};
+	collectionA.find(query, options).toArray(function(err, docs) {
+		if (argv.verbose) console.dir(docs);
+		if (docs.length == 0) {
+			console.log("missing vehicles data in db, assuming Model S 60");
+			capacity = 60;
+		} else {
+			if (docs.length > 1)
+				console.log("congratulations, you have more than one Tesla Model S - this only supports your first car");
+			var options = docs[0].vehicles.option_codes.split(',');
+			for (var i = 0; i < options.length; i++) {
+				if (options[i] == "BT85") {
+					capacity = 85;
+					break;
+				}
+				if (options[i] == "BT60") {
+					capacity = 60;
+					break;
+				}
+			}
+		}
+		if (argv.verbose) console.log("battery capacity", capacity);
+	});
+});
 
 http.createServer(function(req, res) {
 	if (argv.verbose) { console.log("====>request is: ", req.url)}
