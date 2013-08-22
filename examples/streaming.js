@@ -47,7 +47,7 @@ if ( argv.help == true ) {
 
 var p_url = 'https://portal.vn.teslamotors.com/vehicles/';
 var s_url = 'https://streaming.vn.teslamotors.com/stream/';
-var nFields = argv.values.length;
+var nFields = argv.values.split(",").length + 1; // number of fields including ts
 var collectionS, collectionA;
 var startedAuxPoll = false;
 
