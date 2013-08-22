@@ -164,6 +164,13 @@ function getAux() {
 	getAux.lastTime = new Date().getTime();
 }
 
+function storeVehicles(vehicles) {
+	var doc = { 'ts': new Date().getTime(), 'vehicles': vehicles };
+	collectionA.insert(doc, { 'safe': true }, function (err, docs) {
+		if (err) console.dir(err);
+	});
+}
+
 function initstream() {
 	teslams.vehicles( { email: argv.username, password: argv.password }, function ( vehicles ) {
 		if (!argv.silent) { console.log( util.inspect( vehicles) ); }
@@ -176,6 +183,7 @@ function initstream() {
 				initstream();		
 			});
                 } else {
+			storeVehicles(vehicles);
                      	tsla_poll( vehicles.id, vehicles.vehicle_id, vehicles.tokens[0] ); 
 			if (startedAuxPoll == false) {
 				startedAuxPoll = true;
