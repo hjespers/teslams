@@ -171,6 +171,17 @@ function storeVehicles(vehicles) {
 	});
 }
 
+function initdb(vehicles) {
+	storeVehicles(vehicles); 
+	if (startedAuxPoll == false) {
+		startedAuxPoll = true;
+		getAux.vid = vehicles.id;
+		getAux.lastTime = 0;
+		getAux();
+		setInterval(getAux, 60000); // also get non-streaming data every 60 seconds
+	}
+}
+
 function initstream() {
 	teslams.vehicles( { email: argv.username, password: argv.password }, function ( vehicles ) {
 		if (!argv.silent) { console.log( util.inspect( vehicles) ); }
@@ -183,15 +194,8 @@ function initstream() {
 				initstream();		
 			});
                 } else {
-			storeVehicles(vehicles);
+			if (argv.db) initdb(vehicles); //only do this if mongodb flag is set
                      	tsla_poll( vehicles.id, vehicles.vehicle_id, vehicles.tokens[0] ); 
-			if (startedAuxPoll == false) {
-				startedAuxPoll = true;
-				getAux.vid = vehicles.id;
-				getAux.lastTime = 0;
-				getAux();
-				setInterval(getAux, 60000); // also get non-streaming data every 60 seconds
-			}
 		}
         });
 }
