@@ -24,6 +24,39 @@ function sameDate(a, b) {
 }
 
 $(function() {
+	function showTooltip(x, y, contents) {
+		$('<div id="tooltip">' + contents + '</div>').css( {
+			position: 'absolute',
+			display: 'none',
+			top: y + 5,
+			left: x + 5,
+			border: '1px solid #fdd',
+			padding: '2px',
+			'background-color': '#fee',
+			opacity: 0.80
+		}).appendTo("body").fadeIn(200);
+	}
+	var previousPoint = null;
+	$("#dcachart").bind("plothover", function (event, pos, item) {
+		if (item) {
+			if (previousPoint != item.dataIndex) {
+				previousPoint = item.dataIndex;
+				
+				$("#tooltip").remove();
+				var x = item.datapoint[0];
+				x = new Date(Math.round(x / (24 * 3600000)) * 24 * 3600000);
+				var xS = (x.getMonth() + 1) + "/" + x.getDate();
+				var y = item.datapoint[1].toFixed(1);
+				
+				showTooltip(item.pageX, item.pageY,
+							item.series.label + " on " + xS + " : " + y);
+			}
+		} else {
+			$("#tooltip").remove();
+			previousPoint = null;			
+		}
+	});
+
 	var myUrl = $.url('protocol') + "://" + $.url('auth') + (($.url('auth').length > 0) ? "@" : "") +
 		$.url('hostname') + ":" + $.url('port');
 	var fromQ = $.url("?from");
@@ -92,6 +125,7 @@ $(function() {
 		yaxis: 1
 	}];
 	var options = {
+		grid: { hoverable: true },
 		yaxes: [{
 		},{
 			position: 'right'
