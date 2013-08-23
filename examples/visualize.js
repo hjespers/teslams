@@ -257,8 +257,8 @@ http.createServer(function(req, res) {
 		toParts = (parsedUrl.query.to + "-59").split("-");
 		from = new Date(fromParts[0], fromParts[1] - 1, fromParts[2], 0, 0, 0);
 		to = new Date(toParts[0], toParts[1] - 1, toParts[2], 23, 59, 59);
-		var outputD = "", outputC = "", outputA = "", comma = "", commaD = "", firstDate = 0, lastDay = 0, lastDate = 0;
-		var startOdo = 0, charge = 0, minSOC = 101, maxSOC = -1, increment = 0;
+		var outputD = "", outputC = "", outputA = "", outputW = "", comma = "", commaD = "", firstDate = 0, lastDay = 0, lastDate = 0;
+		var startOdo = 0, charge = 0, minSOC = 101, maxSOC = -1, increment = 0, kWs = 0;
 		MongoClient.connect("mongodb://127.0.0.1:27017/" + argv.db, function(err, db) {
 			if(err) {
 				console.log('error connecting to database:', err);
@@ -268,6 +268,7 @@ http.createServer(function(req, res) {
 			res.setHeader("Content-Type", "text/html");
 			collection = db.collection("tesla_stream");
 			collection.find({"ts": {$gte: +from, $lte: +to}}).toArray(function(err,docs) {
+console.log(docs.length);
 				docs.forEach(function(doc) {
 					var day = new Date(doc.ts).getDay();
 					vals = doc.record.toString().replace(",,",",0,").split(",");
@@ -277,61 +278,75 @@ http.createServer(function(req, res) {
 						startOdo = vals[2];
 						minSOC = 101;
 						maxSOC = -1;
+						kWs = 0;
 					}
 					if (doc.ts > lastDate) { // we don't want to go back in time
 						if (day == lastDay) {
 							// still the same day - accumulate stats for charging
 							// this is crude - it would be much better to get this from
-							// the aux databased and use the actual charge info
-							if (vals[9] != 'R' && vals[9] != 'D' && vals[8] < 0) {
-								if (vals[3] < minSOC) minSOC = vals[3];
-								if (vals[3] > maxSOC) maxSOC = vals[3];
-								increment = maxSOC - minSOC;
-							} else {
-								if (increment > 0) {
-									charge += increment * capacity / 100;
-									increment = 0;
-									minSOC = 101;
-									maxSOC = -1;
+							// the aux database and use the actual charge info
+							if (vals[9] != 'R' && vals[9] != 'D') { // we are not driving
+								if (vals[8] < 0) { // parked & charging
+									if (vals[3] < minSOC) minSOC = vals[3];
+									if (vals[3] > maxSOC) maxSOC = vals[3];
+									increment = maxSOC - minSOC;
+								} else { // parked & consuming
+									if (vals[8] > 0)
+										kWs += (doc.ts - lastDate) / 1000 * vals[8];
+									// if we were charging before, add the estimate to the total
+									if (increment > 0) {
+										charge += increment * capacity / 100;
+										increment = 0;
+										minSOC = 101;
+										maxSOC = -1;
+									}
 								}
+							} else {
+								// we're driving - add up the energy used / regen
+								kWs += (doc.ts - lastDate) / 1000 * vals[8];
 							}
 						} else {
 							lastDay = day;
 							var dist = +vals[2] - startOdo;
+							var kWh = kWs / 3600;
 							var ts = new Date(lastDate);
-							// in order for lines and bars to line up nicely it looks better if the
-							// bars start at midnight, but the lines are setup to have their values
-							// at midday
 							var midnight = new Date(ts.getFullYear(), ts.getMonth(), ts.getDate(), 0, 0, 0);
-							var midday = new Date(ts.getFullYear(), ts.getMonth(), ts.getDate(), 12, 0, 0);
 							charge += increment;
 							outputD += comma + "[" + +midnight  + "," + dist + "]";
 							outputC += comma + "[" + +midnight  + "," + charge + "]";
 							if (dist > 0) {
-								outputA += commaD + "[" + +midday  + "," + 1000 * charge / dist + "]";
+								outputA += commaD + "[" + +midnight  + "," + 1000 * kWh / dist + "]";
 								commaD = ",";
 							}
+							outputW += comma + "[" + +midnight + "," + kWh + "]";
 							startOdo = vals[2];
 							charge = 0;
 							minSOC = 101;
 							maxSOC = -1;
+							kWs = 0;
 							comma = ",";
 						}
 						lastDate = doc.ts;
 					}
 				});
+
 				// we still need to add the last day
+
 				var dist = +vals[2] - startOdo;
+				var kWh = kWs / 3600;
 				var ts = new Date(lastDate);
 				var midnight = new Date(ts.getFullYear(), ts.getMonth(), ts.getDate(), 0, 0, 0);
-				var midday = new Date(ts.getFullYear(), ts.getMonth(), ts.getDate(), 12, 0, 0);
 				charge += increment;
 				outputD += comma + "[" + +midnight  + "," + dist + "]";
 				outputC += comma + "[" + +midnight  + "," + charge + "]";
 				if (dist > 0) {
-					outputA += commaD + "[" + +midday  + "," + 1000 * charge / dist + "]";
+					outputA += commaD + "[" + +midnight  + "," + 1000 * kWh / dist + "]";
 					commaD = ",";
 				}
+				outputW += comma + "[" + +midnight + "," + kWh + "]";
+
+				// now look for data in the aux collection
+
 				collection = db.collection("tesla_aux");
 				var maxAmp = 0, maxVolt = 0, maxMph = 0;
 				collection.find({"ts": {$gte: +from, $lte: +to}}).toArray(function(err,docs) {
@@ -354,6 +369,7 @@ http.createServer(function(req, res) {
 						var response = data.replace("MAGIC_DISTANCE", outputD)
 								.replace("MAGIC_CHARGE", outputC)
 								.replace("MAGIC_AVERAGE", outputA)
+								.replace("MAGIC_KWH", outputW)
 								.replace("MAGIC_START", startDate)
 								.replace("MAGIC_MAX_VOLT", maxVolt)
 								.replace("MAGIC_MAX_AMP", maxAmp)
@@ -374,6 +390,7 @@ http.createServer(function(req, res) {
 		    path == "/jquery.flot.js" ||
 		    path == "/jquery.flot.time.min.js" ||
 		    path == "/jquery.flot.threshold.min.js" ||
+		    path == "/jquery.flot.orderBars.js" ||
 		    path == "/url.min.js" ||
 		    (/^\/images.*png$/.test(path))) {
 			if (argv.verbose) console.log("delivering file", path);
