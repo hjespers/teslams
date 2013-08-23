@@ -64,7 +64,8 @@ $(function() {
 			barWidth: 6 * 3600 * 1000,
 			fill: 0.9 },
 		label: "Distance (miles)",
-		color: "#808080"
+		color: "#808080",
+		yaxis: 1
 	},{
 		data: d4,
 		bars: { show: true,
@@ -72,7 +73,8 @@ $(function() {
 			barWidth: 6 * 3600 * 1000,
 			fill: 0.9 },
 		label: "Energy Used (kWh)",
-		color: "#D07F27"
+		color: "#D07F27",
+		yaxis: 2
 	},{
 		data: d2,
 		bars: { show: true,
@@ -80,24 +82,19 @@ $(function() {
 			barWidth: 6 * 3600 * 1000,
 			fill: 0.2 },
 		label: "Charge (kWh)",
-		color: "#0a9fd9"
+		color: "#0a9fd9",
+		yaxis: 2
 	},{
 		data: d3,
 		lines: { show: true },
 		label: "Average (Wh/mile)",
-		color: "#0a9f0a"
+		color: "#0a9f0a",
+		yaxis: 1
 	}];
 	var options = {
 		yaxes: [{
-			ticks: function (axis) {
-				var ticks = [];
-				var bottomy = Math.floor(axis.min / 10) * 10;
-				for (var y = bottomy; y < 0; y += 10)
-					ticks.push(y);
-				for (var y = 50; y < axis.max; y += 50)
-					ticks.push(y);
-				return ticks;
-			}
+		},{
+			position: 'right'
 		}],
 		xaxes: [{
 			mode: "time",
