@@ -179,7 +179,7 @@ http.createServer(function(req, res) {
 		// don't deliver more than 10000 data points (that's one BIG screen)
 		var halfIncrement =  Math.round((+to - +from) / 20000);
 		var increment = 2 + halfIncrement;
-		var outputE = "", outputS = "", outputSOC = "", comma = "", firstDate = 0, lastDate = 0;
+		var outputE = "", outputS = "", outputSOC = "", comma, firstDate = 0, lastDate = 0;
 		var minE = 1000, minS = 1000, minSOC = 1000;
 		var maxE = -1000, maxS = -1000, maxSOC = -1000;
 		var gMaxE = -1000, gMaxS = -1000;
@@ -192,6 +192,7 @@ http.createServer(function(req, res) {
 			res.setHeader("Content-Type", "text/html");
 			collection = db.collection("tesla_stream");
 			collection.find({"ts": {$gte: +from, $lte: +to}}).toArray(function(err,docs) {
+				comma = "";
 				docs.forEach(function(doc) {
 					if (firstDate == 0) firstDate = lastDate = doc.ts;
 					if (doc.ts >= lastDate) {
@@ -221,30 +222,76 @@ http.createServer(function(req, res) {
 						if (+vals[3] < +minSOC) minSOC = vals[3];
 					}
 				});
-				db.close();
-				fs.readFile("./energy.html", "utf-8", function(err, data) {
-					if (err) throw err;
-					var fD = new Date(firstDate);
-					var startDate = (fD.getMonth() + 1) + "/" + fD.getDate() + "/" + fD.getFullYear();
-					gMinE = +gMinE - 10;
-					gMaxE = +gMaxE + 10;
-					if (2 * gMaxS > +gMaxE) {
-						gMaxS = +gMaxS + 5;
-						gMaxE = 2 * gMaxS;
-					} else {
-						gMaxS = gMaxE / 2;
-					}
-					gMinS = gMinE / 2;
-					var response = data.replace("MAGIC_ENERGY", outputE)
-								.replace("MAGIC_SPEED", outputS)
-								.replace("MAGIC_SOC", outputSOC)
-								.replace("MAGIC_START", startDate)
-								.replace("MAGIC_MAX_ENG", gMaxE)
-								.replace("MAGIC_MIN_ENG", gMinE)
-								.replace("MAGIC_MAX_SPD", gMaxS)
-								.replace("MAGIC_MIN_SPD", gMinS);
-					res.end(response, "utf-8");
-					if (argv.verbose) console.log("delivered", outputSOC.length,"records and", response.length, "bytes");
+				var chartEnd = lastDate;
+
+				// now look for data in the aux collection
+
+				collection = db.collection("tesla_aux");
+				var maxAmp = 0, maxVolt = 0, maxMph = 0;
+				var outputAmp = "", outputVolt = "", comma = "";
+				lastDate = +from;
+				collection.find({"ts": {$gte: +from, $lte: +to}}).toArray(function(err,docs) {
+					if (argv.verbose) console.log("Found " + docs.length + " entries in aux DB");
+					comma = '';
+					docs.forEach(function(doc) {
+						if(typeof doc.chargeState !== 'undefined') {
+							if (doc.chargeState.charge_rate > maxMph) {
+								maxMph = doc.chargeState.charge_rate;
+								maxVolt = doc.chargeState.charger_voltage;
+								maxAmp = doc.chargeState.charger_actual_current;
+							}
+							// we get these in 60s increments, but only when charging;
+							// we might miss the occasional sample so if the time gap
+							// is more than 3 minutes, pull the lines down to zero
+							if (doc.ts - lastDate > 180000) {
+								outputAmp += comma + "[" + (lastDate + 60000) + ",0]";
+								outputVolt += comma + "[" + (lastDate + 60000) + ",0]";
+								outputAmp += comma + "[" + (doc.ts - 60000) + ",0]";
+								outputVolt += comma + "[" + (doc.ts - 60000) + ",0]";
+							}
+							outputAmp += comma + "[" + doc.ts + "," + doc.chargeState.charger_actual_current + "]";
+							outputVolt += comma + "[" + doc.ts + "," + doc.chargeState.charger_voltage + "]";
+							comma = ",";
+							lastDate = doc.ts;
+						}
+					});
+					outputAmp += comma + "[" + (lastDate + 60000) + ",0]";
+					outputVolt += comma + "[" + (lastDate + 60000) + ",0]";
+					outputAmp += comma + "[" + (+chartEnd) + ",0]";
+					outputVolt += comma + "[" + (+chartEnd) + ",0]";
+
+					db.close();
+					fs.readFile("./energy.html", "utf-8", function(err, data) {
+						if (err) throw err;
+						var fD = new Date(firstDate);
+						var startDate = (fD.getMonth() + 1) + "/" + fD.getDate() + "/" + fD.getFullYear();
+						gMinE = +gMinE - 10;
+						gMaxE = +gMaxE + 10;
+						if (2 * gMaxS > +gMaxE) {
+							gMaxS = +gMaxS + 5;
+							gMaxE = 2 * gMaxS;
+						} else {
+							gMaxS = gMaxE / 2;
+						}
+						gMinS = gMinE / 2;
+						var maxKw = maxVolt * maxAmp / 1000;
+						var response = data.replace("MAGIC_ENERGY", outputE)
+									.replace("MAGIC_SPEED", outputS)
+									.replace("MAGIC_SOC", outputSOC)
+									.replace("MAGIC_START", startDate)
+									.replace("MAGIC_MAX_ENG", gMaxE)
+									.replace("MAGIC_MIN_ENG", gMinE)
+									.replace("MAGIC_MAX_SPD", gMaxS)
+									.replace("MAGIC_MIN_SPD", gMinS)
+									.replace("MAGIC_VOLT", outputVolt)
+									.replace("MAGIC_AMP", outputAmp)
+									.replace("MAGIC_MAX_VOLT", maxVolt)
+									.replace("MAGIC_MAX_AMP", maxAmp)
+									.replace("MAGIC_MAX_KW", maxKw.toFixed(1))
+									.replace("MAGIC_MAX_MPH", maxMph);
+						res.end(response, "utf-8");
+						if (argv.verbose) console.log("delivered", outputSOC.length,"records and", response.length, "bytes");
+					});
 				});
 			});
 		});
@@ -345,43 +392,17 @@ http.createServer(function(req, res) {
 				}
 				outputW += comma + "[" + +midnight + "," + kWh + "]";
 
-				// now look for data in the aux collection
-
-				collection = db.collection("tesla_aux");
-				var maxAmp = 0, maxVolt = 0, maxMph = 0;
-				var outputAmp = "", outputVolt = "", comma = "";
-				collection.find({"ts": {$gte: +from, $lte: +to}}).toArray(function(err,docs) {
-					if (argv.verbose) console.log("Found " + docs.length + " entries in aux DB");
-					docs.forEach(function(doc) {
-						if(typeof doc.chargeState !== 'undefined') {
-							if (doc.chargeState.charger_voltage > maxVolt)
-								maxVolt = doc.chargeState.charger_voltage;
-							if (doc.chargeState.charger_actual_current > maxAmp)
-								maxAmp = doc.chargeState.charger_actual_current;
-							if (doc.chargeState.charge_rate > maxMph)
-								maxMph = doc.chargeState.charge_rate;
-							outputAmp += comma + "[" + doc.ts + "," + doc.chargeState.charger_actual_current + "]";
-							outputVolt += comma + "[" + doc.ts + "," + doc.chargeState.charger_voltage + "]";
-							comma = ",";
-						}
-					});
-					db.close();
-					fs.readFile("./stats.html", "utf-8", function(err, data) {
-						if (err) throw err;
-						var fD = new Date(firstDate);
-						var startDate = (fD.getMonth() + 1) + "/" + fD.getDate() + "/" + fD.getFullYear();
-						var response = data.replace("MAGIC_DISTANCE", outputD)
-								.replace("MAGIC_CHARGE", outputC)
-								.replace("MAGIC_AVERAGE", outputA)
-								.replace("MAGIC_KWH", outputW)
-								.replace("MAGIC_AMP", outputAmp)
-								.replace("MAGIC_VOLT", outputVolt)
-								.replace("MAGIC_START", startDate)
-								.replace("MAGIC_MAX_VOLT", maxVolt)
-								.replace("MAGIC_MAX_AMP", maxAmp)
-								.replace("MAGIC_MAX_MPH", maxMph);
-						res.end(response, "utf-8");
-					});
+				db.close();
+				fs.readFile("./stats.html", "utf-8", function(err, data) {
+					if (err) throw err;
+					var fD = new Date(firstDate);
+					var startDate = (fD.getMonth() + 1) + "/" + fD.getDate() + "/" + fD.getFullYear();
+					var response = data.replace("MAGIC_DISTANCE", outputD)
+							.replace("MAGIC_CHARGE", outputC)
+							.replace("MAGIC_AVERAGE", outputA)
+							.replace("MAGIC_KWH", outputW)
+							.replace("MAGIC_START", startDate);
+					res.end(response, "utf-8");
 				});
 			});
 		});
