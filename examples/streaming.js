@@ -49,7 +49,7 @@ var p_url = 'https://portal.vn.teslamotors.com/vehicles/';
 var s_url = 'https://streaming.vn.teslamotors.com/stream/';
 var nFields = argv.values.split(",").length + 1; // number of fields including ts
 var collectionS, collectionA;
-var startedAuxPoll = false;
+var firstTime = true;
 
 if (argv.db) {
 	console.log("database name", argv.db);
@@ -171,15 +171,15 @@ function storeVehicles(vehicles) {
 	});
 }
 
+// if we are storing into a database we also want to
+// - store the vehicle data (once, after the first connection)
+// - store some other REST API data around climate and charging (every minute)
 function initdb(vehicles) {
 	storeVehicles(vehicles); 
-	if (startedAuxPoll == false) {
-		startedAuxPoll = true;
-		getAux.vid = vehicles.id;
-		getAux.lastTime = 0;
-		getAux();
-		setInterval(getAux, 60000); // also get non-streaming data every 60 seconds
-	}
+	getAux.vid = vehicles.id;
+	getAux.lastTime = 0;
+	getAux();
+	setInterval(getAux, 60000); // also get non-streaming data every 60 seconds
 }
 
 function initstream() {
@@ -194,7 +194,11 @@ function initstream() {
 				initstream();		
 			});
                 } else {
-			if (argv.db) initdb(vehicles); //only do this if mongodb flag is set
+			if (argv.db && firstTime) {
+				//only do this once, and only if mongodb flag is set
+				firstTime = false;
+				initdb(vehicles);
+			}
                      	tsla_poll( vehicles.id, vehicles.vehicle_id, vehicles.tokens[0] ); 
 		}
         });
