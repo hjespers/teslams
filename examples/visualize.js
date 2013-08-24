@@ -179,7 +179,7 @@ http.createServer(function(req, res) {
 		// don't deliver more than 10000 data points (that's one BIG screen)
 		var halfIncrement =  Math.round((+to - +from) / 20000);
 		var increment = 2 + halfIncrement;
-		var outputE = "", outputS = "", outputSOC = "", comma, firstDate = 0, lastDate = 0;
+		var outputE = "", outputS = "", outputSOC = "", firstDate = 0, lastDate = 0;
 		var minE = 1000, minS = 1000, minSOC = 1000;
 		var maxE = -1000, maxS = -1000, maxSOC = -1000;
 		var gMaxE = -1000, gMaxS = -1000;
@@ -192,21 +192,24 @@ http.createServer(function(req, res) {
 			res.setHeader("Content-Type", "text/html");
 			collection = db.collection("tesla_stream");
 			collection.find({"ts": {$gte: +from, $lte: +to}}).toArray(function(err,docs) {
-				comma = "";
 				docs.forEach(function(doc) {
-					if (firstDate == 0) firstDate = lastDate = doc.ts;
+					var vals = doc.record.toString().replace(",,",",0,").split(",");
+					if (firstDate == 0) {
+						firstDate = lastDate = doc.ts;
+						outputE = "[" + +from + ",0]";
+						outputS = "[" + +from + ",0]";
+						outputSOC = "[" + +from + "," + vals[3] + "],null";
+					}
 					if (doc.ts >= lastDate) {
-						var vals = doc.record.toString().replace(",,",",0,").split(",");
 						if (doc.ts > lastDate + increment) {
 							if (maxE != -1000) {
-								outputE += comma + "[" + (+lastDate + halfIncrement) + "," + maxE + "]";
+								outputE += ",[" + (+lastDate + halfIncrement) + "," + maxE + "]";
 								outputE += ",[" + (+lastDate + increment) + "," + minE + "]";
 							}
 							if (maxS != -1000)
-								outputS += comma + "[" + (+lastDate + halfIncrement) + "," + (+maxS + +minS) / 2 + "]";
+								outputS += ",[" + (+lastDate + halfIncrement) + "," + (+maxS + +minS) / 2 + "]";
 							if (maxSOC != -1000)
-								outputSOC += comma + "[" + (+lastDate + halfIncrement)  + "," + (+maxSOC + +minSOC) / 2 + "]";
-							comma = ",";
+								outputSOC += ",[" + (+lastDate + halfIncrement)  + "," + (+maxSOC + +minSOC) / 2 + "]";
 							lastDate = doc.ts;
 							if (+maxE > +gMaxE) gMaxE = maxE;
 							if (+minE < +gMinE) gMinE = minE;
@@ -228,11 +231,12 @@ http.createServer(function(req, res) {
 
 				collection = db.collection("tesla_aux");
 				var maxAmp = 0, maxVolt = 0, maxMph = 0;
-				var outputAmp = "", outputVolt = "", comma = "";
+				var outputAmp = "", outputVolt = "";
 				lastDate = +from;
 				collection.find({"ts": {$gte: +from, $lte: +to}}).toArray(function(err,docs) {
 					if (argv.verbose) console.log("Found " + docs.length + " entries in aux DB");
-					comma = '';
+					ouputAmp = "[" + +firstDate + ",0]";
+					ouputColt = "[" + +firstDate + ",0]";
 					docs.forEach(function(doc) {
 						if(typeof doc.chargeState !== 'undefined') {
 							if (doc.chargeState.charge_rate > maxMph) {
@@ -244,21 +248,20 @@ http.createServer(function(req, res) {
 							// we might miss the occasional sample so if the time gap
 							// is more than 3 minutes, pull the lines down to zero
 							if (doc.ts - lastDate > 180000) {
-								outputAmp += comma + "[" + (lastDate + 60000) + ",0]";
-								outputVolt += comma + "[" + (lastDate + 60000) + ",0]";
-								outputAmp += comma + "[" + (doc.ts - 60000) + ",0]";
-								outputVolt += comma + "[" + (doc.ts - 60000) + ",0]";
+								outputAmp += ",[" + (lastDate + 60000) + ",0]";
+								outputVolt += ",[" + (lastDate + 60000) + ",0]";
+								outputAmp += ",[" + (doc.ts - 60000) + ",0]";
+								outputVolt += ",[" + (doc.ts - 60000) + ",0]";
 							}
-							outputAmp += comma + "[" + doc.ts + "," + doc.chargeState.charger_actual_current + "]";
-							outputVolt += comma + "[" + doc.ts + "," + doc.chargeState.charger_voltage + "]";
-							comma = ",";
+							outputAmp += ",[" + doc.ts + "," + doc.chargeState.charger_actual_current + "]";
+							outputVolt += ",[" + doc.ts + "," + doc.chargeState.charger_voltage + "]";
 							lastDate = doc.ts;
 						}
 					});
-					outputAmp += comma + "[" + (lastDate + 60000) + ",0]";
-					outputVolt += comma + "[" + (lastDate + 60000) + ",0]";
-					outputAmp += comma + "[" + (+chartEnd) + ",0]";
-					outputVolt += comma + "[" + (+chartEnd) + ",0]";
+					outputAmp += ",[" + (lastDate + 60000) + ",0]";
+					outputVolt += ",[" + (lastDate + 60000) + ",0]";
+					outputAmp += ",[" + (+chartEnd) + ",0]";
+					outputVolt += ",[" + (+chartEnd) + ",0]";
 
 					db.close();
 					fs.readFile("./energy.html", "utf-8", function(err, data) {
