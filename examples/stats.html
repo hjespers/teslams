@@ -1,6 +1,6 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
 <html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<title>Tesla Stats</title>
+<title>Tesla Daily Summary Chart</title>
 <script language="javascript" type="text/javascript" src="jquery-1.9.1.js"></script>
 <script language="javascript" type="text/javascript" src="jquery.flot.js"></script>
 <script language="javascript" type="text/javascript" src="jquery.flot.time.min.js"></script>
@@ -143,34 +143,12 @@ $(function() {
 	};
 	var eschart = $("#dcachart");
 	$.plot(eschart, data, options);
-	var d5 = [MAGIC_AMP];
-	var d6 = [MAGIC_VOLT];
-	var data = [{
-		data: d5,
-		bars: { show: true,
-			barWidth: 20000,
-			lineWidth: 0,
-			fill: 0.99 },
-		label: "current (A)",
-		color: "#808080",
-		yaxis: 1
-	},{
-		data: d6,
-		bars: { show: true,
-			barWidth: 20000,
-			lineWidth: 0,
-			fill: 0.99 },
-		label: "voltage (V)",
-		color: "#D07F27",
-		yaxis: 2
-	}];
-	var chargechart = $("#chargechart");
-	$.plot(chargechart, data, options);
+
 });
 </script>
 </head>
 <body>
-	<h2>Trip Chart <small>(switch to <a id="maplink" href="">Map</a>, <a id="energylink" href="">Energy Chart</a>)</small></h2>
+	<h2>Daily Summary Chart <small>(switch to <a id="maplink" href="">Map</a>, <a id="energylink" href="">Energy Chart</a>)</small></h2>
 	<div id="dates">
 		<label>Start time</label><input id="frompicker" type="text">
 		<label>End time</label><input id="topicker" type="text">
@@ -179,9 +157,6 @@ $(function() {
 		<center><div class="container">
 			<div id="dcachart" style="height:450px; width:90%;"></div>
 			<div id="explanation" style="width:70%">Daily distance, charge and Wh/mile plot, starting MAGIC_START.</div>
-			<div id="maxima" style="width:70%">Maximum charge voltage / current: MAGIC_MAX_VOLT/MAGIC_MAX_AMP (MAGIC_MAX_MPH miles/hour)</div>
-			<div id="chargechart" style="height:450px; width:90%;"></div>
-			<div id="explanation2" style="width:70%">Voltage and current while charging.</div>
 		</div><center>
 	</div>
 </body>
