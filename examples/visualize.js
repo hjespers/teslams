@@ -304,7 +304,7 @@ http.createServer(function(req, res) {
 		toParts = (parsedUrl.query.to + "-59").split("-");
 		from = new Date(fromParts[0], fromParts[1] - 1, fromParts[2], 0, 0, 0);
 		to = new Date(toParts[0], toParts[1] - 1, toParts[2], 23, 59, 59);
-		var outputD = "", outputC = "", outputA = "", outputW = "", comma, commaD, firstDate = 0, lastDay = 0, lastDate = 0;
+		var outputD = "", outputC = "", outputA = "", outputW = "", comma, firstDate = 0, lastDay = 0, lastDate = 0;
 		var startOdo = 0, charge = 0, minSOC = 101, maxSOC = -1, increment = 0, kWs = 0;
 		MongoClient.connect("mongodb://127.0.0.1:27017/" + argv.db, function(err, db) {
 			if(err) {
@@ -325,7 +325,7 @@ http.createServer(function(req, res) {
 						minSOC = 101;
 						maxSOC = -1;
 						kWs = 0;
-						comma = "", commaD = "";
+						comma = "";
 					}
 					if (doc.ts > lastDate) { // we don't want to go back in time
 						if (day == lastDay) {
@@ -362,8 +362,9 @@ http.createServer(function(req, res) {
 							outputD += comma + "[" + +midnight  + "," + dist + "]";
 							outputC += comma + "[" + +midnight  + "," + charge + "]";
 							if (dist > 0) {
-								outputA += commaD + "[" + +midnight  + "," + 1000 * kWh / dist + "]";
-								commaD = ",";
+								outputA += comma + "[" + +midnight  + "," + 1000 * kWh / dist + "]";
+							} else {
+								outputA += comma + "null";
 							}
 							outputW += comma + "[" + +midnight + "," + kWh + "]";
 							startOdo = vals[2];
@@ -387,8 +388,9 @@ http.createServer(function(req, res) {
 				outputD += comma + "[" + +midnight  + "," + dist + "]";
 				outputC += comma + "[" + +midnight  + "," + charge + "]";
 				if (dist > 0) {
-					outputA += commaD + "[" + +midnight  + "," + 1000 * kWh / dist + "]";
-					commaD = ",";
+					outputA += comma + "[" + +midnight  + "," + 1000 * kWh / dist + "]";
+				} else {
+					outputA += comma + "null";
 				}
 				outputW += comma + "[" + +midnight + "," + kWh + "]";
 
