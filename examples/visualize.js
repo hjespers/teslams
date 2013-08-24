@@ -257,7 +257,7 @@ http.createServer(function(req, res) {
 		toParts = (parsedUrl.query.to + "-59").split("-");
 		from = new Date(fromParts[0], fromParts[1] - 1, fromParts[2], 0, 0, 0);
 		to = new Date(toParts[0], toParts[1] - 1, toParts[2], 23, 59, 59);
-		var outputD = "", outputC = "", outputA = "", outputW = "", comma = "", commaD = "", firstDate = 0, lastDay = 0, lastDate = 0;
+		var outputD = "", outputC = "", outputA = "", outputW = "", comma, commaD, firstDate = 0, lastDay = 0, lastDate = 0;
 		var startOdo = 0, charge = 0, minSOC = 101, maxSOC = -1, increment = 0, kWs = 0;
 		MongoClient.connect("mongodb://127.0.0.1:27017/" + argv.db, function(err, db) {
 			if(err) {
@@ -268,7 +268,6 @@ http.createServer(function(req, res) {
 			res.setHeader("Content-Type", "text/html");
 			collection = db.collection("tesla_stream");
 			collection.find({"ts": {$gte: +from, $lte: +to}}).toArray(function(err,docs) {
-console.log(docs.length);
 				docs.forEach(function(doc) {
 					var day = new Date(doc.ts).getDay();
 					vals = doc.record.toString().replace(",,",",0,").split(",");
@@ -279,6 +278,7 @@ console.log(docs.length);
 						minSOC = 101;
 						maxSOC = -1;
 						kWs = 0;
+						comma = "", commaD = "";
 					}
 					if (doc.ts > lastDate) { // we don't want to go back in time
 						if (day == lastDay) {
@@ -349,6 +349,7 @@ console.log(docs.length);
 
 				collection = db.collection("tesla_aux");
 				var maxAmp = 0, maxVolt = 0, maxMph = 0;
+				var outputAmp = "", outputVolt = "", comma = "";
 				collection.find({"ts": {$gte: +from, $lte: +to}}).toArray(function(err,docs) {
 					if (argv.verbose) console.log("Found " + docs.length + " entries in aux DB");
 					docs.forEach(function(doc) {
@@ -359,6 +360,9 @@ console.log(docs.length);
 								maxAmp = doc.chargeState.charger_actual_current;
 							if (doc.chargeState.charge_rate > maxMph)
 								maxMph = doc.chargeState.charge_rate;
+							outputAmp += comma + "[" + doc.ts + "," + doc.chargeState.charger_actual_current + "]";
+							outputVolt += comma + "[" + doc.ts + "," + doc.chargeState.charger_voltage + "]";
+							comma = ",";
 						}
 					});
 					db.close();
@@ -370,6 +374,8 @@ console.log(docs.length);
 								.replace("MAGIC_CHARGE", outputC)
 								.replace("MAGIC_AVERAGE", outputA)
 								.replace("MAGIC_KWH", outputW)
+								.replace("MAGIC_AMP", outputAmp)
+								.replace("MAGIC_VOLT", outputVolt)
 								.replace("MAGIC_START", startDate)
 								.replace("MAGIC_MAX_VOLT", maxVolt)
 								.replace("MAGIC_MAX_AMP", maxAmp)
