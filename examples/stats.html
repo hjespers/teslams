@@ -5,6 +5,7 @@
 <script language="javascript" type="text/javascript" src="jquery.flot.js"></script>
 <script language="javascript" type="text/javascript" src="jquery.flot.time.min.js"></script>
 <script language="javascript" type="text/javascript" src="jquery.flot.threshold.min.js"></script>
+<script language="javascript" type="text/javascript" src="jquery.flot.orderBars.js"></script>
 <script language="javascript" type="text/javascript" src="jquery-ui-1.10.3.custom.min.js"></script>
 <script language="javascript" type="text/javascript" src="jquery-ui-timepicker-addon.js"></script>
 <link rel="stylesheet" media="all" type="text/css" href="jquery-ui-timepicker-addon.css" />
@@ -23,6 +24,39 @@ function sameDate(a, b) {
 }
 
 $(function() {
+	function showTooltip(x, y, contents) {
+		$('<div id="tooltip">' + contents + '</div>').css( {
+			position: 'absolute',
+			display: 'none',
+			top: y + 5,
+			left: x + 5,
+			border: '1px solid #fdd',
+			padding: '2px',
+			'background-color': '#fee',
+			opacity: 0.80
+		}).appendTo("body").fadeIn(200);
+	}
+	var previousPoint = null;
+	$("#dcachart").bind("plothover", function (event, pos, item) {
+		if (item) {
+			if (previousPoint != item.dataIndex) {
+				previousPoint = item.dataIndex;
+				
+				$("#tooltip").remove();
+				var x = item.datapoint[0];
+				x = new Date(Math.round(x / (24 * 3600000)) * 24 * 3600000);
+				var xS = (x.getMonth() + 1) + "/" + x.getDate();
+				var y = item.datapoint[1].toFixed(1);
+				
+				showTooltip(item.pageX, item.pageY,
+							item.series.label + " on " + xS + " : " + y);
+			}
+		} else {
+			$("#tooltip").remove();
+			previousPoint = null;			
+		}
+	});
+
 	var myUrl = $.url('protocol') + "://" + $.url('auth') + (($.url('auth').length > 0) ? "@" : "") +
 		$.url('hostname') + ":" + $.url('port');
 	var fromQ = $.url("?from");
@@ -53,53 +87,59 @@ $(function() {
 		}
 	});
 	var d1 = [MAGIC_DISTANCE];
+	var d4 = [MAGIC_KWH];
 	var d2 = [MAGIC_CHARGE];
 	var d3 = [MAGIC_AVERAGE];
 	var data = [{
 		data: d1,
 		bars: { show: true,
-			barWidth: 24 * 3600 * 1000,
+			order: 0,
+			barWidth: 6 * 3600 * 1000,
 			fill: 0.9 },
 		label: "Distance (miles)",
+		color: "#808080",
+		yaxis: 1
+	},{
+		data: d4,
+		bars: { show: true,
+			order: 1,
+			barWidth: 6 * 3600 * 1000,
+			fill: 0.9 },
+		label: "Energy Used (kWh)",
 		color: "#D07F27",
-		threshold: { below: 0, color: "#008000" }
+		yaxis: 2
 	},{
 		data: d2,
 		bars: { show: true,
-			barWidth: 24 * 3600 * 1000,
+			order: 2,
+			barWidth: 6 * 3600 * 1000,
 			fill: 0.2 },
 		label: "Charge (kWh)",
-		color: "#0a9fd9"
+		color: "#0a9fd9",
+		yaxis: 2
 	},{
 		data: d3,
 		lines: { show: true },
 		label: "Average (Wh/mile)",
-		color: "#0a9f0a"
+		color: "#0a9f0a",
+		yaxis: 1
 	}];
 	var options = {
-		yaxis: {
-			ticks: function (axis) {
-				var ticks = [];
-				var bottomy = Math.floor(axis.min / 10) * 10;
-				for (var y = bottomy; y < 0; y += 10)
-					ticks.push(y);
-				for (var y = 50; y < axis.max; y += 50)
-					ticks.push(y);
-				return ticks;
-			}},
-		xaxis: {
+		grid: { hoverable: true },
+		yaxes: [{
+		},{
+			position: 'right'
+		}],
+		xaxes: [{
 			mode: "time",
 			show: true,
-			minTickSize: [12, "hour"],
+			minTickSize: [1, "day"],
 			timezone: "browser",
 			tickFormatter: function (v, axis) {
 				var s = new Date(v);
-				if (s.getHours() == 12)
-					return (s.getMonth()+1) + '/' + s.getDate();
-				else
-					return "";
+				return (s.getMonth()+1) + '/' + s.getDate();
 			}
-		}
+		}]
 	};
 	var eschart = $("#dcachart");
 	$.plot(dcachart, data, options);
