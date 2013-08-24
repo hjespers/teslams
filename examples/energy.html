@@ -123,11 +123,70 @@ $(function() {
 	var socchart = $("#socchart");
 
 	$.plot(socchart, socData, socOptions);
+
+	// now the volt/amp chart
+
+	function showTooltip(x, y, contents) {
+		$('<div id="tooltip">' + contents + '</div>').css( {
+			position: 'absolute',
+			display: 'none',
+			top: y + 5,
+			left: x + 5,
+			border: '1px solid #fdd',
+			padding: '2px',
+			'background-color': '#fee',
+			opacity: 0.80
+		}).appendTo("body").fadeIn(200);
+	}
+	var d5 = [MAGIC_AMP];
+	var d6 = [MAGIC_VOLT];
+	var previousPointVA = null;
+	$("#chargechart").bind("plothover", function (event, pos, item) {
+		if (item) {
+			if (previousPointVA != item.dataIndex) {
+				previousPointVA = item.dataIndex;
+				$("#tooltip").remove();
+				var x = item.datapoint[0];
+				x = new Date(x);
+				var whenS = (x.getMonth() + 1) + '/' + x.getDate() + ' ' + x.getHours() + ':' + x.getMinutes();
+				var v = d6[item.dataIndex][1], a = d5[item.dataIndex][1], kw = a * v / 1000;
+				var valueS = v + 'V / ' + a + 'A ~ ' + kw.toFixed(1) + 'kW';
+				showTooltip(item.pageX, item.pageY, valueS + " at " + whenS);
+			}
+		} else {
+			$("#tooltip").remove();
+			previousPoint = null;			
+		}
+	});
+	var data = [{
+		data: d5,
+		label: "current (A)",
+		color: "#808080",
+		yaxis: 1
+	},{
+		data: d6,
+		label: "voltage (V)",
+		color: "#D07F27",
+		yaxis: 2
+	}];
+	options = {
+		grid: { hoverable: true },
+		yaxes: [{
+		},{
+			position: 'right'
+		}],
+		xaxes: [{
+			mode: "time",
+			timezone: "browser",
+		}]
+	};
+	var chargechart = $("#chargechart");
+	$.plot(chargechart, data, options);
 });
 </script>
 </head>
 <body>
-	<h2>Energy Chart <small>(switch to <a id="maplink" href="">Map</a>, <a id="statslink" href="">Stats Chart</a>)</small></h2>
+	<h2>Energy Chart <small>(switch to <a id="maplink" href="">Map</a>, <a id="statslink" href="">Daily Summary Chart</a>)</small></h2>
 	<div id="dates">
 		<label>Start time</label><input id="frompicker" type="text">
 		<label>End time</label><input id="topicker" type="text">
@@ -135,8 +194,12 @@ $(function() {
 	<div id="content">
 		<center><div class="container">
 			<div id="eschart" style="height:450px; width:90%"></div>
+			<div id="explanation" style="width:70%">Energy and speed plot, starting MAGIC_START.</div>
+			<div id="chargechart" style="height:450px; width:90%;"></div>
+			<div id="explanation2" style="width:70%">Voltage and current while charging.</div>
+			<div id="maxima" style="width:70%">Maximum charge power: MAGIC_MAX_VOLT V / MAGIC_MAX_AMP A (MAGIC_MAX_KW kW or ~ MAGIC_MAX_MPH miles/hour)</div>
 			<div id="socchart" style="height:300px; width:90%"></div>
-			<div id="explanation" style="width:70%">Energy, speed and SOC plot, starting MAGIC_START.</div>
+			<div id="explanation2" style="width:70%">SOC</div>
 		</div><center>
 	</div>
 </body>

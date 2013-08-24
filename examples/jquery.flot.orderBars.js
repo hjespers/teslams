@@ -76,8 +76,13 @@
         function getAxeMinMaxValues(series,AxeIdx){
             var minMaxValues = new Array();
             for(var i = 0; i < series.length; i++){
-                minMaxValues[0] = series[i].data[0][AxeIdx];
-                minMaxValues[1] = series[i].data[series[i].data.length - 1][AxeIdx];
+		var firstIdx = 0, lastIdx = series[i].data.length - 1;
+		while (series[i].data[firstIdx] == null && firstIdx < lastIdx)
+			firstIdx++;
+		while (series[i].data[lastIdx] == null && firstIdx < lastIdx)
+			lastIdx--;
+                minMaxValues[0] = series[i].data[firstIdx][AxeIdx];
+                minMaxValues[1] = series[i].data[lastIdx][AxeIdx];
             }
             return minMaxValues;
         }
