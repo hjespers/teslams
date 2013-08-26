@@ -1,0 +1,96 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Teslams - Telemetry Data Visualization System</title>
+<script language="javascript" type="text/javascript" src="jquery-1.9.1.js"></script>
+<script language="javascript" type="text/javascript" src="jquery-ui-1.10.3.custom.min.js"></script>
+<script language="javascript" type="text/javascript" src="jquery-ui-timepicker-addon.js"></script>
+<link rel="stylesheet" media="all" type="text/css" href="jquery-ui-timepicker-addon.css" />
+<link rel="stylesheet" media="all" type="text/css" href="jquery-ui.css" />
+<script language="javascript" type="text/javascript" src="url.min.js"></script>
+<script type="text/javascript">
+function sameTime(a, b) {
+	console.log(a,b);
+	var as = (a+"-0").split("-");
+	var bs = (b+"-0").split("-");
+	for (var i = 0; i < 6; i++) {
+		if (+as[i] != +bs[i])
+			return false;
+	}
+	return true;
+}
+
+$(function() {
+	var now = new Date();
+	var start = new Date(+now - 12 * 3600000);
+	var myUrl = $.url('protocol') + "://" + $.url('auth') + (($.url('auth').length > 0) ? "@" : "") +
+		$.url('hostname') + ":" + $.url('port');
+	var fromQ = $.url("?from");
+	if (fromQ == null || fromQ == "") {
+		fromQ = start.getFullYear() + "-" + (+start.getMonth() + 1) + "-" + start.getDate() + "-" +
+			start.getHours() + "-" + start.getMinutes() + "-" + start.getSeconds();
+	}
+	if (fromQ.split("-").length == 5) fromQ += "-00";
+	var toQ = $.url("?to");
+	if (toQ == null || toQ == "") {
+		toQ = now.getFullYear() + "-" + (+now.getMonth() + 1) + "-" + now.getDate() + "-" +
+			now.getHours() + "-" + now.getMinutes() + "-" + now.getSeconds();
+	}
+	if (toQ.split("-").length == 5) toQ += "-00";
+	$("#frompicker").val(fromQ);
+	$("#topicker").val(toQ);
+	$("#maplink").attr("href", myUrl + "/?from=" + fromQ + "&to=" + toQ);
+	$("#statslink").attr("href", myUrl + "/stats?from=" + fromQ + "&to=" + toQ);
+	$("#energylink").attr("href", myUrl + "/energy?from=" + fromQ + "&to=" + toQ);
+	$("#frompicker").datetimepicker({
+		dateFormat: "yy-mm-dd",
+		timeFormat: "HH-mm-ss",
+		separator: "-",
+		defaultValue: fromQ,
+		onClose: function(dateText, inst) {
+			if (dateText.length > 10 && sameTime(dateText, fromQ) == false) {
+				fromQ = dateText;
+				$("#maplink").attr("href", myUrl + "/?from=" + fromQ + "&to=" + toQ);
+				$("#statslink").attr("href", myUrl + "/stats?from=" + fromQ + "&to=" + toQ);
+				$("#energylink").attr("href", myUrl + "/energy?from=" + fromQ + "&to=" + toQ);
+			}
+		}
+	});
+	$("#topicker").datetimepicker({
+		dateFormat: "yy-mm-dd",
+		timeFormat: "HH-mm-ss",
+		separator: "-",
+		defaultValue: toQ,
+		onClose: function(dateText, inst) {
+			if (dateText.length > 10 && sameTime(dateText, toQ) == false) {
+				toQ = dateText;
+				$("#maplink").attr("href", myUrl + "/?from=" + fromQ + "&to=" + toQ);
+				$("#statslink").attr("href", myUrl + "/stats?from=" + fromQ + "&to=" + toQ);
+				$("#energylink").attr("href", myUrl + "/energy?from=" + fromQ + "&to=" + toQ);
+			}
+		}
+	});
+});
+</script>
+</head>
+<style>
+body {
+	margin:2em;
+	background-color: #EEF;
+}
+input {
+	width:20em; background-color: #EEE; border:solid 1px #BBB; color: #222; height: 28px; padding-left:10px; box-shadow: 2px 2px 0 #828181 inset;
+}
+</style>
+<body>
+	<h2>Teslams - Telemetry Data Visualization System</h2>
+
+	<h3>Pick the date/time range for which you want to see the data and click on one of the links below.</h3>
+	<div id="dates" style="font: larger;">
+		<label style="padding:1em;">Start time:</label><input id="frompicker" type="text">
+		<label style="padding:1em;">End time:</label><input id="topicker" type="text">
+	</div>
+	<div style="font: larger; margin: 1em;">
+		<a id="maplink" href="">Map</a>, <a id="energylink" href="">Energy Chart</a> or <a id="statslink" href="">Daily Summary Chart</a>
+	</div>
+</body>
+</html>
