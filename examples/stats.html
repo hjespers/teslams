@@ -66,7 +66,7 @@ $(function() {
 	if (toQ.split("-").length < 6) toQ += "-59-59";
 	$("#frompicker").val(fromQ);
 	$("#topicker").val(toQ);
-	$("#maplink").attr("href", myUrl + "/?from=" + fromQ + "&to=" + toQ);
+	$("#maplink").attr("href", myUrl + "/map?from=" + fromQ + "&to=" + toQ);
 	$("#energylink").attr("href", myUrl + "/energy?from=" + fromQ + "&to=" + toQ);
 	$("#frompicker").datepicker({
 		dateFormat: "yy-mm-dd",

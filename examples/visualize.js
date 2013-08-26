@@ -84,7 +84,15 @@ http.createServer(function(req, res) {
 	if (argv.verbose) { console.log("====>request is: ", req.url)}
 	var parsedUrl = url.parse(req.url, true);
 	var path = parsedUrl.pathname;
-	if (path == "/update") {
+	if (path == "/") {
+		// friendly welcome screen
+		fs.readFile("./welcome.html", "utf-8", function(err, data) {
+			if (err) throw err;
+			res.setHeader("Content-Type", "text/html"); 
+			res.end(data, "utf-8");
+		});
+		
+	} else if (path == "/update") {
 		// we don't keep the database connection as that has caused occasional random issues while testing
 		if (!started)
 			return;
@@ -124,7 +132,7 @@ http.createServer(function(req, res) {
 				db.close();
 			});
 		});
-	} else if (path == "/") {
+	} else if (path == "/map") {
 		var fromParts = (parsedUrl.query.from + "-0").split("-");
 		var toParts = (parsedUrl.query.to + "-59").split("-");
 		if (fromParts[5])

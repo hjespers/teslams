@@ -31,7 +31,7 @@ $(function() {
 	if (toQ.split("-").length == 5) toQ += "-00";
 	$("#frompicker").val(fromQ);
 	$("#topicker").val(toQ);
-	$("#maplink").attr("href", myUrl + "/?from=" + fromQ + "&to=" + toQ);
+	$("#maplink").attr("href", myUrl + "/map?from=" + fromQ + "&to=" + toQ);
 	$("#statslink").attr("href", myUrl + "/stats?from=" + fromQ + "&to=" + toQ);
 	$("#frompicker").datetimepicker({
 		dateFormat: "yy-mm-dd",
