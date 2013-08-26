@@ -89,7 +89,7 @@ function initialize() {
 		defaultValue: fromQ,
 		onClose: function(dateText, inst) {
 			if (dateText.length > 10 && sameTime(dateText, fromQ) == false) {
-				self.location = myUrl + "/?from=" + dateText + "&to=" + toQ
+				self.location = myUrl + "/map?from=" + dateText + "&to=" + toQ
 			}
 		}
 	});
@@ -100,7 +100,7 @@ function initialize() {
 		defaultValue: toQ,
 		onClose: function(dateText, inst) {
 			if (dateText.length > 10 && sameTime(dateText, toQ) == false) {
-				self.location = myUrl + "/?from=" + fromQ + "&to=" + dateText
+				self.location = myUrl + "/map?from=" + fromQ + "&to=" + dateText
 			}
 		}
 	});
