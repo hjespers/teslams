@@ -4,6 +4,10 @@ var util = require('util');
 var portal = 'https://portal.vn.teslamotors.com';
 exports.portal = portal;
 
+var autherrcheck = function( response, body, cb) {
+	if (body.search("You do not have access.") !== -1) return cb(new Error('Tesla returned authentication error. Either password is wrong, or Tesla Auth service may be down'));
+}
+
 var report = function(error, response, body, cb) {
   if (!!cb) cb(error || (new Error(response.statusCode + ': ' + body)));
 };
@@ -22,7 +26,9 @@ var all = exports.all = function(options, cb) {
             , "user_session[password]" : options.password
             }
           }, function (error, response, body) {
+    //if ( typeof cb == 'function' && response.statusCode == 200 && body.search("You do not have access.") !== -1) return cb(new Error('Tesla returned authentication error. Either password is wrong, or Tesla Auth service may be down'));
     if ((!!error) || ((response.statusCode !== 200) && (response.statusCode !== 302))) return report(error, response, body, cb);
+    if ((response.statusCode == 200)) return cb(new Error('Tesla returned authentication error. Either password is wrong, or Tesla Auth service may be down'));
     request(portal + '/vehicles', cb);
   });
 };
@@ -34,6 +40,8 @@ var vehicles = exports.vehicles = function(options, cb) {
   all(options, function (error, response, body) {
     var data;
 
+
+    if ((response.statusCode == 200)) return cb(new Error('Tesla returned authentication error. Either password is wrong, or Tesla Auth service may be down'));
     try { data = JSON.parse(body); } catch(err) { return cb(new Error('login failed')); }
     if (!util.isArray(data)) return cb(new Error('expecting an array from Tesla Motors cloud service'));
     data = data[0];
@@ -114,6 +122,7 @@ function get_vehicle_state( vid, cb ) {
 	request( portal + '/vehicles/' + vid + '/command/vehicle_state', function (error, response, body) { 
 		if ((!!error) || (response.statusCode !== 200)) return report(error, response, body, cb);
 		try {
+			console.log ( body );
 			var data = JSON.parse(body); 
 			if (typeof cb == 'function') return cb( data );  
 			else return true;
@@ -128,6 +137,7 @@ exports.get_vehicle_state = get_vehicle_state;
 function get_gui_settings( vid, cb ) {
 	request( portal + '/vehicles/' + vid + '/command/gui_settings', function (error, response, body) { 
 		if ((!!error) || (response.statusCode !== 200)) return report(error, response, body, cb);
+		if (body.search("You do not have access.") !== -1) return cd(new Error('Tesla returned authentication error. Either password is wrong, or Tesla Auth service may be down'));
 		try {
 			var data = JSON.parse(body); 
 			if (typeof cb == 'function') return cb( data );  

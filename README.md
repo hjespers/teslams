@@ -211,13 +211,13 @@ For help run :
 		  -p, --password  Teslamotors.com password               [required]
 		  -s, --silent    Silent mode: no output to console      [boolean]
 		  -f, --file      Output file.                           [default: "streaming.out"]
-                  -d, --db        MongoDB database location
+		  -d, --db        MongoDB database location
 		  -v, --values    List of values to collect              [default: "speed,odometer,soc,elevation,est_heading,est_lat,est_lng,power,shift_state"]
 		  -?, --help      Print usage information                                            
 
 	Missing required arguments: u, p
 
-#visualize.js - Display historical or realtime streaming data in a browser using Google Maps and provide an energy/speed graph
+#visualize.js - Display historical or realtime streaming data in a web browser 
 
 A sample application that uses streaming data collected in MongoDB by the streaming.js app and makes it visible in a browser. 
 
@@ -227,21 +227,25 @@ For help run:
 
 	visualize --help
 
-        Usage: node visualize.js --db <MongoDB database> [--port <http listen port>] [--replay <number of minutes>] [--silent] [--verbose]
+	Usage: node visualize.js --db <MongoDB database> [--port <http listen port>] [--replay <number of minutes>] [--silent] [--verbose]
 
-        Options:
-                  -p, --port     Listen port for the local http server               [default: 8766]
-                  -r, --replay   number of minutes ago that the replay should start  [default: 5]
-                  -d, --db       MongoDB database name                               [required]
-                  -s, --silent   Silent mode: no output to console                   [boolean]
-	          -v, --verbose  Verbose mode: more output to console                [boolean]
-	          -?, --help     Print usage information
+	Options:
+		  -p, --port     Listen port for the local http server               [default: 8766]
+		  -r, --replay   number of minutes ago that the replay should start  [default: 5]
+		  -d, --db       MongoDB database name                               [required]
+		  -s, --silent   Silent mode: no output to console                   [boolean]
+		  -v, --verbose  Verbose mode: more output to console                [boolean]
+		  -?, --help     Print usage information
 
-	        Missing required arguments: d
+	Missing required arguments: d
 
-Point your browser to http://localhost:8766 to view the map.
+Point your browser to the following URLs to view the various types of visualizations.
 
-Visiting http://localhost:8766/energy?from=<year>-<month>-<day>-<hour>-<minute>&to=<year>-<month>-<day>-<hour>-<minute> displays a speed / energy graph for the given time period. For example http://localhost:8766/energy?from=2013-08-01-7-08&to=2013-08-01-7-52 for your data from 7:08 until 7:52 in the morning of August 1st.
+Stats URL  - http://localhost:8766/stats?from=2013-08-24-00-00-00&to=2013-08-25-23-59-59
+Energy URL - http://localhost:8766/energy?from=2013-08-24-00-00-00&to=2013-08-25-23-59-59
+Maps URL   - http://localhost:8766/?from=2013-08-24-00-00-00&to=2013-08-25-23-59-59
+
+URLs are in the form http://localhost:8766/energy?from=YYYY-MM-DD-HH-MM&to=YYYY-MM-DD-HH-MM 
 
 #teslams.js - The main library (for javascript programmers)
 
