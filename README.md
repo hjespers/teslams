@@ -217,7 +217,7 @@ For help run :
 
 	Missing required arguments: u, p
 
-#visualize.js - Display historical or realtime streaming data in a web browser 
+#visualize.js - Display historical or realtime streaming data in a browser using Google Maps and provide an energy/speed graph
 
 A sample application that uses streaming data collected in MongoDB by the streaming.js app and makes it visible in a browser. 
 
@@ -227,25 +227,22 @@ For help run:
 
 	visualize --help
 
-	Usage: node visualize.js --db <MongoDB database> [--port <http listen port>] [--replay <number of minutes>] [--silent] [--verbose]
+        Usage: node visualize.js --db <MongoDB database> [--port <http listen port>] [--replay <number of minutes>] [--silent] [--verbose]
 
-	Options:
-		  -p, --port     Listen port for the local http server               [default: 8766]
-		  -r, --replay   number of minutes ago that the replay should start  [default: 5]
-		  -d, --db       MongoDB database name                               [required]
-		  -s, --silent   Silent mode: no output to console                   [boolean]
-		  -v, --verbose  Verbose mode: more output to console                [boolean]
-		  -?, --help     Print usage information
+        Options:
+	          -p, --port     Listen port for the local http server               [default: 8766]
+	          -r, --replay   number of minutes ago that the replay should start  [default: 5]
+	          -d, --db       MongoDB database name                               [required]
+	          -s, --silent   Silent mode: no output to console                   [boolean]
+	          -v, --verbose  Verbose mode: more output to console                [boolean]
+	          -?, --help     Print usage information
 
-	Missing required arguments: d
+        Missing required arguments: d
 
-Point your browser to http://localhost:8766 to view the various types of visualizations.
+Point your browser to http://localhost:8766 to view the various visualizations.
 
-Stats URL  - http://localhost:8766/stats?from=2013-08-24-00-00-00&to=2013-08-25-23-59-59
-Energy URL - http://localhost:8766/energy?from=2013-08-24-00-00-00&to=2013-08-25-23-59-59
-Maps URL   - http://localhost:8766/map?from=2013-08-24-00-00-00&to=2013-08-25-23-59-59
+URLs are of the form http://localhost:8766/energy?from=YYYY-MM-DD-HH-MM&to=YYYY-MM-DD-HH-MM 
 
-URLs are in the form http://localhost:8766/REPORT_TYPE?from=YYYY-MM-DD-HH-MM&to=YYYY-MM-DD-HH-MM 
 
 #teslams.js - The main library (for javascript programmers)
 
