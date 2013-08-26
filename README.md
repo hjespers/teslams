@@ -239,13 +239,13 @@ For help run:
 
 	Missing required arguments: d
 
-Point your browser to the following URLs to view the various types of visualizations.
+Point your browser to http://localhost:8766 to view the various types of visualizations.
 
 Stats URL  - http://localhost:8766/stats?from=2013-08-24-00-00-00&to=2013-08-25-23-59-59
 Energy URL - http://localhost:8766/energy?from=2013-08-24-00-00-00&to=2013-08-25-23-59-59
-Maps URL   - http://localhost:8766/?from=2013-08-24-00-00-00&to=2013-08-25-23-59-59
+Maps URL   - http://localhost:8766/map?from=2013-08-24-00-00-00&to=2013-08-25-23-59-59
 
-URLs are in the form http://localhost:8766/energy?from=YYYY-MM-DD-HH-MM&to=YYYY-MM-DD-HH-MM 
+URLs are in the form http://localhost:8766/REPORT_TYPE?from=YYYY-MM-DD-HH-MM&to=YYYY-MM-DD-HH-MM 
 
 #teslams.js - The main library (for javascript programmers)
 
