@@ -6,6 +6,7 @@
 <script language="javascript" type="text/javascript" src="jquery-ui-timepicker-addon.js"></script>
 <link rel="stylesheet" media="all" type="text/css" href="jquery-ui-timepicker-addon.css" />
 <link rel="stylesheet" media="all" type="text/css" href="jquery-ui.css" />
+<link rel="stylesheet" media="all" type="text/css" href="shared.css" />
 <script language="javascript" type="text/javascript" src="url.min.js"></script>
 <script type="text/javascript">
 function sameTime(a, b) {
@@ -38,7 +39,7 @@ $(function() {
 	if (toQ.split("-").length == 5) toQ += "-00";
 	$("#frompicker").val(fromQ);
 	$("#topicker").val(toQ);
-	$("#maplink").attr("href", myUrl + "/?from=" + fromQ + "&to=" + toQ);
+	$("#maplink").attr("href", myUrl + "/map?from=" + fromQ + "&to=" + toQ);
 	$("#statslink").attr("href", myUrl + "/stats?from=" + fromQ + "&to=" + toQ);
 	$("#energylink").attr("href", myUrl + "/energy?from=" + fromQ + "&to=" + toQ);
 	$("#frompicker").datetimepicker({
@@ -49,7 +50,7 @@ $(function() {
 		onClose: function(dateText, inst) {
 			if (dateText.length > 10 && sameTime(dateText, fromQ) == false) {
 				fromQ = dateText;
-				$("#maplink").attr("href", myUrl + "/?from=" + fromQ + "&to=" + toQ);
+				$("#maplink").attr("href", myUrl + "/map?from=" + fromQ + "&to=" + toQ);
 				$("#statslink").attr("href", myUrl + "/stats?from=" + fromQ + "&to=" + toQ);
 				$("#energylink").attr("href", myUrl + "/energy?from=" + fromQ + "&to=" + toQ);
 			}
@@ -63,7 +64,7 @@ $(function() {
 		onClose: function(dateText, inst) {
 			if (dateText.length > 10 && sameTime(dateText, toQ) == false) {
 				toQ = dateText;
-				$("#maplink").attr("href", myUrl + "/?from=" + fromQ + "&to=" + toQ);
+				$("#maplink").attr("href", myUrl + "/map?from=" + fromQ + "&to=" + toQ);
 				$("#statslink").attr("href", myUrl + "/stats?from=" + fromQ + "&to=" + toQ);
 				$("#energylink").attr("href", myUrl + "/energy?from=" + fromQ + "&to=" + toQ);
 			}
@@ -72,15 +73,6 @@ $(function() {
 });
 </script>
 </head>
-<style>
-body {
-	margin:2em;
-	background-color: #EEF;
-}
-input {
-	width:20em; background-color: #EEE; border:solid 1px #BBB; color: #222; height: 28px; padding-left:10px; box-shadow: 2px 2px 0 #828181 inset;
-}
-</style>
 <body>
 	<h2>Teslams - Telemetry Data Visualization System</h2>
 
