@@ -28,6 +28,10 @@ function getColor(speed) {
 	var g=(wl<580) ? Math.round(35+(wl-440)*4.4) : Math.round(35+(640-wl)*3.66); if(g<55){g=55} if(g>255){g=255}
 	return '#'+hex(r)+hex(g)+hex(b);
 }
+function cancelUpdates() {
+	if (getMore.ID)
+		clearInterval(getMore.ID);
+}
 function getMore() {
 	if (myUrl.length == 0)
 		return;
@@ -40,7 +44,7 @@ function getMore() {
 			getMore.lastTimestamp = +d[0][0];
 			console.log("do we need to stop?", "end", +getMore.endTimestamp, "last", +getMore.lastTimestamp);
 			if (+getMore.endTimestamp - +getMore.lastTimestamp < 120000)
-				clearInterval(getMore.ID);
+				cancelUpdates();
 			return;
 		}
 		for (var i = 0; i < d.length; i++) { 
@@ -71,6 +75,7 @@ function getMore() {
 	.fail(function(jqXHR, textStatus, errorThrown) { console.log(myUrl + "/update : ajax fail", textStatus, errorThrown); }) 
 }
 function initialize() { 
+	getMore.ID = null;
 	myUrl = $.url('protocol') + "://" + $.url('auth') + (($.url('auth').length > 0) ? "@" : "") +
 		$.url('hostname') + ":" + $.url('port');
 	var fromQ = $.url("?from");
@@ -122,6 +127,7 @@ google.maps.event.addDomListener(window, 'load', initialize);
 	<div id="dates">
 		<label>Start time</label><input id="frompicker" type="text">
 		<label>End time</label><input id="topicker" type="text">
+		<button onclick="cancelUpdates()">Stop updates</button>
 	</div>
 	<div id='map-canvas'/>
 </body> </html>
