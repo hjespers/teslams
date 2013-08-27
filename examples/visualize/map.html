@@ -36,7 +36,7 @@ function getMore() {
 	$.getJSON(myUrl + "/update", { 'last': +getMore.lastTimestamp })
 	.done(function (d, textStatus, jqXHR) {
 		console.log("length", d.length, "end", +getMore.endTimestamp, "last", +getMore.lastTimestamp);
-		if (d.length == 1) { // that's just the fake entry
+		if (d.length == 1 && d[0][2] == 0) { // that's just the fake entry
 			getMore.lastTimestamp = +d[0][0];
 			console.log("do we need to stop?", "end", +getMore.endTimestamp, "last", +getMore.lastTimestamp);
 			if (+getMore.endTimestamp - +getMore.lastTimestamp < 120000)

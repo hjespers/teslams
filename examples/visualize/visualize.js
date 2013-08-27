@@ -119,15 +119,18 @@ app.get('/update', function (req, res) {
 		}
 		collection = db.collection("tesla_stream");
 		// get no more than 10 minutes or 240 samples, whichever is smaller
+		// but not past the end of the requested segment and not past the current time
 		var endTime = +lastTime + 600000;
 		if (to && +endTime > +to)
 			endTime = +to;
+		var currentTime = new Date().getTime();
+		if (+endTime > +currentTime)
+			endTime = +currentTime;
 		collection.find({"ts": {"$gt": +lastTime, "$lte": +endTime}}).toArray(function(err,docs) {
 			if (argv.verbose) console.log("got datasets:", docs.length);
 			if (docs.length == 0) {
 				// create one dummy entry so the map app knows the last time we looked at
 				docs = [ { "ts": +endTime, "record": [ +lastTime+"" ,"0","0","0","0","0","0","0","0","0","0","0"]} ];
-				lastTime = +endTime; // skip this segment
 			}
 			res.setHeader("Content-Type", "application/json"); 
 			res.write("[", "utf-8");
