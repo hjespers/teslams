@@ -46,6 +46,8 @@ Be careful when using these programs as they can lock and unlock your car as wel
 
 Be careful not to send your login and password to anyone other than Tesla or you are giving away the authentication details required to control your car.
 
+Also ensure that you don't overwhelm the Tesla servers with requests. Calling REST APIs at very high frequency can put substantial load on the Tesla servers and might get your IP blocked by Tesla.
+
 #Disclaimer
 
 Use these programs at your own risk. The authors do not guaranteed the proper functioning of these applications. This code attempts to use the same interfaces used by the official Tesla phone apps. However, it is possible that use of this code may cause unexpected damage for which nobody but you are responsible. Use of these functions can change the settings on your car and may have negative consequences such as (but not limited to) unlocking the doors, opening the sun roof, or reducing the available charge in the battery.
@@ -219,7 +221,11 @@ For help run :
 
 #visualize.js - Display historical or realtime streaming data in a browser using Google Maps and provide an energy/speed graph
 
-A sample application that uses streaming data collected in MongoDB by the streaming.js app and makes it visible in a browser. 
+A sample application that uses streaming data collected in MongoDB by the streaming.js app and makes it visible in a browser. For this app to work you need to be logging the streaming data into a database (see the streaming app above for details). Visualize then takes those data and shows them as a web application. You can connect to the main page for a simple welcome screen that allows you to pick the data range and then select one of the (currently) three supported applications:
+
+- map: visualize the path and speed of the car over a period of time. This can also do live tracking of the progress of the car. It uses Google Maps and AJAX to update the map (either in real time, or in "fast forward" mode when looking at the past).
+- energy: visualize the energy used and regenerated while driving, charging (voltage and current) and SOC (state of charge) over the time period given.
+- stats: visualize daily driving, charging and Wh/mile.
 
 To execute run:
 
