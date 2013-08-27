@@ -223,9 +223,11 @@ A sample application that uses streaming data collected in MongoDB by the stream
 
 To execute run:
 
+        node examples/visualize/visualze.js --db <MongoDB database>
+
 For help run:
 
-	visualize --help
+	node examples/visualize/visualize.js --help
 
         Usage: node visualize.js --db <MongoDB database> [--port <http listen port>] [--replay <number of minutes>] [--silent] [--verbose]
 
