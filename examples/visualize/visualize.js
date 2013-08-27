@@ -51,6 +51,7 @@ var capacity;
 var express = require('express');
 var app = express();
 var passport = require('passport'), LocalStrategy = require('passport-local').Strategy;
+var speedup = 60000;
 
 passport.use(new LocalStrategy(
 	function(username, password, done) {
@@ -118,9 +119,11 @@ app.get('/update', function (req, res) {
 			return;
 		}
 		collection = db.collection("tesla_stream");
-		// get no more than 10 minutes or 240 samples, whichever is smaller
+		if (req.query.speed != null && req.query.speed != "")
+			speedup = req.query.speed * 2000; // every 2000 msec
+		// get the data from 'speedup' as many seconds
 		// but not past the end of the requested segment and not past the current time
-		var endTime = +lastTime + 600000;
+		var endTime = +lastTime + speedup;
 		if (to && +endTime > +to)
 			endTime = +to;
 		var currentTime = new Date().getTime();
@@ -154,14 +157,14 @@ app.get('/update', function (req, res) {
 });
 
 app.get('/map', function(req, res) {
-	var parsedUrl = url.parse(req.url, true);
-	var path = parsedUrl.pathname;
-	var fromParts = (parsedUrl.query.from + "-0").split("-");
-	var toParts = (parsedUrl.query.to + "-59").split("-");
+	var fromParts = (req.query.from + '-0').split('-');
+	var toParts = (req.query.to + '-0').split('-');
 	if (fromParts[5])
 		from = new Date(fromParts[0], fromParts[1] - 1, fromParts[2], fromParts[3], fromParts[4], fromParts[5]);
 	if (toParts[5])
 		to = new Date(toParts[0], toParts[1] - 1, toParts[2], toParts[3], toParts[4], toParts[5]);
+	if (req.query.speed != null && req.query.speed != "" && req.query.speed <= 120 && req.query.speed >= 1)
+		speedup = req.query.speed * 2000;
 	MongoClient.connect("mongodb://127.0.0.1:27017/" + argv.db, function(err, db) {
 		if(err) {
 			console.log('error connecting to database:', err);

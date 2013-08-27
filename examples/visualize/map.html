@@ -37,7 +37,7 @@ function getMore() {
 		return;
 	// this gets us an array of arrays - there is always at least one dummy
 	// entry that gives us the last timestamp that was considered in this batch
-	$.getJSON(myUrl + "/update", { 'last': +getMore.lastTimestamp })
+	$.getJSON(myUrl + "/update", { 'speed': +$("#speed").val() })
 	.done(function (d, textStatus, jqXHR) {
 		console.log("length", d.length, "end", +getMore.endTimestamp, "last", +getMore.lastTimestamp);
 		if (d.length == 1 && d[0][2] == 0) { // that's just the fake entry
@@ -74,6 +74,9 @@ function getMore() {
 	})
 	.fail(function(jqXHR, textStatus, errorThrown) { console.log(myUrl + "/update : ajax fail", textStatus, errorThrown); }) 
 }
+function updateSpeed(event, ui) {
+	$("#speed").val(ui.value);
+}
 function initialize() { 
 	getMore.ID = null;
 	myUrl = $.url('protocol') + "://" + $.url('auth') + (($.url('auth').length > 0) ? "@" : "") +
@@ -109,6 +112,12 @@ function initialize() {
 			}
 		}
 	});
+	var speedup = $.url("?speed");
+	if (speedup == null || speedup == "")
+		speedup = 120;
+	$("#speedSlider").slider({'animate': 'fast', 'min': 1, 'max': 120, 'value': speedup,
+				'slide': updateSpeed});
+	$("#speed").val($("#speedSlider").slider("value"));
 	myLatlng = new google.maps.LatLng(MAGIC_FIRST_LOC);
 	var mapOptions = { center: myLatlng, zoom: 16, mapTypeId: google.maps.MapTypeId.ROADMAP };
 	map = new google.maps.Map(document.getElementById('map-canvas'), mapOptions);
@@ -122,12 +131,19 @@ function initialize() {
 }
 google.maps.event.addDomListener(window, 'load', initialize);
 </script>
-</head> <body>
+</head>
+<body>
 	<h2>Tesla Tracker <small>(switch to <a id="energylink" href="">Energy Chart</a>, <a id="statslink" href="">Daily Summary Chart</a>)</small></h2>
-	<div id="dates">
-		<label>Start time</label><input id="frompicker" type="text">
-		<label>End time</label><input id="topicker" type="text">
-		<button onclick="cancelUpdates()">Stop updates</button>
+	<div id="top">
+		<div id="dates">
+			<label>Start time</label><input id="frompicker" type="text">
+			<label>End time</label><input id="topicker" type="text">
+			<button onclick="cancelUpdates()">Stop updates</button>
+		</div>
+		<p><label>Replay Speed (real Time = 1x):</label>
+		   <input type="text" id="speed" />
+		</p>
+		<div id="speedSlider"></div>
 	</div>
 	<div id='map-canvas'/>
 </body> </html>
