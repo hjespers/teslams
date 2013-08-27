@@ -178,7 +178,7 @@ app.get('/map', function(req, res) {
 				var vals = record.toString().replace(",,",",0,").split(/[,\n\r]/);
 				lastTime = +vals[0];
 				res.setHeader("Content-Type", "text/html"); 
-				fs.readFile("./map.html", "utf-8", function(err, data) {
+				fs.readFile(__dirname + "/map.html", "utf-8", function(err, data) {
 					if (err) throw err;
 					var response = data.replace("MAGIC_APIKEY", apiKey)
 						.replace("MAGIC_FIRST_LOC", vals[6] + "," + vals[7]);
@@ -296,7 +296,7 @@ app.get('/energy', function(req, res) {
 				outputVolt += ",[" + (+chartEnd) + ",0]";
 				
 				db.close();
-				fs.readFile("./energy.html", "utf-8", function(err, data) {
+				fs.readFile(__dirname + "/energy.html", "utf-8", function(err, data) {
 					if (err) throw err;
 					var fD = new Date(firstDate);
 					var startDate = (fD.getMonth() + 1) + "/" + fD.getDate() + "/" + fD.getFullYear();
@@ -434,7 +434,7 @@ app.get('/stats', function(req, res) {
 			outputW += comma + "[" + +midnight + "," + kWh + "]";
 			
 			db.close();
-			fs.readFile("./stats.html", "utf-8", function(err, data) {
+			fs.readFile(__dirname + "/stats.html", "utf-8", function(err, data) {
 				if (err) throw err;
 				var fD = new Date(firstDate);
 				var startDate = (fD.getMonth() + 1) + "/" + fD.getDate() + "/" + fD.getFullYear();
