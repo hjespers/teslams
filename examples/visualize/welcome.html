@@ -39,7 +39,7 @@ $(function() {
 	if (toQ.split("-").length == 5) toQ += "-00";
 	$("#frompicker").val(fromQ);
 	$("#topicker").val(toQ);
-	$("#maplink").attr("href", myUrl + "/?from=" + fromQ + "&to=" + toQ);
+	$("#maplink").attr("href", myUrl + "/map?from=" + fromQ + "&to=" + toQ);
 	$("#statslink").attr("href", myUrl + "/stats?from=" + fromQ + "&to=" + toQ);
 	$("#energylink").attr("href", myUrl + "/energy?from=" + fromQ + "&to=" + toQ);
 	$("#frompicker").datetimepicker({
@@ -50,7 +50,7 @@ $(function() {
 		onClose: function(dateText, inst) {
 			if (dateText.length > 10 && sameTime(dateText, fromQ) == false) {
 				fromQ = dateText;
-				$("#maplink").attr("href", myUrl + "/?from=" + fromQ + "&to=" + toQ);
+				$("#maplink").attr("href", myUrl + "/map?from=" + fromQ + "&to=" + toQ);
 				$("#statslink").attr("href", myUrl + "/stats?from=" + fromQ + "&to=" + toQ);
 				$("#energylink").attr("href", myUrl + "/energy?from=" + fromQ + "&to=" + toQ);
 			}
@@ -64,7 +64,7 @@ $(function() {
 		onClose: function(dateText, inst) {
 			if (dateText.length > 10 && sameTime(dateText, toQ) == false) {
 				toQ = dateText;
-				$("#maplink").attr("href", myUrl + "/?from=" + fromQ + "&to=" + toQ);
+				$("#maplink").attr("href", myUrl + "/map?from=" + fromQ + "&to=" + toQ);
 				$("#statslink").attr("href", myUrl + "/stats?from=" + fromQ + "&to=" + toQ);
 				$("#energylink").attr("href", myUrl + "/energy?from=" + fromQ + "&to=" + toQ);
 			}
