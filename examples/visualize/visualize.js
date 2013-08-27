@@ -98,7 +98,7 @@ MongoClient.connect("mongodb://127.0.0.1:27017/" + argv.db, function(err, db) {
 	});
 });
 
-app.use(express.logger('dev'));
+if (argv.verbose) app.use(express.logger('dev'));
 
 app.get('/', function(req, res) {
 	// friendly welcome screen
