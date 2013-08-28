@@ -55,6 +55,7 @@ function getMore() {
 			myLatlng = nextLatlng;
 			getMore.lastTimestamp = d[i][0];
 		}
+		map.setCenter(myLatlng);
 		var cStr = '<div id="content">';
 		marker.setPosition(myLatlng);
 		var i = d.length - 1; // last spot
