@@ -167,6 +167,13 @@ function storeVehicles(vehicles) {
 	collectionA.insert(doc, { 'safe': true }, function (err, docs) {
 		if (err) console.dir(err);
 	});
+	teslams.get_vehicle_state(vehicles.id, function(data) {
+		if (!argv.silent) console.log( util.inspect(data));
+		doc = { 'ts': new Date().getTime(), 'vehicleState': data };
+		collectionA.insert(doc, { 'safe': true }, function (err, docs) {
+			if (err) console.dir(err);
+		});
+	});
 }
 
 // if we are storing into a database we also want to
