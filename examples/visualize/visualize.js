@@ -42,7 +42,6 @@ if ( argv.help == true ) {
 var MongoClient = require('mongodb').MongoClient;
 var date = new Date();
 var http = require('http');
-var url = require('url');
 var fs = require('fs');
 var lastTime = 0;
 var started = false;
@@ -199,18 +198,17 @@ app.get('/map', function(req, res) {
 });
 
 app.get('/energy', function(req, res) {
-	var parsedUrl = url.parse(req.url, true);
-	var path = parsedUrl.pathname;
-	if (!parsedUrl.query.to || !parsedUrl.query.from) {
+	var path = req.path;
+	if (!req.query.to || !req.query.from) {
 		res.end("<html><head></head><body>Invalid query format</body></html>", "utf-8");
 		return;
 	}
 	// make ranges work with and without time component
-	fromParts = (parsedUrl.query.from + "-0-0-0").split("-");
-	if (parsedUrl.query.to.split("-").length == 3) {
-		toParts = (parsedUrl.query.to + "23-59-59").split("-");
+	fromParts = (req.query.from + "-0-0-0").split("-");
+	if (req.query.to.split("-").length == 3) {
+		toParts = (req.query.to + "23-59-59").split("-");
 	} else {
-		toParts = (parsedUrl.query.to + "-59-59").split("-");
+		toParts = (req.query.to + "-59-59").split("-");
 	}
 	from = new Date(fromParts[0], fromParts[1] - 1, fromParts[2], fromParts[3], fromParts[4], fromParts[5]);
 	to = new Date(toParts[0], toParts[1] - 1, toParts[2], toParts[3], toParts[4], toParts[5]);
@@ -339,14 +337,13 @@ app.get('/energy', function(req, res) {
 });
 
 app.get('/stats', function(req, res) {
-	var parsedUrl = url.parse(req.url, true);
-	var path = parsedUrl.pathname;
-	if (!parsedUrl.query.to || !parsedUrl.query.from) {
+	var path = req.path;
+	if (!req.query.to || !req.query.from) {
 		res.end("<html><head></head><body>Invalid query format</body></html>", "utf-8");
 		return;
 	}
-	fromParts = (parsedUrl.query.from + "-0").split("-");
-	toParts = (parsedUrl.query.to + "-59").split("-");
+	fromParts = (req.query.from + "-0").split("-");
+	toParts = (req.query.to + "-59").split("-");
 	from = new Date(fromParts[0], fromParts[1] - 1, fromParts[2], 0, 0, 0);
 	to = new Date(toParts[0], toParts[1] - 1, toParts[2], 23, 59, 59);
 	var outputD = "", outputC = "", outputA = "", outputW = "", comma, firstDate = 0, lastDay = 0, lastDate = 0;
