@@ -15,14 +15,11 @@ function argchecker( argv ) {
 }
 
 var argv = require('optimist')
-	.usage('Usage: $0 --db <MongoDB database> [--port <http listen port>] [--replay <number of minutes>] [--silent] [--verbose]')
+	.usage('Usage: $0 --db <MongoDB database> [--port <http listen port>] [--silent] [--verbose]')
 	.check( argchecker )
 	.alias('p', 'port')
 	.describe('p', 'Listen port for the local http server')
 	.default('p', 8766)
-	.alias('r', 'replay')
-	.describe('r', 'number of minutes ago that the replay should start')
-	.default('r', 5)
 	.alias('d', 'db')
 	.describe('d', 'MongoDB database name')
 	.demand('d')
@@ -36,13 +33,12 @@ var argv = require('optimist')
 	.describe('?', 'Print usage information')
 	.argv;
 if ( argv.help == true ) {
-	console.log( 'Usage: visualize.js --db <MongoDB database> [--replay <number of minutes>] [--silent] [--verbose]');
+	console.log( 'Usage: visualize.js --db <MongoDB database> [--silent] [--verbose]');
 	process.exit(1);
 }
 var MongoClient = require('mongodb').MongoClient;
 var date = new Date();
 var http = require('http');
-var url = require('url');
 var fs = require('fs');
 var lastTime = 0;
 var started = false;
@@ -67,7 +63,33 @@ passport.use(new LocalStrategy(
 		});
 	}
 ));
-
+function makeDate(string, offset) {
+	var args = string.split('-');
+	var date = new Date(args[0], args[1]-1, args[2], args[3], args[4], args[5]);
+	if (offset != null)
+		date = +date + offset;
+	return new Date(date);
+}
+function dateString(time) {
+	return time.getFullYear() + '-' + (time.getMonth()+1) + '-' + time.getDate() + '-' +
+		time.getHours() + '-' + time.getMinutes() + '-' + time.getSeconds();
+}
+function dashDate(date, filler) { // date-time with all '-'
+	var c = date.replace('%20','-').replace(' ','-').split('-');
+	for (var i = c.length; i < 6; i++)
+		c.push(filler[i-3]);
+	return c[0] + '-' + c[1] + '-' + c[2] + '-' + c[3] + '-' + c[4] + '-' + c[5];
+}
+function parseDates(fromQ, toQ) {
+	if (toQ == null || toQ == "" || toQ.split('-').count < 2) // no valid to argument -> to = now
+		this.toQ = dateString(new Date());
+	else
+		this.toQ = dashDate(toQ,['00','00','00']);
+	if (fromQ == null || fromQ == "" || fromQ.split('-').count < 2) // no valid from argument -> 12h before to
+		this.fromQ = dashDate(dateString(makeDate(this.toQ, -12 * 3600 * 1000)));
+	else
+		this.fromQ = dashDate(fromQ,['23','59','59']);
+}
 MongoClient.connect("mongodb://127.0.0.1:27017/" + argv.db, function(err, db) {
 	// this is the first time we connect - if we get an error, just throw it
 	if(err) throw(err);
@@ -135,7 +157,7 @@ app.get('/update', function (req, res) {
 				// create one dummy entry so the map app knows the last time we looked at
 				docs = [ { "ts": +endTime, "record": [ +lastTime+"" ,"0","0","0","0","0","0","0","0","0","0","0"]} ];
 			}
-			res.setHeader("Content-Type", "application/json"); 
+			res.setHeader("Content-Type", "application/json");
 			res.write("[", "utf-8");
 			var comma = "";
 			docs.forEach(function(doc) {
@@ -157,33 +179,31 @@ app.get('/update', function (req, res) {
 });
 
 app.get('/map', function(req, res) {
-	var fromParts = (req.query.from + '-0').split('-');
-	var toParts = (req.query.to + '-0').split('-');
-	if (fromParts[5])
-		from = new Date(fromParts[0], fromParts[1] - 1, fromParts[2], fromParts[3], fromParts[4], fromParts[5]);
-	if (toParts[5])
-		to = new Date(toParts[0], toParts[1] - 1, toParts[2], toParts[3], toParts[4], toParts[5]);
+	var dates = new parseDates(req.query.from, req.query.to);
+	from = makeDate(dates.fromQ);
+	to = makeDate(dates.toQ);
 	if (req.query.speed != null && req.query.speed != "" && req.query.speed <= 120 && req.query.speed >= 1)
 		speedup = req.query.speed * 2000;
+	if (req.query.to == undefined || req.query.to.split('-').length < 6 ||
+	    req.query.from == undefined || req.query.from.split('-').length < 6) {
+		var speedQ = speedup / 2000;
+		res.redirect('/map?from=' + dates.fromQ + '&to=' + dates.toQ + '&speed=' + speedQ.toFixed(0));
+		return;
+	}
 	MongoClient.connect("mongodb://127.0.0.1:27017/" + argv.db, function(err, db) {
 		if(err) {
 			console.log('error connecting to database:', err);
 			return;
 		}
 		collection = db.collection("tesla_stream");
-		var startTime = (from) ? from : date.getTime() - argv.replay * 60 * 1000; // go back 'replay' minutes
-		var searchString;
-		if (!toParts[5])
-			searchString = {$gte: +startTime};
-		else
-			searchString = {$gte: +startTime, $lte: +to};
+		var searchString = {$gte: +from, $lte: +to};
 		collection.find({"ts": searchString}).limit(1).toArray(function(err,docs) {
 			if (argv.verbose) console.log("got datasets:", docs.length);
 			docs.forEach(function(doc) {
 				var record = doc.record;
 				var vals = record.toString().replace(",,",",0,").split(/[,\n\r]/);
 				lastTime = +vals[0];
-				res.setHeader("Content-Type", "text/html"); 
+				res.setHeader("Content-Type", "text/html");
 				fs.readFile(__dirname + "/map.html", "utf-8", function(err, data) {
 					if (err) throw err;
 					var response = data.replace("MAGIC_APIKEY", apiKey)
@@ -199,21 +219,15 @@ app.get('/map', function(req, res) {
 });
 
 app.get('/energy', function(req, res) {
-	var parsedUrl = url.parse(req.url, true);
-	var path = parsedUrl.pathname;
-	if (!parsedUrl.query.to || !parsedUrl.query.from) {
-		res.end("<html><head></head><body>Invalid query format</body></html>", "utf-8");
+	var path = req.path;
+	var dates = new parseDates(req.query.from, req.query.to);
+	from = makeDate(dates.fromQ);
+	to = makeDate(dates.toQ);
+	if (req.query.to == undefined || req.query.to.split('-').length < 6 ||
+	    req.query.from == undefined || req.query.from.split('-').length < 6) {
+		res.redirect('/energy?from=' + dates.fromQ + '&to=' + dates.toQ);
 		return;
 	}
-	// make ranges work with and without time component
-	fromParts = (parsedUrl.query.from + "-0-0-0").split("-");
-	if (parsedUrl.query.to.split("-").length == 3) {
-		toParts = (parsedUrl.query.to + "23-59-59").split("-");
-	} else {
-		toParts = (parsedUrl.query.to + "-59-59").split("-");
-	}
-	from = new Date(fromParts[0], fromParts[1] - 1, fromParts[2], fromParts[3], fromParts[4], fromParts[5]);
-	to = new Date(toParts[0], toParts[1] - 1, toParts[2], toParts[3], toParts[4], toParts[5]);
 	// don't deliver more than 10000 data points (that's one BIG screen)
 	var halfIncrement =  Math.round((+to - +from) / 20000);
 	var increment = 2 + halfIncrement;
@@ -264,9 +278,9 @@ app.get('/energy', function(req, res) {
 				}
 			});
 			var chartEnd = lastDate;
-			
+
 			// now look for data in the aux collection
-			
+
 			collection = db.collection("tesla_aux");
 			var maxAmp = 0, maxVolt = 0, maxMph = 0;
 			var outputAmp = "", outputVolt = "";
@@ -300,7 +314,7 @@ app.get('/energy', function(req, res) {
 				outputVolt += ",[" + (lastDate + 60000) + ",0]";
 				outputAmp += ",[" + (+chartEnd) + ",0]";
 				outputVolt += ",[" + (+chartEnd) + ",0]";
-				
+
 				db.close();
 				fs.readFile(__dirname + "/energy.html", "utf-8", function(err, data) {
 					if (err) throw err;
@@ -339,16 +353,15 @@ app.get('/energy', function(req, res) {
 });
 
 app.get('/stats', function(req, res) {
-	var parsedUrl = url.parse(req.url, true);
-	var path = parsedUrl.pathname;
-	if (!parsedUrl.query.to || !parsedUrl.query.from) {
-		res.end("<html><head></head><body>Invalid query format</body></html>", "utf-8");
+	var path = req.path;
+	var dates = new parseDates(req.query.from, req.query.to);
+	from = makeDate(dates.fromQ);
+	to = makeDate(dates.toQ);
+	if (req.query.to == undefined || req.query.to.split('-').length < 6 ||
+	    req.query.from == undefined || req.query.from.split('-').length < 6) {
+		res.redirect('/stats?from=' + dates.fromQ + '&to=' + dates.toQ);
 		return;
 	}
-	fromParts = (parsedUrl.query.from + "-0").split("-");
-	toParts = (parsedUrl.query.to + "-59").split("-");
-	from = new Date(fromParts[0], fromParts[1] - 1, fromParts[2], 0, 0, 0);
-	to = new Date(toParts[0], toParts[1] - 1, toParts[2], 23, 59, 59);
 	var outputD = "", outputC = "", outputA = "", outputW = "", comma, firstDate = 0, lastDay = 0, lastDate = 0;
 	var startOdo = 0, charge = 0, minSOC = 101, maxSOC = -1, increment = 0, kWs = 0;
 	MongoClient.connect("mongodb://127.0.0.1:27017/" + argv.db, function(err, db) {
@@ -422,9 +435,9 @@ app.get('/stats', function(req, res) {
 					lastDate = doc.ts;
 				}
 			});
-			
+
 			// we still need to add the last day
-			
+
 			var dist = +vals[2] - startOdo;
 			var kWh = kWs / 3600;
 			var ts = new Date(lastDate);
@@ -438,7 +451,7 @@ app.get('/stats', function(req, res) {
 				outputA += comma + "null";
 			}
 			outputW += comma + "[" + +midnight + "," + kWh + "]";
-			
+
 			db.close();
 			fs.readFile(__dirname + "/stats.html", "utf-8", function(err, data) {
 				if (err) throw err;
@@ -461,4 +474,3 @@ app.use(express.static(__dirname + '/otherfiles'));
 app.listen(8766);
 
 if (!argv.silent) console.log("Server running");
-

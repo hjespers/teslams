@@ -7,54 +7,20 @@
 <script language="javascript" type="text/javascript" src="jquery.flot.threshold.min.js"></script>
 <script language="javascript" type="text/javascript" src="jquery-ui-1.10.3.custom.min.js"></script>
 <script language="javascript" type="text/javascript" src="jquery-ui-timepicker-addon.js"></script>
+<script language="javascript" type="text/javascript" src="lib.js"></script>
 <link rel="stylesheet" media="all" type="text/css" href="jquery-ui-timepicker-addon.css" />
 <link rel="stylesheet" media="all" type="text/css" href="jquery-ui.css" />
 <script language="javascript" type="text/javascript" src="url.min.js"></script>
 <script type="text/javascript">
-function sameTime(a, b) {
-	console.log(a,b);
-	var as = (a+"-0").split("-");
-	var bs = (b+"-0").split("-");
-	for (var i = 0; i < 6; i++) {
-		if (+as[i] != +bs[i])
-			return false;
-	}
-	return true;
-}
-
 $(function() {
 	var myUrl = $.url('protocol') + "://" + $.url('auth') + (($.url('auth').length > 0) ? "@" : "") +
 		$.url('hostname') + ":" + $.url('port');
-	var fromQ = $.url("?from");
-	if (fromQ.split("-").length == 5) fromQ += "-00";
-	var toQ = $.url("?to");
-	if (toQ.split("-").length == 5) toQ += "-00";
-	$("#frompicker").val(fromQ);
-	$("#topicker").val(toQ);
-	$("#maplink").attr("href", myUrl + "/map?from=" + fromQ + "&to=" + toQ);
-	$("#statslink").attr("href", myUrl + "/stats?from=" + fromQ + "&to=" + toQ);
-	$("#frompicker").datetimepicker({
-		dateFormat: "yy-mm-dd",
-		timeFormat: "HH-mm-ss",
-		separator: "-",
-		defaultValue: fromQ,
-		onClose: function(dateText, inst) {
-			if (dateText.length > 10 && sameTime(dateText, fromQ) == false) {
-				self.location = myUrl + "/energy?from=" + dateText + "&to=" + toQ
-			}
-		}
-	});
-	$("#topicker").datetimepicker({
-		dateFormat: "yy-mm-dd",
-		timeFormat: "HH-mm-ss",
-		separator: "-",
-		defaultValue: toQ,
-		onClose: function(dateText, inst) {
-			if (dateText.length > 10 && sameTime(dateText, toQ) == false) {
-				self.location = myUrl + "/energy?from=" + fromQ + "&to=" + dateText
-			}
-		}
-	});
+	parseDates($.url("?from"), $.url("?to"));
+	$("#frompicker").val(datepickers.fromQ);
+	$("#topicker").val(datepickers.toQ);
+	datepickers(myUrl + '/energy');
+	$("#maplink").attr("href", myUrl + "/map?from=" + datepickers.fromQ + "&to=" + datepickers.toQ);
+	$("#statslink").attr("href", myUrl + "/stats?from=" + datepickers.fromQ + "&to=" + datepickers.toQ);
 	var d1 = [MAGIC_ENERGY];
 	var d2 = [MAGIC_SPEED];
 	var data = [{

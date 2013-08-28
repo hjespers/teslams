@@ -235,11 +235,10 @@ For help run:
 
 	node examples/visualize/visualize.js --help
 
-        Usage: node visualize.js --db <MongoDB database> [--port <http listen port>] [--replay <number of minutes>] [--silent] [--verbose]
+        Usage: node visualize.js --db <MongoDB database> [--port <http listen port>] [--silent] [--verbose]
 
         Options:
 	          -p, --port     Listen port for the local http server               [default: 8766]
-	          -r, --replay   number of minutes ago that the replay should start  [default: 5]
 	          -d, --db       MongoDB database name                               [required]
 	          -s, --silent   Silent mode: no output to console                   [boolean]
 	          -v, --verbose  Verbose mode: more output to console                [boolean]
