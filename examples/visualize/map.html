@@ -2,6 +2,7 @@
 <meta name='viewport' content='initial-scale=1.0, user-scalable=no' />
 <script language="javascript" type="text/javascript" src="jquery-1.9.1.js"></script>
 <script language="javascript" type="text/javascript" src="url.min.js"></script>
+<script language="javascript" type="text/javascript" src="lib.js"></script>
 <script language="javascript" type="text/javascript" src="jquery-ui-1.10.3.custom.min.js"></script>
 <script language="javascript" type="text/javascript" src="jquery-ui-timepicker-addon.js"></script>
 <link rel="stylesheet" media="all" type="text/css" href="jquery-ui-timepicker-addon.css" />
@@ -11,15 +12,6 @@
 <script type='text/javascript'>
 var myLatlng; var map; var marker; var infoWindow;
 var myUrl = "";
-function sameTime(a, b) {
-	var as = (a+"-0").split("-");
-	var bs = (b+"-0").split("-");
-	for (var i = 0; i < 6; i++) {
-		if (+as[i] != +bs[i])
-			return false;
-	}
-	return true;
-}
 function hex(num) { var s = '#0' + num.toString(16) + ''; return s.substring(s.length - 2); }
 function getColor(speed) { 
 	var wl = speed*2+440; if(wl>640){wl=640;}
@@ -96,7 +88,7 @@ function initialize() {
 		separator: "-",
 		defaultValue: fromQ,
 		onClose: function(dateText, inst) {
-			if (dateText.length > 10 && sameTime(dateText, fromQ) == false) {
+			if (dateText.length > 10 && compareTime(dateText, fromQ) != 0) {
 				self.location = myUrl + "/map?from=" + dateText + "&to=" + toQ
 			}
 		}
@@ -107,7 +99,7 @@ function initialize() {
 		separator: "-",
 		defaultValue: toQ,
 		onClose: function(dateText, inst) {
-			if (dateText.length > 10 && sameTime(dateText, toQ) == false) {
+			if (dateText.length > 10 && compareTime(dateText, toQ) != 0) {
 				self.location = myUrl + "/map?from=" + fromQ + "&to=" + dateText
 			}
 		}

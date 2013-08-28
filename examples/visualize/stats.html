@@ -8,21 +8,11 @@
 <script language="javascript" type="text/javascript" src="jquery.flot.orderBars.js"></script>
 <script language="javascript" type="text/javascript" src="jquery-ui-1.10.3.custom.min.js"></script>
 <script language="javascript" type="text/javascript" src="jquery-ui-timepicker-addon.js"></script>
+<script language="javascript" type="text/javascript" src="lib.js"></script>
 <link rel="stylesheet" media="all" type="text/css" href="jquery-ui-timepicker-addon.css" />
 <link rel="stylesheet" media="all" type="text/css" href="jquery-ui.css" />
 <script language="javascript" type="text/javascript" src="url.min.js"></script>
 <script type="text/javascript">
-function sameDate(a, b) {
-	console.log(a,b);
-	var as = a.split("-");
-	var bs = b.split("-");
-	for (var i = 0; i < 3; i++) {
-		if (+as[i] != +bs[i])
-			return false;
-	}
-	return true;
-}
-
 $(function() {
 	function showTooltip(x, y, contents) {
 		$('<div id="tooltip">' + contents + '</div>').css( {
