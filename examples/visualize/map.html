@@ -64,7 +64,7 @@ function getMore() {
 			getMore.lastTimestamp = d[i][0];
 		}
 		var cStr = '<div id="content">';
-		marker.setPosition(nextLatlng);
+		marker.setPosition(myLatlng);
 		var i = d.length - 1; // last spot
 		if (d[i][9] == 'D' || d[i][9] == 'R'){cStr+='going '+d[i][1]+' mph'}
 		else if (d[i][8] < 0){cStr+='parked and charging ~ '+(-d[i][8])+'kW'}
