@@ -15,14 +15,11 @@ function argchecker( argv ) {
 }
 
 var argv = require('optimist')
-	.usage('Usage: $0 --db <MongoDB database> [--port <http listen port>] [--replay <number of minutes>] [--silent] [--verbose]')
+	.usage('Usage: $0 --db <MongoDB database> [--port <http listen port>] [--silent] [--verbose]')
 	.check( argchecker )
 	.alias('p', 'port')
 	.describe('p', 'Listen port for the local http server')
 	.default('p', 8766)
-	.alias('r', 'replay')
-	.describe('r', 'number of minutes ago that the replay should start')
-	.default('r', 5)
 	.alias('d', 'db')
 	.describe('d', 'MongoDB database name')
 	.demand('d')
@@ -36,7 +33,7 @@ var argv = require('optimist')
 	.describe('?', 'Print usage information')
 	.argv;
 if ( argv.help == true ) {
-	console.log( 'Usage: visualize.js --db <MongoDB database> [--replay <number of minutes>] [--silent] [--verbose]');
+	console.log( 'Usage: visualize.js --db <MongoDB database> [--silent] [--verbose]');
 	process.exit(1);
 }
 var MongoClient = require('mongodb').MongoClient;
@@ -199,12 +196,7 @@ app.get('/map', function(req, res) {
 			return;
 		}
 		collection = db.collection("tesla_stream");
-		var startTime = (from) ? from : date.getTime() - argv.replay * 60 * 1000; // go back 'replay' minutes
-		var searchString;
-		if (!toParts[5])
-			searchString = {$gte: +startTime};
-		else
-			searchString = {$gte: +startTime, $lte: +to};
+		var searchString = {$gte: +from, $lte: +to};
 		collection.find({"ts": searchString}).limit(1).toArray(function(err,docs) {
 			if (argv.verbose) console.log("got datasets:", docs.length);
 			docs.forEach(function(doc) {

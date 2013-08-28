@@ -92,7 +92,7 @@ function initialize() {
 	infoWindow = new google.maps.InfoWindow({content: ""});
 	infoWindow.open(map, marker);
 	getMore.lastTimestamp = 0;
-	getMore.endTimestamp = new Date(toP[0], toP[1] - 1, toP[2], toP[3], toP[4], toP[5]);
+	getMore.endTimestamp = makeDate(datepickers.toQ);
 	getMore();
 	getMore.ID = setInterval(getMore, 2000);
 }

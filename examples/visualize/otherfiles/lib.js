@@ -19,6 +19,13 @@ function sameDate(a, b) {
 	}
 	return true;
 }
+function makeDate(string, offset) {
+	var args = string.replace('%20','-').replace(' ','-').split('-');
+	var date = new Date(args[0], args[1]-1, args[2], args[3], args[4], args[5]);
+	if (offset != null)
+		date = +date + offset;
+	return new Date(date);
+}
 function normalizeDate(date) {
 	var c = date.replace('%20','-').replace(' ','-').split('-');
 	while (c.length < 6)
