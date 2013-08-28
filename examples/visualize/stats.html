@@ -8,21 +8,11 @@
 <script language="javascript" type="text/javascript" src="jquery.flot.orderBars.js"></script>
 <script language="javascript" type="text/javascript" src="jquery-ui-1.10.3.custom.min.js"></script>
 <script language="javascript" type="text/javascript" src="jquery-ui-timepicker-addon.js"></script>
+<script language="javascript" type="text/javascript" src="lib.js"></script>
 <link rel="stylesheet" media="all" type="text/css" href="jquery-ui-timepicker-addon.css" />
 <link rel="stylesheet" media="all" type="text/css" href="jquery-ui.css" />
 <script language="javascript" type="text/javascript" src="url.min.js"></script>
 <script type="text/javascript">
-function sameDate(a, b) {
-	console.log(a,b);
-	var as = a.split("-");
-	var bs = b.split("-");
-	for (var i = 0; i < 3; i++) {
-		if (+as[i] != +bs[i])
-			return false;
-	}
-	return true;
-}
-
 $(function() {
 	function showTooltip(x, y, contents) {
 		$('<div id="tooltip">' + contents + '</div>').css( {
@@ -59,33 +49,12 @@ $(function() {
 
 	var myUrl = $.url('protocol') + "://" + $.url('auth') + (($.url('auth').length > 0) ? "@" : "") +
 		$.url('hostname') + ":" + $.url('port');
-	var fromQ = $.url("?from");
-	if (fromQ.split("-").length == 3) fromQ += "-00-00-00";
-	var toQ = $.url("?to");
-	if (toQ.split("-").length == 3) toQ += "-23-59-59";
-	if (toQ.split("-").length < 6) toQ += "-59-59";
-	$("#frompicker").val(fromQ);
-	$("#topicker").val(toQ);
-	$("#maplink").attr("href", myUrl + "/map?from=" + fromQ + "&to=" + toQ);
-	$("#energylink").attr("href", myUrl + "/energy?from=" + fromQ + "&to=" + toQ);
-	$("#frompicker").datepicker({
-		dateFormat: "yy-mm-dd",
-		defaultValue: fromQ,
-		onClose: function(dateText, inst) {
-			if (dateText.length > 7 && sameDate(dateText, fromQ) == false) {
-				self.location = myUrl + "/stats?from=" + dateText + "&to=" + toQ
-			}
-		}
-	});
-	$("#topicker").datepicker({
-		dateFormat: "yy-mm-dd",
-		defaultValue: toQ,
-		onClose: function(dateText, inst) {
-			if (dateText.length > 7 && sameDate(dateText, toQ) == false) {
-				self.location = myUrl + "/stats?from=" + fromQ + "&to=" + dateText
-			}
-		}
-	});
+	parseDates($.url("?from"), $.url("?to"));
+	$("#frompicker").val(datepickers.fromQ);
+	$("#topicker").val(datepickers.toQ);
+	datepickers(myUrl + '/stats');
+	$("#maplink").attr("href", myUrl + "/map?from=" + datepickers.fromQ + "&to=" + datepickers.toQ);
+	$("#energylink").attr("href", myUrl + "/energy?from=" + datepickers.fromQ + "&to=" + datepickers.toQ);
 	var d1 = [MAGIC_DISTANCE];
 	var d4 = [MAGIC_KWH];
 	var d2 = [MAGIC_CHARGE];

@@ -2,6 +2,7 @@
 <meta name='viewport' content='initial-scale=1.0, user-scalable=no' />
 <script language="javascript" type="text/javascript" src="jquery-1.9.1.js"></script>
 <script language="javascript" type="text/javascript" src="url.min.js"></script>
+<script language="javascript" type="text/javascript" src="lib.js"></script>
 <script language="javascript" type="text/javascript" src="jquery-ui-1.10.3.custom.min.js"></script>
 <script language="javascript" type="text/javascript" src="jquery-ui-timepicker-addon.js"></script>
 <link rel="stylesheet" media="all" type="text/css" href="jquery-ui-timepicker-addon.css" />
@@ -11,15 +12,6 @@
 <script type='text/javascript'>
 var myLatlng; var map; var marker; var infoWindow;
 var myUrl = "";
-function sameTime(a, b) {
-	var as = (a+"-0").split("-");
-	var bs = (b+"-0").split("-");
-	for (var i = 0; i < 6; i++) {
-		if (+as[i] != +bs[i])
-			return false;
-	}
-	return true;
-}
 function hex(num) { var s = '#0' + num.toString(16) + ''; return s.substring(s.length - 2); }
 function getColor(speed) { 
 	var wl = speed*2+440; if(wl>640){wl=640;}
@@ -81,40 +73,15 @@ function initialize() {
 	getMore.ID = null;
 	myUrl = $.url('protocol') + "://" + $.url('auth') + (($.url('auth').length > 0) ? "@" : "") +
 		$.url('hostname') + ":" + $.url('port');
-	var fromQ = $.url("?from");
-	if (fromQ.split("-").length == 5) fromQ += "-00";
-	var toQ = $.url("?to");
-	var toP = toQ.split("-");
-	if (toP.length == 5) { toQ += "-00"; toP[5] = 0 }
-	$("#frompicker").val(fromQ);
-	$("#topicker").val(toQ);
-	$("#energylink").attr("href", myUrl + "/energy?from=" + fromQ + "&to=" + toQ);
-	$("#statslink").attr("href", myUrl + "/stats?from=" + fromQ + "&to=" + toQ);
-	$("#frompicker").datetimepicker({
-		dateFormat: "yy-mm-dd",
-		timeFormat: "HH-mm-ss",
-		separator: "-",
-		defaultValue: fromQ,
-		onClose: function(dateText, inst) {
-			if (dateText.length > 10 && sameTime(dateText, fromQ) == false) {
-				self.location = myUrl + "/map?from=" + dateText + "&to=" + toQ
-			}
-		}
-	});
-	$("#topicker").datetimepicker({
-		dateFormat: "yy-mm-dd",
-		timeFormat: "HH-mm-ss",
-		separator: "-",
-		defaultValue: toQ,
-		onClose: function(dateText, inst) {
-			if (dateText.length > 10 && sameTime(dateText, toQ) == false) {
-				self.location = myUrl + "/map?from=" + fromQ + "&to=" + dateText
-			}
-		}
-	});
+	parseDates($.url("?from"), $.url("?to"));
+	$("#frompicker").val(datepickers.fromQ);
+	$("#topicker").val(datepickers.toQ);
+	datepickers(myUrl + '/map');
+	$("#energylink").attr("href", myUrl + "/energy?from=" + datepickers.fromQ + "&to=" + datepickers.toQ);
+	$("#statslink").attr("href", myUrl + "/stats?from=" + datepickers.fromQ + "&to=" + datepickers.toQ);
 	var speedup = $.url("?speed");
 	if (speedup == null || speedup == "")
-		speedup = 120;
+		speedup = 30;
 	$("#speedSlider").slider({'animate': 'fast', 'min': 1, 'max': 120, 'value': speedup,
 				'slide': updateSpeed});
 	$("#speed").val($("#speedSlider").slider("value"));
@@ -125,7 +92,7 @@ function initialize() {
 	infoWindow = new google.maps.InfoWindow({content: ""});
 	infoWindow.open(map, marker);
 	getMore.lastTimestamp = 0;
-	getMore.endTimestamp = new Date(toP[0], toP[1] - 1, toP[2], toP[3], toP[4], toP[5]);
+	getMore.endTimestamp = makeDate(datepickers.toQ);
 	getMore();
 	getMore.ID = setInterval(getMore, 2000);
 }

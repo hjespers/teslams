@@ -8,18 +8,8 @@
 <link rel="stylesheet" media="all" type="text/css" href="jquery-ui.css" />
 <link rel="stylesheet" media="all" type="text/css" href="shared.css" />
 <script language="javascript" type="text/javascript" src="url.min.js"></script>
+<script language="javascript" type="text/javascript" src="lib.js"></script>
 <script type="text/javascript">
-function sameTime(a, b) {
-	console.log(a,b);
-	var as = (a+"-0").split("-");
-	var bs = (b+"-0").split("-");
-	for (var i = 0; i < 6; i++) {
-		if (+as[i] != +bs[i])
-			return false;
-	}
-	return true;
-}
-
 $(function() {
 	var now = new Date();
 	var start = new Date(+now - 12 * 3600000);
@@ -48,7 +38,7 @@ $(function() {
 		separator: "-",
 		defaultValue: fromQ,
 		onClose: function(dateText, inst) {
-			if (dateText.length > 10 && sameTime(dateText, fromQ) == false) {
+			if (dateText.length > 10 && compareTime(dateText, fromQ) != 0) {
 				fromQ = dateText;
 				$("#maplink").attr("href", myUrl + "/map?from=" + fromQ + "&to=" + toQ);
 				$("#statslink").attr("href", myUrl + "/stats?from=" + fromQ + "&to=" + toQ);
@@ -62,7 +52,7 @@ $(function() {
 		separator: "-",
 		defaultValue: toQ,
 		onClose: function(dateText, inst) {
-			if (dateText.length > 10 && sameTime(dateText, toQ) == false) {
+			if (dateText.length > 10 && compareTime(dateText, toQ) != 0) {
 				toQ = dateText;
 				$("#maplink").attr("href", myUrl + "/map?from=" + fromQ + "&to=" + toQ);
 				$("#statslink").attr("href", myUrl + "/stats?from=" + fromQ + "&to=" + toQ);
