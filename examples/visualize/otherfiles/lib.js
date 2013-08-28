@@ -7,7 +7,6 @@ function compareTime(a,b){
 		if (+as[i] > +bs[i])
 			return +1;
 	}
-console.log(0);
 	return 0;
 }
 function sameDate(a, b) {
@@ -20,4 +19,49 @@ function sameDate(a, b) {
 	}
 	return true;
 }
-
+function normalizeDate(date) {
+	var c = date.replace('%20','-').replace(' ','-').split('-');
+	while (c.length < 6)
+		c.push('00');
+	return c[0] + '-' + c[1] + '-' + c[2] + ' ' + c[3] + '-' + c[4] + '-' + c[5];
+}
+function dateString(time) {
+	return time.getFullYear() + '-' + (time.getMonth()+1) + '-' + time.getDate() + ' ' +
+		time.getHours() + '-' + time.getMinutes() + '-' + time.getSeconds();
+}
+function parseDates(fromQ, toQ) {
+	if (toQ == null || toQ == "" || toQ.split('-').count < 2) // no valid to argument -> to = now
+		datepickers.toQ = dateString(new Date());
+	else
+		datepickers.toQ = normalizeDate(toQ);
+	if (fromQ == null || fromQ == "" || fromQ.split('-').count < 2) // no valid from argument -> 12h before to
+		datepickers.fromQ = normalizeDate(new Date(toQ));
+	else
+		datepickers.fromQ = normalizeDate(fromQ);
+}
+function datepickers(url) {
+	$("#frompicker").datetimepicker({
+		dateFormat: "yy-mm-dd",
+		timeFormat: "HH-mm-ss",
+		separator: " ",
+		defaultValue: datepickers.fromQ,
+		onClose: function(dateText, inst) {
+			var dt = dateText.replace(' ','-');
+			if (dt.length > 10 && compareTime(dt, datepickers.fromQ) != 0) {
+				self.location = url + "?from=" + dt + "&to=" + datepickers.toQ.replace(' ','-')
+			}
+		}
+	});
+	$("#topicker").datetimepicker({
+		dateFormat: "yy-mm-dd",
+		timeFormat: "HH-mm-ss",
+		separator: " ",
+		defaultValue: datepickers.toQ,
+		onClose: function(dateText, inst) {
+			var dt = dateText.replace(' ','-');
+			if (dt.length > 10 && compareTime(dt, datepickers.toQ) != 0) {
+				self.location = url + "?from=" + datepickers.fromQ.replace(' ','-') + "&to=" + dt
+			}
+		}
+	});
+}

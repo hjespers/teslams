@@ -73,40 +73,15 @@ function initialize() {
 	getMore.ID = null;
 	myUrl = $.url('protocol') + "://" + $.url('auth') + (($.url('auth').length > 0) ? "@" : "") +
 		$.url('hostname') + ":" + $.url('port');
-	var fromQ = $.url("?from");
-	if (fromQ.split("-").length == 5) fromQ += "-00";
-	var toQ = $.url("?to");
-	var toP = toQ.split("-");
-	if (toP.length == 5) { toQ += "-00"; toP[5] = 0 }
-	$("#frompicker").val(fromQ);
-	$("#topicker").val(toQ);
-	$("#energylink").attr("href", myUrl + "/energy?from=" + fromQ + "&to=" + toQ);
-	$("#statslink").attr("href", myUrl + "/stats?from=" + fromQ + "&to=" + toQ);
-	$("#frompicker").datetimepicker({
-		dateFormat: "yy-mm-dd",
-		timeFormat: "HH-mm-ss",
-		separator: "-",
-		defaultValue: fromQ,
-		onClose: function(dateText, inst) {
-			if (dateText.length > 10 && compareTime(dateText, fromQ) != 0) {
-				self.location = myUrl + "/map?from=" + dateText + "&to=" + toQ
-			}
-		}
-	});
-	$("#topicker").datetimepicker({
-		dateFormat: "yy-mm-dd",
-		timeFormat: "HH-mm-ss",
-		separator: "-",
-		defaultValue: toQ,
-		onClose: function(dateText, inst) {
-			if (dateText.length > 10 && compareTime(dateText, toQ) != 0) {
-				self.location = myUrl + "/map?from=" + fromQ + "&to=" + dateText
-			}
-		}
-	});
+	parseDates($.url("?from"), $.url("?to"));
+	$("#frompicker").val(datepickers.fromQ);
+	$("#topicker").val(datepickers.toQ);
+	datepickers(myUrl + '/map');
+	$("#energylink").attr("href", myUrl + "/energy?from=" + datepickers.fromQ + "&to=" + datepickers.toQ);
+	$("#statslink").attr("href", myUrl + "/stats?from=" + datepickers.fromQ + "&to=" + datepickers.toQ);
 	var speedup = $.url("?speed");
 	if (speedup == null || speedup == "")
-		speedup = 120;
+		speedup = 30;
 	$("#speedSlider").slider({'animate': 'fast', 'min': 1, 'max': 120, 'value': speedup,
 				'slide': updateSpeed});
 	$("#speed").val($("#speedSlider").slider("value"));
