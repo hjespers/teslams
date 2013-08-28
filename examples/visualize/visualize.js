@@ -190,7 +190,7 @@ app.get('/map', function(req, res) {
 	if (req.query.to == undefined || req.query.to.split('-').length < 6 ||
 	    req.query.from == undefined || req.query.from.split('-').length < 6) {
 		var speedQ = speedup / 2000;
-		res.redirect('/energy?from=' + dates.fromQ + '&to=' + dates.toQ + '&speed=' + speedQ.toFixed(0));
+		res.redirect('/map?from=' + dates.fromQ + '&to=' + dates.toQ + '&speed=' + speedQ.toFixed(0));
 		return;
 	}
 	MongoClient.connect("mongodb://127.0.0.1:27017/" + argv.db, function(err, db) {
