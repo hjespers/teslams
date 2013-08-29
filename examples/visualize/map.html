@@ -10,9 +10,11 @@
 <link rel="stylesheet" media="all" type="text/css" href="shared.css" />
 <script type='text/javascript' src='https://maps.googleapis.com/maps/api/js?key=MAGIC_APIKEY&sensor=true'></script>
 <script type='text/javascript'>
-var myLatlng; var map; var marker; var infoWindow;
+var myLatlng, map, marker, infoWindow, lastDrawn = -1;
 var myUrl = "";
 var speedup, replayControl;
+var msecPerUpdate = 2000; // get AJAX data every 2 seconds
+var drawTimeIncr = 100; // 10 FPS for drawing
 function hex(num) { var s = '#0' + num.toString(16) + ''; return s.substring(s.length - 2); }
 function getColor(speed) {
 	var wl = speed*2+440; if(wl>640){wl=640;}
@@ -21,21 +23,65 @@ function getColor(speed) {
 	var g=(wl<580) ? Math.round(35+(wl-440)*4.4) : Math.round(35+(640-wl)*3.66); if(g<55){g=55} if(g>255){g=255}
 	return '#'+hex(r)+hex(g)+hex(b);
 }
+function startUpdates() {
+	getMore.ID = setInterval(getMore, msecPerUpdate);
+}
 function cancelUpdates() {
-	if (getMore.ID)
+	stopDrawing();
+	if (getMore.ID) {
 		clearInterval(getMore.ID);
+		getMore.ID = null;
+	}
+}
+function showMarker() {
+	//debug output console.log("lastDrawn", lastDrawn, "available", getMore.lines.length);
+	if (lastDrawn >= 0) {
+		var segment = getMore.lines[lastDrawn];
+		if (segment === undefined)
+			return;
+		var latlng = new google.maps.LatLng(segment[0][6],segment[0][7]);
+		var cStr = '<div id="content">';
+		marker.setPosition(latlng);
+		if (segment[0][9] == 'D' || segment[0][9] == 'R'){cStr+='going '+segment[0][1]+' mph'}
+		else if (segment[0][8] < 0){cStr+='parked and charging ~ '+(-segment[0][8])+'kW'}
+		else {cStr+='parked'}
+		cStr+='<br>odometer '+segment[0][2]+'<br>range '+segment[0][10]+'</div>';
+		infoWindow.setContent(cStr);
+		replayControl.slider("value", segment[0][0]);
+
+	}
+}
+function drawCachedUntil(endTime) {
+	var segment;
+	//debug output console.log("drawCachedUntil", new Date(+endTime), "with", +lastDrawn + 1, "elements drawn and", getMore.lines.length, "cached");
+	while (lastDrawn + 1 < getMore.lines.length) {
+		lastDrawn++;
+		segment = getMore.lines[lastDrawn];
+		if (segment[0][0] > endTime) {
+			lastDrawn--;
+			break;
+		}
+		segment[1].setMap(map);
+	}
+	showMarker();
+	if (lastDrawn + 1 === getMore.lines.length) { // we have drawn everything there is, so return that last ts
+		return getMore.lines[lastDrawn][0][0];
+	}
+	return endTime;
+
 }
 function getMore() {
 	if (myUrl.length == 0)
 		return;
 	// this gets us an array of arrays - there is always at least one dummy
 	// entry that gives us the last timestamp that was considered in this batch
-	$.getJSON(myUrl + "/update", { 'speed': +speedup })
+	// debug output console.log("get AJAX data until", new Date(+getMore.lastTimestamp + (speedup + 10) * msecPerUpdate));
+	$.getJSON(myUrl + "/update", { 'until': +getMore.lastTimestamp + (speedup + 10) * msecPerUpdate })
 	.done(function (d, textStatus, jqXHR) {
-		console.log("length", d.length, "end", +getMore.endTimestamp, "last", +getMore.lastTimestamp);
+		//console.log("length", d.length, "end", +getMore.endTimestamp, "last", +getMore.lastTimestamp);
 		if (d.length == 1 && d[0][2] == 0) { // that's just the fake entry
 			getMore.lastTimestamp = +d[0][0];
-			console.log("do we need to stop?", "end", +getMore.endTimestamp, "last", +getMore.lastTimestamp);
+			//debug output console.log("do we need to stop?", "end", +getMore.endTimestamp, "last", +getMore.lastTimestamp);
 			if (+getMore.endTimestamp - +getMore.lastTimestamp < 120000)
 				cancelUpdates();
 			return;
@@ -48,28 +94,56 @@ function getMore() {
 				getMore.lastTimestamp = +d[i][0];
 				continue; // no lines if there is a jump in the time series
 			}
+			// because GoogleMap API doesn't allow for color changes along a line,
+			// each little segment is its own path. We store them in an array so
+			// we can easily move forward and backward
 			var nextLatlng = new google.maps.LatLng(d[i][6],d[i][7]);
 			var points = [myLatlng,nextLatlng];
+			myLatlng = nextLatlng;
 			var color = getColor(d[i][1]);
 			var path = new google.maps.Polyline({path:points,strokeColor:color,strokeWeight:4});
-			path.setMap(map);
-			myLatlng = nextLatlng;
+			getMore.lines.push([d[i], path]);
 			getMore.lastTimestamp = d[i][0];
 		}
-		replayControl.slider("value", getMore.lastTimestamp);
-		var cStr = '<div id="content">';
-		marker.setPosition(myLatlng);
-		var i = d.length - 1; // last spot
-		if (d[i][9] == 'D' || d[i][9] == 'R'){cStr+='going '+d[i][1]+' mph'}
-		else if (d[i][8] < 0){cStr+='parked and charging ~ '+(-d[i][8])+'kW'}
-		else {cStr+='parked'}
-		cStr+='<br>odometer '+d[i][2]+'<br>range '+d[i][10]+'</div>';
-		infoWindow.setContent(cStr);
+		//debug output console.log("got data until", getMore.lastTimestamp, '=', new Date(+getMore.lastTimestamp));
+		// showMarker();
 	})
 	.fail(function(jqXHR, textStatus, errorThrown) { console.log(myUrl + "/update : ajax fail", textStatus, errorThrown); })
 }
+function drawNext() { // this is the timer driven drawing
+	drawNext.last = drawCachedUntil(+drawNext.last + drawTimeIncr * speedup);
+}
+function startDrawing() {
+	drawNext.ID = setInterval(drawNext, drawTimeIncr);
+}
+function stopDrawing() {
+	if (drawNext.ID) {
+		clearInterval(drawNext.ID);
+		drawNext.ID = null;
+	}
+}
+function drawUntil(endTime) { // this is manual drawing
+	var segment, path;
+	// debug output console.log("drawUntil", new Date(endTime), "we have until", drawNext.last);
+	// do we need to delete things that were drawn?
+	if (+endTime < drawNext.last) {
+		console.log("delete part of the path");
+		do {
+			segment = getMore.lines[lastDrawn];
+			if (segment[0][0] > endTime) {
+				segment[1].setMap(null);
+				lastDrawn--;
+				console.log("removed segment for", new Date(+segment[0][0]));
+			}
+		} while (lastDrawn >= 0 && segment[0][0] > endTime);
+		showMarker();
+	} else {
+		drawNext.last = drawCachedUntil(endTime);
+	}
+}
 function initialize() {
 	getMore.ID = null;
+	getMore.lines = [];
 	myUrl = $.url('protocol') + "://" + $.url('auth') + (($.url('auth').length > 0) ? "@" : "") +
 		$.url('hostname') + ":" + $.url('port');
 	parseDates($.url("?from"), $.url("?to"));
@@ -96,21 +170,33 @@ function initialize() {
 	var minV = makeDate(datepickers.fromQ).getTime();
 	var maxV = makeDate(datepickers.toQ).getTime();
 	replayControl  = $('#replayControl'), tooltipR = $('#replayTT');
-	function rSliderUpdate(event, ui) {
+	function updateTooltip(ui) {
 		var value  = (ui.value - minV) / (maxV - minV) * replayControl.width();
 		var ts = new Date(ui.value);
 		var text = (ts.getMonth()+1) + '/' + ts.getDate() + ' ' + ts.getHours() + ':' + ('0'+ts.getMinutes()).slice(-2);
 		tooltipR.css('left', value).text(text);  //Adjust the tooltip accordingly
+	}
+	function rSliderUpdate(event, ui) {
+		if (drawNext.ID === null) {
+			startDrawing();
+		}
+		updateTooltip(ui);
 	}
 	var rSliderOpts = {'animate': false,
 			   'range': 'min',
 			   'min': minV,
 			   'max': maxV,
 			   'value': minV,
-			   'slide': rSliderUpdate,
+			   'slide': function(event, ui) {
+				   stopDrawing();
+				   updateTooltip(ui);
+				   console.log("slider", new Date(ui.value));
+				   drawUntil(ui.value);
+			   },
 			   'change': rSliderUpdate
 			  };
 	var ts = new Date(minV);
+	drawNext.last = +ts;
 	var text = (ts.getMonth()+1) + '/' + ts.getDate() + ' ' + ts.getHours() + ':' + ts.getMinutes();
 	tooltipR.css('left', 0).text(text);  //Adjust the tooltip according to start value
 	replayControl.slider(rSliderOpts);
@@ -120,10 +206,11 @@ function initialize() {
 	marker = new google.maps.Marker({ position: myLatlng, map: map, title: 'Tesla Model S'});
 	infoWindow = new google.maps.InfoWindow({content: ""});
 	infoWindow.open(map, marker);
-	getMore.lastTimestamp = 0;
+	getMore.lastTimestamp = makeDate(datepickers.fromQ);
 	getMore.endTimestamp = makeDate(datepickers.toQ);
 	getMore();
-	getMore.ID = setInterval(getMore, 2000);
+	startUpdates();
+	startDrawing();
 }
 google.maps.event.addDomListener(window, 'load', initialize);
 </script>
