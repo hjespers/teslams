@@ -12,7 +12,7 @@
 <script type='text/javascript'>
 var myLatlng; var map; var marker; var infoWindow;
 var myUrl = "";
-var speedup;
+var speedup, replayControl;
 function hex(num) { var s = '#0' + num.toString(16) + ''; return s.substring(s.length - 2); }
 function getColor(speed) {
 	var wl = speed*2+440; if(wl>640){wl=640;}
@@ -56,6 +56,7 @@ function getMore() {
 			myLatlng = nextLatlng;
 			getMore.lastTimestamp = d[i][0];
 		}
+		replayControl.slider("value", getMore.lastTimestamp);
 		var cStr = '<div id="content">';
 		marker.setPosition(myLatlng);
 		var i = d.length - 1; // last spot
@@ -94,18 +95,21 @@ function initialize() {
 	speedControl.slider(sSliderOpts);
 	var minV = makeDate(datepickers.fromQ).getTime();
 	var maxV = makeDate(datepickers.toQ).getTime();
-	var replayControl  = $('#replayControl'), tooltipR = $('#replayTT');
-	var rSliderOpts = {'animate': 'fast',
+	replayControl  = $('#replayControl'), tooltipR = $('#replayTT');
+	function rSliderUpdate(event, ui) {
+		var value  = (ui.value - minV) / (maxV - minV) * replayControl.width();
+		var ts = new Date(ui.value);
+		var text = (ts.getMonth()+1) + '/' + ts.getDate() + ' ' + ts.getHours() + ':' + ('0'+ts.getMinutes()).slice(-2);
+		tooltipR.css('left', value).text(text);  //Adjust the tooltip accordingly
+	}
+	var rSliderOpts = {'animate': false,
 			   'range': 'min',
 			   'min': minV,
 			   'max': maxV,
 			   'value': minV,
-			   'slide': function (event, ui) {
-				   var value  = (ui.value - minV) / (maxV - minV) * replayControl.width();
-				   var ts = new Date(ui.value);
-				   var text = (ts.getMonth()+1) + '/' + ts.getDate() + ' ' + ts.getHours() + ':' + ts.getMinutes();
-				   tooltipR.css('left', value).text(text);  //Adjust the tooltip accordingly
-			   }};
+			   'slide': rSliderUpdate,
+			   'change': rSliderUpdate
+			  };
 	var ts = new Date(minV);
 	var text = (ts.getMonth()+1) + '/' + ts.getDate() + ' ' + ts.getHours() + ':' + ts.getMinutes();
 	tooltipR.css('left', 0).text(text);  //Adjust the tooltip according to start value
