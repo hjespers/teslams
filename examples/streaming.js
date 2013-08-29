@@ -147,12 +147,10 @@ function getAux() {
 		return;
 
 	teslams.get_charge_state( getAux.vid, function(data) {
-		if (data.charging_state == "Charging") {
-			var doc = { 'ts': new Date().getTime(), 'chargeState': data };
-			collectionA.insert(doc, { 'safe': true }, function(err,docs) {
-				if(err) throw err;
-			});
-		}
+		var doc = { 'ts': new Date().getTime(), 'chargeState': data };
+		collectionA.insert(doc, { 'safe': true }, function(err,docs) {
+			if(err) throw err;
+		});
 	});
 	teslams.get_climate_state( getAux.vid, function(data) {
 		var ds = JSON.stringify(data);
@@ -171,6 +169,13 @@ function storeVehicles(vehicles) {
 	var doc = { 'ts': new Date().getTime(), 'vehicles': vehicles };
 	collectionA.insert(doc, { 'safe': true }, function (err, docs) {
 		if (err) console.dir(err);
+	});
+	teslams.get_vehicle_state(vehicles.id, function(data) {
+		if (!argv.silent) console.log( util.inspect(data));
+		doc = { 'ts': new Date().getTime(), 'vehicleState': data };
+		collectionA.insert(doc, { 'safe': true }, function (err, docs) {
+			if (err) console.dir(err);
+		});
 	});
 }
 
