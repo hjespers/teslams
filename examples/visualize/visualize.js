@@ -141,11 +141,13 @@ app.get('/update', function (req, res) {
 			return;
 		}
 		collection = db.collection("tesla_stream");
-		if (req.query.speed != null && req.query.speed != "")
-			speedup = req.query.speed * 2000; // every 2000 msec
-		// get the data from 'speedup' as many seconds
+		if (req.query.until == null) {
+			console.log("why is there no 'until' parameter???");
+			return;
+		}
+		// get the data unti 'until'
 		// but not past the end of the requested segment and not past the current time
-		var endTime = +lastTime + speedup;
+		var endTime = +req.query.until;
 		if (to && +endTime > +to)
 			endTime = +to;
 		var currentTime = new Date().getTime();
