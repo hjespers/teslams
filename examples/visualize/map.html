@@ -12,8 +12,9 @@
 <script type='text/javascript'>
 var myLatlng; var map; var marker; var infoWindow;
 var myUrl = "";
+var speedup;
 function hex(num) { var s = '#0' + num.toString(16) + ''; return s.substring(s.length - 2); }
-function getColor(speed) { 
+function getColor(speed) {
 	var wl = speed*2+440; if(wl>640){wl=640;}
 	var r=Math.round(35+(wl-510)*3.14); if(r<55){r=55} if(r>255){r=255}
 	var b=35+(510-wl)*11;if(b<55){b=55;} if(b>255){b=255}
@@ -29,7 +30,7 @@ function getMore() {
 		return;
 	// this gets us an array of arrays - there is always at least one dummy
 	// entry that gives us the last timestamp that was considered in this batch
-	$.getJSON(myUrl + "/update", { 'speed': +$("#speed").val() })
+	$.getJSON(myUrl + "/update", { 'speed': +speedup })
 	.done(function (d, textStatus, jqXHR) {
 		console.log("length", d.length, "end", +getMore.endTimestamp, "last", +getMore.lastTimestamp);
 		if (d.length == 1 && d[0][2] == 0) { // that's just the fake entry
@@ -39,7 +40,7 @@ function getMore() {
 				cancelUpdates();
 			return;
 		}
-		for (var i = 0; i < d.length; i++) { 
+		for (var i = 0; i < d.length; i++) {
 			if (d[i][6] == 0 && d[i][7] == 0)
 				continue; // no line to GPS (0,0)
 			if (Math.abs(d[i][0] - getMore.lastTimestamp) > 5000) {
@@ -64,12 +65,9 @@ function getMore() {
 		cStr+='<br>odometer '+d[i][2]+'<br>range '+d[i][10]+'</div>';
 		infoWindow.setContent(cStr);
 	})
-	.fail(function(jqXHR, textStatus, errorThrown) { console.log(myUrl + "/update : ajax fail", textStatus, errorThrown); }) 
+	.fail(function(jqXHR, textStatus, errorThrown) { console.log(myUrl + "/update : ajax fail", textStatus, errorThrown); })
 }
-function updateSpeed(event, ui) {
-	$("#speed").val(ui.value);
-}
-function initialize() { 
+function initialize() {
 	getMore.ID = null;
 	myUrl = $.url('protocol') + "://" + $.url('auth') + (($.url('auth').length > 0) ? "@" : "") +
 		$.url('hostname') + ":" + $.url('port');
@@ -79,12 +77,39 @@ function initialize() {
 	datepickers(myUrl + '/map');
 	$("#energylink").attr("href", myUrl + "/energy?from=" + datepickers.fromQ + "&to=" + datepickers.toQ);
 	$("#statslink").attr("href", myUrl + "/stats?from=" + datepickers.fromQ + "&to=" + datepickers.toQ);
-	var speedup = $.url("?speed");
+	speedup = $.url("?speed");
 	if (speedup == null || speedup == "")
 		speedup = 30;
-	$("#speedSlider").slider({'animate': 'fast', 'min': 1, 'max': 120, 'value': speedup,
-				'slide': updateSpeed});
-	$("#speed").val($("#speedSlider").slider("value"));
+	var speedControl  = $('#speedSlider'), tooltipS = $('#speedTT');
+	var sSliderOpts = {'animate': 'fast',
+			   'min': 1,
+			   'max': 120,
+			   'value': speedup,
+			   'slide': function(event, ui) {
+				   speedup = ui.value;
+				   var sliderPos = (speedup - 1) / 119 * speedControl.width();
+				   tooltipS.css('left', sliderPos).text(speedup);  //Adjust the tooltip accordingly
+			   }};
+	tooltipS.css('left', (speedup - 1) / 119 * speedControl.width()).text(speedup); //Adjust the tooltip according to start value
+	speedControl.slider(sSliderOpts);
+	var minV = makeDate(datepickers.fromQ).getTime();
+	var maxV = makeDate(datepickers.toQ).getTime();
+	var replayControl  = $('#replayControl'), tooltipR = $('#replayTT');
+	var rSliderOpts = {'animate': 'fast',
+			   'range': 'min',
+			   'min': minV,
+			   'max': maxV,
+			   'value': minV,
+			   'slide': function (event, ui) {
+				   var value  = (ui.value - minV) / (maxV - minV) * replayControl.width();
+				   var ts = new Date(ui.value);
+				   var text = (ts.getMonth()+1) + '/' + ts.getDate() + ' ' + ts.getHours() + ':' + ts.getMinutes();
+				   tooltipR.css('left', value).text(text);  //Adjust the tooltip accordingly
+			   }};
+	var ts = new Date(minV);
+	var text = (ts.getMonth()+1) + '/' + ts.getDate() + ' ' + ts.getHours() + ':' + ts.getMinutes();
+	tooltipR.css('left', 0).text(text);  //Adjust the tooltip according to start value
+	replayControl.slider(rSliderOpts);
 	myLatlng = new google.maps.LatLng(MAGIC_FIRST_LOC);
 	var mapOptions = { center: myLatlng, zoom: 16, mapTypeId: google.maps.MapTypeId.ROADMAP };
 	map = new google.maps.Map(document.getElementById('map-canvas'), mapOptions);
@@ -107,11 +132,18 @@ google.maps.event.addDomListener(window, 'load', initialize);
 			<label>End time</label><input id="topicker" type="text">
 			<button onclick="cancelUpdates()">Stop updates</button>
 		</div>
-		<p><label>Replay Speed (real Time = 1x):</label>
-		   <input type="text" id="speed" />
-		</p>
-		<div id="speedSlider"></div>
+		<div id="sliders">
+			<section id="sliderS">
+				<span id="speedTT" class="tooltip"></span> <!-- Tooltip -->
+				<div id="speedSlider"></div> <!-- the Slider -->
+				<div class="label"><label>Replay Speed (real time = 1x)</label></div>
+			</section>
+			<section id="sliderR">
+				<span id="replayTT" class="tooltip"></span> <!-- Tooltip -->
+				<div id="replayControl"></div> <!-- the Slider -->
+				<div class="label"><label>Replay Control</label></div>
+			</section>
+		</div>
 	</div>
 	<div id='map-canvas'/>
 </body> </html>
-
