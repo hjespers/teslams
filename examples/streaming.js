@@ -197,10 +197,16 @@ function initstream() {
 				initstream();
 			});
 		} else {
-			if (argv.db && firstTime) {
-				//only do this once, and only if mongodb flag is set
+			// initialize DB or CSV stream only once
+			if (firstTime)
+			{
 				firstTime = false;
-				initdb(vehicles);
+
+				if (argv.db) {
+					initdb(vehicles);
+				} else {
+					stream.write('timestamp,' + argv.values + '\n');
+				}
 			}
 			tsla_poll( vehicles.id, vehicles.vehicle_id, vehicles.tokens[0] );
 		}
@@ -209,7 +215,7 @@ function initstream() {
 
 // this is the main part of this program
 if (!argv.silent) {
-	util.log('timestamp,' + argv.values); //TODO: write this line to outfile for csv
+	util.log('timestamp,' + argv.values);
 }
 
 // call the REST API in order get login and get the id, vehicle_id, and streaming password token
