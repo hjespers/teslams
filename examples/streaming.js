@@ -13,7 +13,7 @@ function argchecker( argv ) {
 	if (argv.db == true) throw 'MongoDB database name is unspecified. Use -d dbname or --db dbname';
 }
 
-var argv = require('optimist')
+var argv = require('optimist') // https://github.com/substack/node-optimist
 	.usage('Usage: $0 -u <username> -p <password> [--file <filename>] [--db <MongoDB database>] [--silent] \n' +
 		'# if --db <MongoDB database> argument is given, store data in MongoDB, otherwise in a flat file')
 	.check(argchecker)
@@ -69,43 +69,46 @@ function tsla_poll( vid, long_vid, token ) {
 		console.log('Exiting...');
 		process.exit(1);
 	} else {
-		request( 
-		{ 
-			'uri': s_url + long_vid +'/?values=' + argv.values, 
+		request(
+		{
+			'uri': s_url + long_vid +'/?values=' + argv.values,
 			'method' : 'GET',
 			'auth': {
 				'user': argv.username,
 				'pass': token
 			},
 			'timeout' : 125000 // a bit more than the expected 2 minute max long poll
-		},  
+		},
 		function( error, response, body) {
 			if ( error ) { // HTTP Error
 				if (!argv.silent) { console.log( error ); }
 				// put short delay to avoid stack overflow
-				setTimeout(function() { 
+				setTimeout(function() {
 					tsla_poll( vid, long_vid, token ); // poll again
 				}, 1000);
 			} else if (response.statusCode == 200) { // HTTP OK
-				if (!argv.silent) { console.log(body); }
-					tsla_poll( vid, long_vid, token ); // poll again
+				if (!argv.silent) {
+					//console.log(body);
+					util.log(body); // this way we get a human readable timestamp from the server too
+				}
+				tsla_poll( vid, long_vid, token ); // poll again
 			} else if ( response.statusCode == 401) { // HTTP AUTH Failed
 				if (!argv.silent) {
-					console.log('WARN: HTTP 401: Unauthorized - token has likely expired, getting a new one');
+					util.log('WARN: HTTP 401: Unauthorized - token has likely expired, getting a new one');
 				}
 				initstream();
 			} else {
 				if (!argv.silent) {
-					console.log('Problem with request:'); 
-					console.log('	Response status code = ' + response.statusCode );
-					console.log('	Error code = ' + error);
-					console.log('Polling again...');
+					util.log('Problem with request:');
+					util.log('	Response status code = ' + response.statusCode );
+					util.log('	Error code = ' + error);
+					util.log('Polling again...');
 				}
 				// put short delay to avoid stack overflow
-				setTimeout(function() { 
-					tsla_poll( vid, long_vid, token ); // poll again 
+				setTimeout(function() {
+					tsla_poll( vid, long_vid, token ); // poll again
 				}, 1000);
-			}	
+			}
 		}
 		).on('data', function(data) {
 			if (argv.db) {
@@ -115,16 +118,16 @@ function tsla_poll( vid, long_vid, token ) {
 					var record = vals.slice(i, nFields);
 					var doc = { 'ts': +vals[i], 'record': record };
 					collectionS.insert(doc, { 'safe': true }, function(err,docs) {
-						if(err) console.log(err);
+						if(err) util.log(err);
 					});
 //					collectionS.find({ 'ts': +vals[i]}).toArray(function(err, exist){
 //						try {
 //							if (err || exist == null || exist.length == 0) { // only write entry if it doesn't already exist
 //								collectionS.insert(doc, { 'safe': true }, function(err,docs) {
-//									if(err) console.log(err);
+//									if(err) util.log(err);
 //								});
 //							} else {
-//								console.log("had data, not writing it");
+//								util.log("had data, not writing it");
 //							}
 //						} catch (innerError) {
 //							console.dir(innerError);
@@ -135,7 +138,7 @@ function tsla_poll( vid, long_vid, token ) {
 				stream.write(data);
 			}
 		});
-	} 
+	}
 }
 
 function getAux() {
@@ -175,7 +178,7 @@ function storeVehicles(vehicles) {
 // - store the vehicle data (once, after the first connection)
 // - store some other REST API data around climate and charging (every minute)
 function initdb(vehicles) {
-	storeVehicles(vehicles); 
+	storeVehicles(vehicles);
 	getAux.vid = vehicles.id;
 	getAux.lastTime = 0;
 	getAux();
@@ -184,26 +187,30 @@ function initdb(vehicles) {
 
 function initstream() {
 	teslams.vehicles( { email: argv.username, password: argv.password }, function ( vehicles ) {
-		if (!argv.silent) { console.log( util.inspect( vehicles) ); }
+		if (!argv.silent) { util.log( util.inspect( vehicles) ); }
 		if ( typeof vehicles == "undefined" || typeof vehicles.tokens == "undefined" || vehicles.tokens[0] == undefined ) {
 			if (!argv.silent) {
-				console.log('Warn: no tokens returned, calling wake_up then trying again');
+				util.log('Warn: no tokens returned, calling wake_up then trying again');
 			}
 			teslams.wake_up( vehicles.id, function( resp ) {
 				//ignore the wake_up() response and try again
-				initstream();		
+				initstream();
 			});
-                } else {
+		} else {
 			if (argv.db && firstTime) {
 				//only do this once, and only if mongodb flag is set
 				firstTime = false;
 				initdb(vehicles);
 			}
-                     	tsla_poll( vehicles.id, vehicles.vehicle_id, vehicles.tokens[0] ); 
+			tsla_poll( vehicles.id, vehicles.vehicle_id, vehicles.tokens[0] );
 		}
-        });
+	});
 }
 
-//this is the main part of this program
-if (!argv.silent) { console.log('timestamp,' + argv.values);} //TODO: write this line to outfile for csv 
-initstream(); 	//call the REST API in order get login and get the id, vehicle_id, and streaming password token
+// this is the main part of this program
+if (!argv.silent) {
+	util.log('timestamp,' + argv.values); //TODO: write this line to outfile for csv
+}
+
+// call the REST API in order get login and get the id, vehicle_id, and streaming password token
+initstream();
