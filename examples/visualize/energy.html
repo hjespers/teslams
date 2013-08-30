@@ -15,15 +15,16 @@
 $(function() {
 	var myUrl = $.url('protocol') + "://" + $.url('auth') + (($.url('auth').length > 0) ? "@" : "") +
 		$.url('hostname') + ":" + $.url('port');
+	var d1, d2, d3, d4, d5, d6, data, options, eschart, socData, socOptions, socchart, previousPointVA;
 	parseDates($.url("?from"), $.url("?to"));
 	$("#frompicker").val(datepickers.fromQ);
 	$("#topicker").val(datepickers.toQ);
 	datepickers(myUrl + '/energy');
 	$("#maplink").attr("href", myUrl + "/map?from=" + datepickers.fromQ + "&to=" + datepickers.toQ);
 	$("#statslink").attr("href", myUrl + "/stats?from=" + datepickers.fromQ + "&to=" + datepickers.toQ);
-	var d1 = [MAGIC_ENERGY];
-	var d2 = [MAGIC_SPEED];
-	var data = [{
+	d1 = [MAGIC_ENERGY];
+	d2 = [MAGIC_SPEED];
+	data = [{
 		data: d1,
 		bars: { show: true,
 			barWidth: 250,
@@ -38,17 +39,17 @@ $(function() {
 		color: "rgba(10,159,217,0.4)",
 		yaxis: 2
 	}];
-	var options = {
+	options = {
 		yaxes: [{
 			axisLabel: "Energy",
 			min: MAGIC_MIN_ENG,
 			max: MAGIC_MAX_ENG,
 			ticks: function (axis) {
-				var ticks = [];
+				var ticks = [], y;
 				var bottomy = Math.floor(axis.min / 10) * 10;
-				for (var y = bottomy; y < 0; y += 10)
+				for (y = bottomy; y < 0; y += 10)
 					ticks.push(y);
-				for (var y = 50; y < axis.max; y += 50)
+				for (y = 50; y < axis.max; y += 50)
 					ticks.push(y);
 				return ticks;
 			}},
@@ -69,10 +70,10 @@ $(function() {
 			timezone: "browser"
 			}]
 	};
-	var eschart = $("#eschart");
+	eschart = $("#eschart");
 	$.plot(eschart, data, options);
-	var d3 = [MAGIC_SOC];
-	var socData = [{
+	d3 = [MAGIC_SOC];
+	socData = [{
 		data: d3,
 		lines: { show: true,
 			 fill: 0.9 },
@@ -81,12 +82,12 @@ $(function() {
 		fillColor: { colors: [{ opacity: 0.8 }, { opacity: 0.1 }] },
 		threshold: [{below: 101, color: "#c02020"},{below: 91, color: "#008000"}, {below: 10, color: "#FF2020"}]
 	}];
-	var socOptions = {
+	socOptions = {
 		yaxis: { max: 119 },
 		xaxis: { mode: "time",
 			 timezone: "browser"}
 	};
-	var socchart = $("#socchart");
+	socchart = $("#socchart");
 
 	$.plot(socchart, socData, socOptions);
 
@@ -104,9 +105,9 @@ $(function() {
 			opacity: 0.80
 		}).appendTo("body").fadeIn(200);
 	}
-	var d5 = [MAGIC_AMP];
-	var d6 = [MAGIC_VOLT];
-	var previousPointVA = null;
+	d5 = [MAGIC_AMP];
+	d6 = [MAGIC_VOLT];
+	previousPointVA = null;
 	$("#chargechart").bind("plothover", function (event, pos, item) {
 		if (item) {
 			if (previousPointVA != item.dataIndex) {
@@ -121,10 +122,10 @@ $(function() {
 			}
 		} else {
 			$("#tooltip").remove();
-			previousPoint = null;			
+			previousPoint = null;
 		}
 	});
-	var data = [{
+	data = [{
 		data: d5,
 		label: "current (A)",
 		color: "#808080",
@@ -143,7 +144,7 @@ $(function() {
 		}],
 		xaxes: [{
 			mode: "time",
-			timezone: "browser",
+			timezone: "browser"
 		}]
 	};
 	var chargechart = $("#chargechart");
