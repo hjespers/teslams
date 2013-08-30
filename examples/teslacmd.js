@@ -2,12 +2,14 @@
 var util = require('util');
 var teslams = require('../teslams.js');
 var argv = require('optimist')
-	.usage('Usage: $0 -u <username> -p <password> -cdFgHimPtvw -A [on|off] -C [start|stop] -R [std|max|50-100] -S [close|vent|comfort|open|0-100] -L [lock|unlock] -T temp')
+	.usage('Usage: $0 -u <username> -p <password> -acdFgHimPtvw -A [on|off] -C [start|stop] -R [std|max|50-100] -S [close|vent|comfort|open|0-100] -L [lock|unlock] -T temp')
 	.alias('u', 'username')
 	.describe('u', 'Teslamotors.com login')
 	.alias('p', 'password')
 	.describe('p', 'Teslamotors.com password')
-	.boolean(['c', 'd', 'F', 'g', 'H', 'i', 'm', 'P', 't', 'v', 'w'])
+	.boolean(['a', 'c', 'd', 'F', 'g', 'H', 'i', 'm', 'P', 't', 'v', 'w'])
+	.alias('a', 'all')
+	.describe('a', 'Print information about all vehicles on the account')
 	.describe('c', 'Display the charge state')
 	.describe('d', 'Display the drive state')
 	.alias('d', 'drive')
@@ -17,8 +19,8 @@ var argv = require('optimist')
 	.alias('g', 'gui')
 	.alias('H', 'honk')
 	.describe('H', 'Honk the car horn')
-	.alias('i', 'id')
-	.describe('i', 'Print vehicle identification')
+	.alias('i', 'info')
+	.describe('i', 'Print vehicle information')
 	.describe('m', 'Display the mobile state')
 	.alias('m', 'mobile')
 	.describe('P', 'Open charge port door')
@@ -30,12 +32,14 @@ var argv = require('optimist')
 	.alias('R', 'range')
 	.describe('R', 'Charging range mode: "std" or "max"')
 	.alias('S', 'roof')
+	.alias('S', 'sunroof')
 	.describe('S', 'Move the car sunroof to: "close", "vent", "comfort", "open" or any percent')
 	.alias('T', 'temp')
 	.describe('T', 'Set the car climate control temperature (in Celcius)')
 	.alias('L', 'lock')
 	.describe('L', 'Lock/Unlock the car doors')
 	.alias('A', 'climate')
+	.alias('A', 'air')
 	.describe('A', 'Turn the air conditioning and heating on/off')
 	.alias('C', 'charge')
 	.describe('C', 'Turn the charging on/off')
@@ -54,6 +58,7 @@ if ( argv.help == true ) {
 	console.log( '\nOptions:');
 	console.log( '  -u, --username  Teslamotors.com login                                                       [required]');
 	console.log( '  -p, --password  Teslamotors.com password                                                    [required]');
+	console.log( '  -a, --all       Print info for all vehicle on the users account                             [boolean]');
 	console.log( '  -c              Display the charge state                                                    [boolean]');
 	console.log( '  -d, --drive     Display the drive state                                                     [boolean]');
 	console.log( '  -F, --flash     Flash the car headlights                                                    [boolean]');
@@ -63,7 +68,7 @@ if ( argv.help == true ) {
 	console.log( '  -P, --port      Open charge port door                                                       [boolean]');
 	console.log( '  -t              Display the climate/temp state                                              [boolean]');
 	console.log( '  -v              Display the vehicle state                                                   [boolean]');
-	console.log( '  -i, --id        Print vehicle identification "--no-i" for silent mode                       [boolean]  [default: true]');
+	console.log( '  -i, --info      Print vehicle info                                                          [boolean]');
 	console.log( '  -w, --wake      Wake up the car telemetry                                                   [boolean]');
 	console.log( '  -R, --range     Charging range mode: "std" or "max" or any percent from 50-100            ');
 	console.log( '  -S, --roof      Move the car sunroof to: "close", "vent", "comfort", "open" or any percent');
@@ -79,17 +84,26 @@ function pr( stuff ) {
 	console.log( util.inspect(stuff) );
 }
 
+//teslams.vehicles( { email: creds.username, password: creds.password }, function ( vehicle ) {
+teslams.all( { email: creds.username, password: creds.password }, function ( error, response, body ) {
+	var data;
 
-//teslams.get_vid( { email: creds.username, password: creds.password }, function ( vid ) {
-teslams.vehicles( { email: creds.username, password: creds.password }, function ( vehicle ) {
+	try { 
+		data = JSON.parse(body); 
+	} catch(err) { 
+		pr(new Error('login failed')); 
+		process.exit(1);
+	}
+    	if (!util.isArray(data)) pr(new Error('expecting an array from Tesla Motors cloud service'));
+    	vehicle = data[0];
+		
 	vid = vehicle.id;
 	if (vid == undefined) {
-		console.log("Error: Undefined vehicle vid");
+		pr( new Error('expecting vehicle ID from Tesla Motors cloud service'));
 		process.exit(1);
 	} else {
-		if (argv.i) {
-			pr( vehicle);
-		}
+		if (argv.all) { pr(body); }
+		if (argv.i) { pr(vehicle); }
 		// wake up the car's telematics system
 		if (argv.w) {
 			teslams.wake_up( vid, pr );
