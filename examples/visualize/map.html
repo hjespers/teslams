@@ -53,13 +53,13 @@ function showMarker() {
 		var latlng = new google.maps.LatLng(segment[0][6],segment[0][7]);
 		var cStr = '<div id="content">';
 		marker.setPosition(latlng);
+		map.setCenter(latlng);
 		if (segment[0][9] == 'D' || segment[0][9] == 'R'){cStr+='going '+segment[0][1]+' mph';}
 		else if (segment[0][8] < 0){cStr+='parked and charging ~ '+(-segment[0][8])+'kW';}
 		else {cStr+='parked';}
 		cStr+='<br>odometer '+segment[0][2]+'<br>range '+segment[0][10]+'</div>';
 		infoWindow.setContent(cStr);
 		replayControl.slider("value", segment[0][0]);
-
 	}
 }
 function drawCachedUntil(endTime) {
