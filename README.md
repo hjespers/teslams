@@ -55,6 +55,7 @@ Use these programs at your own risk. The authors do not guaranteed the proper fu
 #Contributors
 Marshall Rose (https://github.com/mrose17)
 Dirk Hohndel (https://github.com/dirkhh)
+Arthur Blake (https://github.com/arthurblake)
 
 #Installation
 
