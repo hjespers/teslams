@@ -4,21 +4,18 @@ var argv = require('optimist')
 	.usage('Usage: $0 -u username -p password ')
 	.alias('u', 'username')
 	.describe('u', 'Teslamotors.com login')
-	.demand('u')
 	.alias('p', 'password')
-	.describe('p', 'Teslamotors.com password')
-	.demand('p')
-	.argv;
+	.describe('p', 'Teslamotors.com password');
+
+// get credentials either from command line or config.json in ~/.teslams/config.js
+var creds = require('./config.js').config(argv);
+
+argv = argv.argv;
 
 if ( argv.help == true ) {
 	console.log( 'Usage: climatemon.js -u <username> -p <password>');
 	process.exit(1);
 }
-
-var creds = { 
-	email: argv.username, 
-	password: argv.password 
-};
 
 var multimeter = require('multimeter-hj');
 var multi = multimeter(process);
@@ -33,7 +30,7 @@ multi.charm.on('^C', function () {
 
 multi.charm.on('^D', function () {
     // toggle climate control on/off
-    teslams.vehicles( { email: creds.email, password: creds.password }, function ( vehicles ) {
+    teslams.vehicles( { email: creds.username, password: creds.password }, function ( vehicles ) {
 	if (vehicles.id == undefined) {
 		// console.log("Error: Undefined vehicle id");
 	} else {
@@ -75,7 +72,7 @@ bars[0].ratio( 0, 140, msg='Initializing...' );
 bars[1].ratio( 0, 140, msg='Initializing...' );
 bars[2].ratio( 0, 140, msg='Initializing...' );
 
-teslams.vehicles( { email: creds.email, password: creds.password }, function ( vehicles ) {
+teslams.vehicles( { email: creds.username, password: creds.password }, function ( vehicles ) {
 	if (vehicles.id == undefined) {
 		// console.log("Error: Undefined vehicle id");
 	} else {

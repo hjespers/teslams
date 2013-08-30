@@ -13,16 +13,16 @@ function argchecker( argv ) {
 	if (argv.db == true) throw 'MongoDB database name is unspecified. Use -d dbname or --db dbname';
 }
 
+var usage = 'Usage: $0 -u <username> -p <password> [--file <filename>] [--db <MongoDB database>] [--silent] \n' +
+	'# if --db <MongoDB database> argument is given, store data in MongoDB, otherwise in a flat file';
+
 var argv = require('optimist') // https://github.com/substack/node-optimist
-	.usage('Usage: $0 -u <username> -p <password> [--file <filename>] [--db <MongoDB database>] [--silent] \n' +
-		'# if --db <MongoDB database> argument is given, store data in MongoDB, otherwise in a flat file')
+	.usage(usage)
 	.check(argchecker)
 	.alias('u', 'username')
 	.describe('u', 'Teslamotors.com login')
-	.demand('u')
 	.alias('p', 'password')
 	.describe('p', 'Teslamotors.com password')
-	.demand('p')
 	.alias('d', 'db')
 	.describe('d', 'MongoDB database name')
 	.alias('s', 'silent')
@@ -36,12 +36,15 @@ var argv = require('optimist') // https://github.com/substack/node-optimist
 	.default('v', 'speed,odometer,soc,elevation,est_heading,est_lat,est_lng,power,shift_state,range,est_range')
 	//.default('v', 'speed,odometer,soc,elevation,est_heading,est_lat,est_lng,power,shift_state,range,est_range,heading')
 	.alias('?', 'help')
-	.describe('?', 'Print usage information')
-	.argv;
+	.describe('?', 'Print usage information');
+
+// get credentials either from command line or config.json in ~/.teslams/config.js
+var creds = require('./config.js').config(argv);
+
+argv = argv.argv;
 
 if ( argv.help == true ) {
-	console.log( 'Usage: streaming.js -u <username> -p <password> [--file <filename>] [--db <MongoDB database>] [--silent] \n' +
-		'# if --db <MongoDB database> argument is given, store data in MongoDB, otherwise in a flat file');
+	console.log(usage);
 	process.exit(1);
 }
 
@@ -74,7 +77,7 @@ function tsla_poll( vid, long_vid, token ) {
 			'uri': s_url + long_vid +'/?values=' + argv.values,
 			'method' : 'GET',
 			'auth': {
-				'user': argv.username,
+				'user': creds.username,
 				'pass': token
 			},
 			'timeout' : 125000 // a bit more than the expected 2 minute max long poll
@@ -191,7 +194,7 @@ function initdb(vehicles) {
 }
 
 function initstream() {
-	teslams.vehicles( { email: argv.username, password: argv.password }, function ( vehicles ) {
+	teslams.vehicles( { email: creds.username, password: creds.password }, function ( vehicles ) {
 		if (!argv.silent) { util.log( util.inspect( vehicles) ); }
 		if ( typeof vehicles == "undefined" || typeof vehicles.tokens == "undefined" || vehicles.tokens[0] == undefined ) {
 			if (!argv.silent) {

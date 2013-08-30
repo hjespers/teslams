@@ -67,6 +67,18 @@ or if you are not logged in as the root (administrator) use:
 	
 	sudo npm install -g teslams
 
+Alternatively, to run from github sources, clone teslams, go to the main folder and run
+
+	npm install
+
+All example programs normally require -u and -p in order to specify the Tesla Motors user name and password to access your Model S.
+Or, you can instead create a json file in ~/.teslams/config.json and specify them once, in the following format:
+
+	{
+		"username": "Your teslamotors.com username/email",
+		"password": "Your teslamotors.com password"
+	}
+
 #chargebar.js - monitor your car from your desktop 
 
 

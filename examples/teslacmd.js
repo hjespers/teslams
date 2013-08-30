@@ -5,10 +5,8 @@ var argv = require('optimist')
 	.usage('Usage: $0 -u <username> -p <password> -cdFgHimPtvw -A [on|off] -C [start|stop] -R [std|max|50-100] -S [close|vent|comfort|open|0-100] -L [lock|unlock] -T temp')
 	.alias('u', 'username')
 	.describe('u', 'Teslamotors.com login')
-	.demand('u')
 	.alias('p', 'password')
 	.describe('p', 'Teslamotors.com password')
-	.demand('p')
 	.boolean(['c', 'd', 'F', 'g', 'H', 'i', 'm', 'P', 't', 'v', 'w'])
 	.describe('c', 'Display the charge state')
 	.describe('d', 'Display the drive state')
@@ -43,9 +41,12 @@ var argv = require('optimist')
 	.alias('C', 'charge')
 	.describe('C', 'Turn the charging on/off')
 	.alias('?', 'help')
-	.describe('?', 'Print usage information')
-	.argv;
+	.describe('?', 'Print usage information');
 
+
+// get credentials either from command line or config.json in ~/.teslams/config.js
+var creds = require('./config.js').config(argv);
+argv = argv.argv;
 
 if ( argv.help == true ) {
 	console.log( 'Usage: teslacmd.js -u <username> -p <password> -cdFgHimPtvw');
@@ -75,17 +76,12 @@ if ( argv.help == true ) {
 	process.exit(1);
 }
 
-var creds = { 
-	email: argv.username, 
-	password: argv.password 
-};
-
 function pr( stuff ) {
 	console.log( util.inspect(stuff) );
 }
 
 
-teslams.get_vid( { email: argv.username, password: argv.password }, function ( vid ) {
+teslams.get_vid( { email: creds.username, password: creds.password }, function ( vid ) {
 	if (vid == undefined) {
 		console.log("Error: Undefined vehicle vid");
 		process.exit(1);
