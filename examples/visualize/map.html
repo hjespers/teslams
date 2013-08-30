@@ -136,6 +136,7 @@ function drawUntil(endTime) { // this is manual drawing
 				console.log("removed segment for", new Date(+segment[0][0]));
 			}
 		} while (lastDrawn >= 0 && segment[0][0] > endTime);
+		drawNext.last = endTime;
 		showMarker();
 	} else {
 		drawNext.last = drawCachedUntil(endTime);
