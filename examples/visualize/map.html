@@ -33,6 +33,17 @@ function cancelUpdates() {
 		getMore.ID = null;
 	}
 }
+function startStopUpdates() {
+	if (getMore.ID) { // let's stop
+		cancelUpdates();
+		$('#startStopButton').html("Start Updates");
+	} else {
+		startUpdates();
+		startDrawing();
+		$('#startStopButton').html("Stop Updates");
+	}
+}
+
 function showMarker() {
 	//debug output console.log("lastDrawn", lastDrawn, "available", getMore.lines.length);
 	if (lastDrawn >= 0) {
@@ -54,6 +65,8 @@ function showMarker() {
 function drawCachedUntil(endTime) {
 	var segment;
 	//debug output console.log("drawCachedUntil", new Date(+endTime), "with", +lastDrawn + 1, "elements drawn and", getMore.lines.length, "cached");
+	if (getMore.lines.length === 0)
+		return;
 	while (lastDrawn + 1 < getMore.lines.length) {
 		lastDrawn++;
 		segment = getMore.lines[lastDrawn];
@@ -70,13 +83,18 @@ function drawCachedUntil(endTime) {
 	return endTime;
 
 }
-function getMore() {
+function getMore(ts, cb) {
+	var until;
 	if (myUrl.length === 0)
 		return;
 	// this gets us an array of arrays - there is always at least one dummy
 	// entry that gives us the last timestamp that was considered in this batch
 	// debug output console.log("get AJAX data until", new Date(+getMore.lastTimestamp + (speedup + 10) * msecPerUpdate));
-	$.getJSON(myUrl + "/update", { 'until': +getMore.lastTimestamp + (speedup + 10) * msecPerUpdate })
+	if (ts !== undefined)
+		until = +ts + 2 * speedup * msecPerUpdate;
+	else
+		until =  +getMore.lastTimestamp + (speedup + 10) * msecPerUpdate;
+	$.getJSON(myUrl + "/update", { 'until': +until})
 	.done(function (d, textStatus, jqXHR) {
 		//console.log("length", d.length, "end", +getMore.endTimestamp, "last", +getMore.lastTimestamp);
 		if (d.length === 1 && d[0][2] === 0) { // that's just the fake entry
@@ -105,8 +123,8 @@ function getMore() {
 			getMore.lines.push([d[i], path]);
 			getMore.lastTimestamp = +d[i][0];
 		}
-		//debug output console.log("got data until", getMore.lastTimestamp, '=', new Date(+getMore.lastTimestamp));
-		// showMarker();
+		if (cb !== undefined)
+			cb();
 	})
 	.fail(function(jqXHR, textStatus, errorThrown) { console.log(myUrl + "/update : ajax fail", textStatus, errorThrown); });
 }
@@ -123,23 +141,26 @@ function stopDrawing() {
 	}
 }
 function drawUntil(endTime) { // this is manual drawing
-	var segment, path;
+	var segment, path, thisFar;
 	// debug output console.log("drawUntil", new Date(endTime), "we have until", drawNext.last);
 	// do we need to delete things that were drawn?
 	if (+endTime < drawNext.last) {
-		console.log("delete part of the path");
 		do {
 			segment = getMore.lines[lastDrawn];
 			if (segment[0][0] > endTime) {
 				segment[1].setMap(null);
 				lastDrawn--;
-				console.log("removed segment for", new Date(+segment[0][0]));
 			}
 		} while (lastDrawn >= 0 && segment[0][0] > endTime);
 		drawNext.last = endTime;
 		showMarker();
 	} else {
-		drawNext.last = drawCachedUntil(endTime);
+		thisFar =  drawCachedUntil(endTime);
+		if (thisFar < endTime && lastDrawn + 1 === getMore.lines.length) { // we have drawn everything there is
+			getMore(endTime, function(){ drawUntil(endTime); });
+		} else {
+			drawNext.last = thisFar;
+		}
 	}
 }
 function initialize() {
@@ -191,7 +212,6 @@ function initialize() {
 			   'slide': function(event, ui) {
 				   stopDrawing();
 				   updateTooltip(ui);
-				   console.log("slider", new Date(ui.value));
 				   drawUntil(ui.value);
 			   },
 			   'change': rSliderUpdate
@@ -222,7 +242,7 @@ google.maps.event.addDomListener(window, 'load', initialize);
 		<div id="dates">
 			<label>Start time</label><input id="frompicker" type="text">
 			<label>End time</label><input id="topicker" type="text">
-			<button onclick="cancelUpdates()">Stop updates</button>
+			<button id="startStopButton" onclick="startStopUpdates()">Stop updates</button>
 		</div>
 		<div id="sliders">
 			<section id="sliderS">
