@@ -18,14 +18,13 @@ var argv = require('optimist')
 	.alias('H', 'honk')
 	.describe('H', 'Honk the car horn')
 	.alias('i', 'id')
-	.default('i', true)
+	.describe('i', 'Print vehicle identification')
 	.describe('m', 'Display the mobile state')
 	.alias('m', 'mobile')
 	.describe('P', 'Open charge port door')
 	.alias('P', 'port')
 	.describe('t', 'Display the climate/temp state')
 	.describe('v', 'Display the vehicle state')
-	.describe('i', 'Print vehicle identification "--no-i" for silent mode')
 	.alias('w', 'wake')
 	.describe('w', 'Wake up the car telemetry')
 	.alias('R', 'range')
@@ -81,11 +80,16 @@ function pr( stuff ) {
 }
 
 
-teslams.get_vid( { email: creds.username, password: creds.password }, function ( vid ) {
+//teslams.get_vid( { email: creds.username, password: creds.password }, function ( vid ) {
+teslams.vehicles( { email: creds.username, password: creds.password }, function ( vehicle ) {
+	vid = vehicle.id;
 	if (vid == undefined) {
 		console.log("Error: Undefined vehicle vid");
 		process.exit(1);
 	} else {
+		if (argv.i) {
+			pr( vehicle);
+		}
 		// wake up the car's telematics system
 		if (argv.w) {
 			teslams.wake_up( vid, pr );
