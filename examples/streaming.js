@@ -8,7 +8,6 @@ var request = require('request');
 var teslams = require('../teslams.js');
 var fs = require('fs');
 var util = require('util');
-var config = require('./config.js');
 
 function argchecker( argv ) {
 	if (argv.db == true) throw 'MongoDB database name is unspecified. Use -d dbname or --db dbname';
