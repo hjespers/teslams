@@ -93,7 +93,7 @@ function getMore(ts, cb) {
 	if (ts !== undefined)
 		until = +ts + 2 * speedup * msecPerUpdate;
 	else
-		until =  +getMore.lastTimestamp + (speedup + 10) * msecPerUpdate;
+		until =  +getMore.lastTimestamp + 5 * (speedup + 10) * msecPerUpdate;
 	$.getJSON(myUrl + "/update", { 'until': +until})
 	.done(function (d, textStatus, jqXHR) {
 		//console.log("length", d.length, "end", +getMore.endTimestamp, "last", +getMore.lastTimestamp);
