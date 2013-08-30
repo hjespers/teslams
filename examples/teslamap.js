@@ -6,10 +6,8 @@ var argv = require('optimist')
 	.usage('Usage: $0 -u <username> -p <password> [--json || --url || --kml] [--map]')
 	.alias('u', 'username')
 	.describe('u', 'Teslamotors.com login')
-	.demand('u')
 	.alias('p', 'password')
 	.describe('p', 'Teslamotors.com password')
-	.demand('p')
 	.boolean(['j'])
 	.describe('j', 'Display the drive state info in JSON format')
 	.alias('j', 'json')
@@ -23,19 +21,17 @@ var argv = require('optimist')
 	.describe('U', 'Print a URL to google maps on the console')
 	.alias('U', 'url')
 	.describe('?', 'Print usage information')
-	.alias('?', 'help')
-	.argv;
+	.alias('?', 'help');
 
+// get credentials either from command line or config.json in ~/.teslams/config.js
+var creds = require('./config.js').config(argv);
+
+argv = argv.argv;
 
 if ( argv.help == true ) {
 	console.log( 'Usage: teslamap.js -u <username> -p <password> [--json || --url || --kml] [--map]');
 	process.exit(1);
 }
-
-var creds = { 
-	email: argv.username, 
-	password: argv.password 
-};
 
 function ds( state ) {
 	if (state.latitude != undefined) {
@@ -59,7 +55,7 @@ function ds( state ) {
 	} 
 }
 
-teslams.get_vid( { email: argv.username, password: argv.password }, function ( id ) {
+teslams.get_vid( { email: creds.username, password: creds.password }, function ( id ) {
 	teslams.get_drive_state( id , ds ); 
 });
 
