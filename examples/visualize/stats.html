@@ -14,6 +14,7 @@
 <script language="javascript" type="text/javascript" src="url.min.js"></script>
 <script type="text/javascript">
 $(function() {
+	var previousPoint, myUrl, d1, d2, d3, d4, data, options, eschart;
 	function showTooltip(x, y, contents) {
 		$('<div id="tooltip">' + contents + '</div>').css( {
 			position: 'absolute',
@@ -26,28 +27,28 @@ $(function() {
 			opacity: 0.80
 		}).appendTo("body").fadeIn(200);
 	}
-	var previousPoint = null;
+	previousPoint = null;
 	$("#dcachart").bind("plothover", function (event, pos, item) {
+		var x, xS, y;
 		if (item) {
 			if (previousPoint != item.dataIndex) {
 				previousPoint = item.dataIndex;
-				
+
 				$("#tooltip").remove();
-				var x = item.datapoint[0];
-				x = new Date(Math.round(x / (24 * 3600000)) * 24 * 3600000);
-				var xS = (x.getMonth() + 1) + "/" + x.getDate();
-				var y = item.datapoint[1].toFixed(1);
-				
+				x = new Date(Math.round(item.datapoint[0] / (24 * 3600000)) * 24 * 3600000);
+				xS = (x.getMonth() + 1) + "/" + x.getDate();
+				y = item.datapoint[1].toFixed(1);
+
 				showTooltip(item.pageX, item.pageY,
 							item.series.label + " on " + xS + " : " + y);
 			}
 		} else {
 			$("#tooltip").remove();
-			previousPoint = null;			
+			previousPoint = null;
 		}
 	});
 
-	var myUrl = $.url('protocol') + "://" + $.url('auth') + (($.url('auth').length > 0) ? "@" : "") +
+	myUrl = $.url('protocol') + "://" + $.url('auth') + (($.url('auth').length > 0) ? "@" : "") +
 		$.url('hostname') + ":" + $.url('port');
 	parseDates($.url("?from"), $.url("?to"));
 	$("#frompicker").val(datepickers.fromQ);
@@ -55,11 +56,11 @@ $(function() {
 	datepickers(myUrl + '/stats');
 	$("#maplink").attr("href", myUrl + "/map?from=" + datepickers.fromQ + "&to=" + datepickers.toQ);
 	$("#energylink").attr("href", myUrl + "/energy?from=" + datepickers.fromQ + "&to=" + datepickers.toQ);
-	var d1 = [MAGIC_DISTANCE];
-	var d4 = [MAGIC_KWH];
-	var d2 = [MAGIC_CHARGE];
-	var d3 = [MAGIC_AVERAGE];
-	var data = [{
+	d1 = [MAGIC_DISTANCE];
+	d4 = [MAGIC_KWH];
+	d2 = [MAGIC_CHARGE];
+	d3 = [MAGIC_AVERAGE];
+	data = [{
 		data: d1,
 		bars: { show: true,
 			order: 0,
@@ -93,7 +94,7 @@ $(function() {
 		color: "#0a9f0a",
 		yaxis: 1
 	}];
-	var options = {
+	options = {
 		grid: { hoverable: true },
 		yaxes: [{
 		},{
@@ -110,7 +111,7 @@ $(function() {
 			}
 		}]
 	};
-	var eschart = $("#dcachart");
+	eschart = $("#dcachart");
 	$.plot(eschart, data, options);
 
 });

@@ -11,7 +11,7 @@ var apiKey = 'AIzaSyAtYQ9xjedv3B6_2HwsDVMY7oHlbNs-cvk';
 
 
 function argchecker( argv ) {
-	if (argv.db == true) throw 'MongoDB database name is unspecified. Use -d dbname or --db dbname';
+	if (argv.db === true) throw 'MongoDB database name is unspecified. Use -d dbname or --db dbname';
 }
 
 var argv = require('optimist')
@@ -32,7 +32,7 @@ var argv = require('optimist')
 	.alias('?', 'help')
 	.describe('?', 'Print usage information')
 	.argv;
-if ( argv.help == true ) {
+if ( argv.help === true ) {
 	console.log( 'Usage: visualize.js --db <MongoDB database> [--silent] [--verbose]');
 	process.exit(1);
 }
@@ -66,9 +66,9 @@ passport.use(new LocalStrategy(
 function makeDate(string, offset) {
 	var args = string.split('-');
 	var date = new Date(args[0], args[1]-1, args[2], args[3], args[4], args[5]);
-	if (offset != null)
-		date = +date + offset;
-	return new Date(date);
+	if (offset !== undefined )
+		date = new Date(date.getTime() + offset);
+	return date;
 }
 function dateString(time) {
 	return time.getFullYear() + '-' + (time.getMonth()+1) + '-' + time.getDate() + '-' +
@@ -81,11 +81,11 @@ function dashDate(date, filler) { // date-time with all '-'
 	return c[0] + '-' + c[1] + '-' + c[2] + '-' + c[3] + '-' + c[4] + '-' + c[5];
 }
 function parseDates(fromQ, toQ) {
-	if (toQ == null || toQ == "" || toQ.split('-').count < 2) // no valid to argument -> to = now
+	if (toQ === null || toQ === "" || toQ.split('-').count < 2) // no valid to argument -> to = now
 		this.toQ = dateString(new Date());
 	else
 		this.toQ = dashDate(toQ,['00','00','00']);
-	if (fromQ == null || fromQ == "" || fromQ.split('-').count < 2) // no valid from argument -> 12h before to
+	if (fromQ === null || fromQ === "" || fromQ.split('-').count < 2) // no valid from argument -> 12h before to
 		this.fromQ = dashDate(dateString(makeDate(this.toQ, -12 * 3600 * 1000)));
 	else
 		this.fromQ = dashDate(fromQ,['23','59','59']);
@@ -99,7 +99,7 @@ MongoClient.connect("mongodb://127.0.0.1:27017/" + argv.db, function(err, db) {
 	var options = { 'sort': [['ts', 'desc']], 'limit': 1};
 	collectionA.find(query, options).toArray(function(err, docs) {
 		if (argv.verbose) console.dir(docs);
-		if (docs.length == 0) {
+		if (docs.length === 0) {
 			console.log("missing vehicles data in db, assuming Model S 60");
 			capacity = 60;
 		} else {
@@ -141,7 +141,7 @@ app.get('/update', function (req, res) {
 			return;
 		}
 		collection = db.collection("tesla_stream");
-		if (req.query.until == null) {
+		if (req.query.until === null) {
 			console.log("why is there no 'until' parameter???");
 			return;
 		}
@@ -155,7 +155,7 @@ app.get('/update', function (req, res) {
 			endTime = +currentTime;
 		collection.find({"ts": {"$gt": +lastTime, "$lte": +endTime}}).toArray(function(err,docs) {
 			if (argv.verbose) console.log("got datasets:", docs.length);
-			if (docs.length == 0) {
+			if (docs.length === 0) {
 				// create one dummy entry so the map app knows the last time we looked at
 				docs = [ { "ts": +endTime, "record": [ +lastTime+"" ,"0","0","0","0","0","0","0","0","0","0","0"]} ];
 			}
@@ -167,7 +167,7 @@ app.get('/update', function (req, res) {
 				// the reg exp below replaces the two that are numerical with 0 (the shift_state stays unchanged)
 				var vals = doc.record.toString().replace(",,",",0,").split(",");
 				res.write(comma + JSON.stringify(vals), "utf-8");
-				lastTime = doc.ts;
+				lastTime = +doc.ts;
 				comma = ",";
 			});
 			res.end("]", "utf-8");
@@ -184,10 +184,10 @@ app.get('/map', function(req, res) {
 	var dates = new parseDates(req.query.from, req.query.to);
 	from = makeDate(dates.fromQ);
 	to = makeDate(dates.toQ);
-	if (req.query.speed != null && req.query.speed != "" && req.query.speed <= 120 && req.query.speed >= 1)
+	if (req.query.speed !== null && req.query.speed !== "" && req.query.speed <= 120 && req.query.speed >= 1)
 		speedup = req.query.speed * 2000;
-	if (req.query.to == undefined || req.query.to.split('-').length < 6 ||
-	    req.query.from == undefined || req.query.from.split('-').length < 6) {
+	if (req.query.to === undefined || req.query.to.split('-').length < 6 ||
+	    req.query.from === undefined || req.query.from.split('-').length < 6) {
 		var speedQ = speedup / 2000;
 		res.redirect('/map?from=' + dates.fromQ + '&to=' + dates.toQ + '&speed=' + speedQ.toFixed(0));
 		return;
@@ -225,8 +225,8 @@ app.get('/energy', function(req, res) {
 	var dates = new parseDates(req.query.from, req.query.to);
 	from = makeDate(dates.fromQ);
 	to = makeDate(dates.toQ);
-	if (req.query.to == undefined || req.query.to.split('-').length < 6 ||
-	    req.query.from == undefined || req.query.from.split('-').length < 6) {
+	if (req.query.to === undefined || req.query.to.split('-').length < 6 ||
+	    req.query.from === undefined || req.query.from.split('-').length < 6) {
 		res.redirect('/energy?from=' + dates.fromQ + '&to=' + dates.toQ);
 		return;
 	}
@@ -248,11 +248,11 @@ app.get('/energy', function(req, res) {
 		collection.find({"ts": {$gte: +from, $lte: +to}}).toArray(function(err,docs) {
 			docs.forEach(function(doc) {
 				var vals = doc.record.toString().replace(",,",",0,").split(",");
-				if (firstDate == 0) {
+				if (firstDate === 0) {
 					firstDate = lastDate = doc.ts;
-					outputE = "[" + +from + ",0]";
-					outputS = "[" + +from + ",0]";
-					outputSOC = "[" + +from + "," + vals[3] + "],null";
+					outputE = "[" + (+from) + ",0]";
+					outputS = "[" + (+from) + ",0]";
+					outputSOC = "[" + (+from) + "," + vals[3] + "],null";
 				}
 				if (doc.ts >= lastDate) {
 					if (doc.ts > lastDate + increment) {
@@ -261,9 +261,9 @@ app.get('/energy', function(req, res) {
 							outputE += ",[" + (+lastDate + increment) + "," + minE + "]";
 						}
 						if (maxS != -1000)
-							outputS += ",[" + (+lastDate + halfIncrement) + "," + (+maxS + +minS) / 2 + "]";
+							outputS += ",[" + (+lastDate + halfIncrement) + "," + (+maxS + minS) / 2 + "]";
 						if (maxSOC != -1000)
-							outputSOC += ",[" + (+lastDate + halfIncrement)  + "," + (+maxSOC + +minSOC) / 2 + "]";
+							outputSOC += ",[" + (+lastDate + halfIncrement)  + "," + (+maxSOC + minSOC) / 2 + "]";
 						lastDate = doc.ts;
 						if (+maxE > +gMaxE) gMaxE = maxE;
 						if (+minE < +gMinE) gMinE = minE;
@@ -289,8 +289,8 @@ app.get('/energy', function(req, res) {
 			lastDate = +from;
 			collection.find({"ts": {$gte: +from, $lte: +to}}).toArray(function(err,docs) {
 				if (argv.verbose) console.log("Found " + docs.length + " entries in aux DB");
-				ouputAmp = "[" + +firstDate + ",0]";
-				ouputColt = "[" + +firstDate + ",0]";
+				ouputAmp = "[" + (+firstDate) + ",0]";
+				ouputColt = "[" + (+firstDate) + ",0]";
 				docs.forEach(function(doc) {
 					if(typeof doc.chargeState !== 'undefined') {
 						if (doc.chargeState.charge_rate > maxMph) {
@@ -359,8 +359,8 @@ app.get('/stats', function(req, res) {
 	var dates = new parseDates(req.query.from, req.query.to);
 	from = makeDate(dates.fromQ);
 	to = makeDate(dates.toQ);
-	if (req.query.to == undefined || req.query.to.split('-').length < 6 ||
-	    req.query.from == undefined || req.query.from.split('-').length < 6) {
+	if (req.query.to === undefined || req.query.to.split('-').length < 6 ||
+	    req.query.from === undefined || req.query.from.split('-').length < 6) {
 		res.redirect('/stats?from=' + dates.fromQ + '&to=' + dates.toQ);
 		return;
 	}
@@ -378,7 +378,7 @@ app.get('/stats', function(req, res) {
 			docs.forEach(function(doc) {
 				var day = new Date(doc.ts).getDay();
 				vals = doc.record.toString().replace(",,",",0,").split(",");
-				if (firstDate == 0) {
+				if (firstDate === 0) {
 					firstDate = doc.ts;
 					lastDay = day;
 					startOdo = vals[2];
@@ -419,14 +419,14 @@ app.get('/stats', function(req, res) {
 						var ts = new Date(lastDate);
 						var midnight = new Date(ts.getFullYear(), ts.getMonth(), ts.getDate(), 0, 0, 0);
 						charge += increment;
-						outputD += comma + "[" + +midnight  + "," + dist + "]";
-						outputC += comma + "[" + +midnight  + "," + charge + "]";
+						outputD += comma + "[" + (+midnight)  + "," + dist + "]";
+						outputC += comma + "[" + (+midnight)  + "," + charge + "]";
 						if (dist > 0) {
-							outputA += comma + "[" + +midnight  + "," + 1000 * kWh / dist + "]";
+							outputA += comma + "[" + (+midnight)  + "," + 1000 * kWh / dist + "]";
 						} else {
 							outputA += comma + "null";
 						}
-						outputW += comma + "[" + +midnight + "," + kWh + "]";
+						outputW += comma + "[" + (+midnight) + "," + kWh + "]";
 						startOdo = vals[2];
 						charge = 0;
 						minSOC = 101;
@@ -445,14 +445,14 @@ app.get('/stats', function(req, res) {
 			var ts = new Date(lastDate);
 			var midnight = new Date(ts.getFullYear(), ts.getMonth(), ts.getDate(), 0, 0, 0);
 			charge += increment;
-			outputD += comma + "[" + +midnight  + "," + dist + "]";
-			outputC += comma + "[" + +midnight  + "," + charge + "]";
+			outputD += comma + "[" + (+midnight)  + "," + dist + "]";
+			outputC += comma + "[" + (+midnight)  + "," + charge + "]";
 			if (dist > 0) {
-				outputA += comma + "[" + +midnight  + "," + 1000 * kWh / dist + "]";
+				outputA += comma + "[" + (+midnight)  + "," + 1000 * kWh / dist + "]";
 			} else {
 				outputA += comma + "null";
 			}
-			outputW += comma + "[" + +midnight + "," + kWh + "]";
+			outputW += comma + "[" + (+midnight) + "," + kWh + "]";
 
 			db.close();
 			fs.readFile(__dirname + "/stats.html", "utf-8", function(err, data) {

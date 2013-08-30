@@ -18,9 +18,9 @@ var drawTimeIncr = 100; // 10 FPS for drawing
 function hex(num) { var s = '#0' + num.toString(16) + ''; return s.substring(s.length - 2); }
 function getColor(speed) {
 	var wl = speed*2+440; if(wl>640){wl=640;}
-	var r=Math.round(35+(wl-510)*3.14); if(r<55){r=55} if(r>255){r=255}
-	var b=35+(510-wl)*11;if(b<55){b=55;} if(b>255){b=255}
-	var g=(wl<580) ? Math.round(35+(wl-440)*4.4) : Math.round(35+(640-wl)*3.66); if(g<55){g=55} if(g>255){g=255}
+	var r=Math.round(35+(wl-510)*3.14); if(r<55){r=55;} if(r>255){r=255;}
+	var b=35+(510-wl)*11;if(b<55){b=55;} if(b>255){b=255;}
+	var g=(wl<580) ? Math.round(35+(wl-440)*4.4) : Math.round(35+(640-wl)*3.66); if(g<55){g=55;} if(g>255){g=255;}
 	return '#'+hex(r)+hex(g)+hex(b);
 }
 function startUpdates() {
@@ -42,9 +42,9 @@ function showMarker() {
 		var latlng = new google.maps.LatLng(segment[0][6],segment[0][7]);
 		var cStr = '<div id="content">';
 		marker.setPosition(latlng);
-		if (segment[0][9] == 'D' || segment[0][9] == 'R'){cStr+='going '+segment[0][1]+' mph'}
-		else if (segment[0][8] < 0){cStr+='parked and charging ~ '+(-segment[0][8])+'kW'}
-		else {cStr+='parked'}
+		if (segment[0][9] == 'D' || segment[0][9] == 'R'){cStr+='going '+segment[0][1]+' mph';}
+		else if (segment[0][8] < 0){cStr+='parked and charging ~ '+(-segment[0][8])+'kW';}
+		else {cStr+='parked';}
 		cStr+='<br>odometer '+segment[0][2]+'<br>range '+segment[0][10]+'</div>';
 		infoWindow.setContent(cStr);
 		replayControl.slider("value", segment[0][0]);
@@ -71,7 +71,7 @@ function drawCachedUntil(endTime) {
 
 }
 function getMore() {
-	if (myUrl.length == 0)
+	if (myUrl.length === 0)
 		return;
 	// this gets us an array of arrays - there is always at least one dummy
 	// entry that gives us the last timestamp that was considered in this batch
@@ -79,7 +79,7 @@ function getMore() {
 	$.getJSON(myUrl + "/update", { 'until': +getMore.lastTimestamp + (speedup + 10) * msecPerUpdate })
 	.done(function (d, textStatus, jqXHR) {
 		//console.log("length", d.length, "end", +getMore.endTimestamp, "last", +getMore.lastTimestamp);
-		if (d.length == 1 && d[0][2] == 0) { // that's just the fake entry
+		if (d.length === 1 && d[0][2] === 0) { // that's just the fake entry
 			getMore.lastTimestamp = +d[0][0];
 			//debug output console.log("do we need to stop?", "end", +getMore.endTimestamp, "last", +getMore.lastTimestamp);
 			if (+getMore.endTimestamp - +getMore.lastTimestamp < 120000)
@@ -87,7 +87,7 @@ function getMore() {
 			return;
 		}
 		for (var i = 0; i < d.length; i++) {
-			if (d[i][6] == 0 && d[i][7] == 0)
+			if (d[i][6] === 0 && d[i][7] === 0)
 				continue; // no line to GPS (0,0)
 			if (Math.abs(d[i][0] - getMore.lastTimestamp) > 5000) {
 				myLatlng = new google.maps.LatLng(d[i][6],d[i][7]);
@@ -103,12 +103,12 @@ function getMore() {
 			var color = getColor(d[i][1]);
 			var path = new google.maps.Polyline({path:points,strokeColor:color,strokeWeight:4});
 			getMore.lines.push([d[i], path]);
-			getMore.lastTimestamp = d[i][0];
+			getMore.lastTimestamp = +d[i][0];
 		}
 		//debug output console.log("got data until", getMore.lastTimestamp, '=', new Date(+getMore.lastTimestamp));
 		// showMarker();
 	})
-	.fail(function(jqXHR, textStatus, errorThrown) { console.log(myUrl + "/update : ajax fail", textStatus, errorThrown); })
+	.fail(function(jqXHR, textStatus, errorThrown) { console.log(myUrl + "/update : ajax fail", textStatus, errorThrown); });
 }
 function drawNext() { // this is the timer driven drawing
 	drawNext.last = drawCachedUntil(+drawNext.last + drawTimeIncr * speedup);
@@ -153,7 +153,7 @@ function initialize() {
 	$("#energylink").attr("href", myUrl + "/energy?from=" + datepickers.fromQ + "&to=" + datepickers.toQ);
 	$("#statslink").attr("href", myUrl + "/stats?from=" + datepickers.fromQ + "&to=" + datepickers.toQ);
 	speedup = $.url("?speed");
-	if (speedup == null || speedup == "")
+	if (speedup === null || speedup === "")
 		speedup = 30;
 	var speedControl  = $('#speedSlider'), tooltipS = $('#speedTT');
 	var sSliderOpts = {'animate': 'fast',
