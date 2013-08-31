@@ -105,7 +105,7 @@ function getMore(ts, cb) {
 			return;
 		}
 		for (var i = 0; i < d.length; i++) {
-			if (d[i][6] === 0 && d[i][7] === 0)
+			if (d[i][6] === "0" && d[i][7] === "0")
 				continue; // no line to GPS (0,0)
 			if (Math.abs(d[i][0] - getMore.lastTimestamp) > 5000) {
 				myLatlng = new google.maps.LatLng(d[i][6],d[i][7]);
