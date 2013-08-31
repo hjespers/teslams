@@ -16,7 +16,14 @@ function argchecker( argv ) {
 var usage = 'Usage: $0 -u <username> -p <password> [--file <filename>] [--db <MongoDB database>] [--silent] \n' +
 	'# if --db <MongoDB database> argument is given, store data in MongoDB, otherwise in a flat file';
 
-var argv = require('optimist') // https://github.com/substack/node-optimist
+var p_url = 'https://portal.vn.teslamotors.com/vehicles/';
+var s_url = 'https://streaming.vn.teslamotors.com/stream/';
+var collectionS, collectionA;
+var firstTime = true;
+var MongoClient;
+var stream;
+
+var argv = require('optimist')
 	.usage(usage)
 	.check(argchecker)
 	.alias('u', 'username')
@@ -38,7 +45,7 @@ var argv = require('optimist') // https://github.com/substack/node-optimist
 	.alias('?', 'help')
 	.describe('?', 'Print usage information');
 
-// get credentials either from command line or config.json in ~/.teslams/config.js
+// get credentials either from command line or ~/.teslams/config.json
 var creds = require('./config.js').config(argv);
 
 argv = argv.argv;
@@ -48,22 +55,18 @@ if ( argv.help == true ) {
 	process.exit(1);
 }
 
-var p_url = 'https://portal.vn.teslamotors.com/vehicles/';
-var s_url = 'https://streaming.vn.teslamotors.com/stream/';
 var nFields = argv.values.split(",").length + 1; // number of fields including ts
-var collectionS, collectionA;
-var firstTime = true;
 
 if (argv.db) {
 	console.log("database name", argv.db);
-	var MongoClient = require('mongodb').MongoClient;
+	MongoClient = require('mongodb').MongoClient;
 	MongoClient.connect('mongodb://127.0.0.1:27017/' + argv.db, function(err, db) {
 		if(err) throw err;
 		collectionS = db.collection('tesla_stream');
 		collectionA = db.collection('tesla_aux');
 	});
 } else {
-	var stream = fs.createWriteStream(argv.file);
+	stream = fs.createWriteStream(argv.file);
 }
 
 function tsla_poll( vid, long_vid, token ) {
@@ -84,15 +87,26 @@ function tsla_poll( vid, long_vid, token ) {
 		},
 		function( error, response, body) {
 			if ( error ) { // HTTP Error
-				if (!argv.silent) { console.log( error ); }
+				if (!argv.silent) { util.log( error ); }
 				// put short delay to avoid stack overflow
 				setTimeout(function() {
 					tsla_poll( vid, long_vid, token ); // poll again
 				}, 1000);
 			} else if (response.statusCode == 200) { // HTTP OK
-				if (!argv.silent && body != undefined) {
-					//console.log(body);
-					util.log(body); // this way we get a human readable timestamp from the server too
+				if (!argv.silent)
+				{
+					if (body===undefined)
+					{
+						util.log('undefined');
+					}
+					else if (body===null)
+					{
+						util.log('null');
+					}
+					else
+					{
+						util.log(body);
+					}
 				}
 				tsla_poll( vid, long_vid, token ); // poll again
 			} else if ( response.statusCode == 401) { // HTTP AUTH Failed
@@ -114,12 +128,13 @@ function tsla_poll( vid, long_vid, token ) {
 			}
 		}
 		).on('data', function(data) {
+			var d, vals, i, record, doc;
 			if (argv.db) {
-				var d = data.toString().trim();
-				var vals = d.split(/[,\n\r]/);
-				for (var i = 0; i < vals.length; i += nFields) {
-					var record = vals.slice(i, nFields);
-					var doc = { 'ts': +vals[i], 'record': record };
+				d = data.toString().trim();
+				vals = d.split(/[,\n\r]/);
+				for (i = 0; i < vals.length; i += nFields) {
+					record = vals.slice(i, nFields);
+					doc = { 'ts': +vals[i], 'record': record };
 					collectionS.insert(doc, { 'safe': true }, function(err,docs) {
 						if(err) util.log(err);
 					});
@@ -156,10 +171,11 @@ function getAux() {
 		});
 	});
 	teslams.get_climate_state( getAux.vid, function(data) {
-		var ds = JSON.stringify(data);
+		var ds = JSON.stringify(data), doc;
+
 		if (ds.length > 2 && ds != JSON.stringify(getAux.climate)) {
 			getAux.climate = data;
-			var doc = { 'ts': new Date().getTime(), 'climateState': data };
+			doc = { 'ts': new Date().getTime(), 'climateState': data };
 			collectionA.insert(doc, { 'safe': true }, function(err,docs) {
 				if(err) throw err;
 			});
