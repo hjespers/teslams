@@ -86,11 +86,9 @@ function tsla_poll( vid, long_vid, token ) {
 		},
 		function( error, response, body) {
 			if ( error ) { // HTTP Error
-				if (!argv.silent) { console.log( error ); }
+				if (!argv.silent) { console.log( 'Long poll error - ' +error ); }
 				// put short delay to avoid stack overflow
-				setTimeout(function() {
-					tsla_poll( vid, long_vid, token ); // poll again
-				}, 1000);
+				setTimeout(function() { tsla_poll( vid, long_vid, token ) }, 1000);
 			} else if (response.statusCode == 200) { // HTTP OK
 				if (!argv.silent) {
 					//console.log(body);
@@ -109,7 +107,7 @@ function tsla_poll( vid, long_vid, token ) {
 					util.log('	Error code = ' + error);
 					util.log('Polling again...');
 				}
-				// put short delay to avoid stack overflow and try 
+				// put short delay to avoid stack overflow
 				setTimeout(function() { tsla_poll( vid, long_vid, token ) }, 1000);
 			}
 		}
@@ -200,7 +198,7 @@ function initstream() {
 			if (!argv.silent) {
 				util.log('Warn: no tokens returned');
 			}
-			if (!argv.zzz && vehicles.state == 'asleep') { //respect sleep mode
+			if (argv.zzz && vehicles.state == 'asleep') { //respect sleep mode
 				util.log('Info: car is sleeping, will check again later');	
 				setTimeout(function() { initstream() }, 60000);
 			} else {
