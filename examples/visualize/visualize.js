@@ -238,7 +238,9 @@ app.get('/energy', function(req, res) {
 	var maxE = -1000, maxS = -1000, maxSOC = -1000;
 	var gMaxE = -1000, gMaxS = -1000;
 	var gMinE = 1000, gMinS = 1000;
+	var cumulE = 0, cumulR = 0, cumulES, cumulRS, prevTS;
 	MongoClient.connect("mongodb://127.0.0.1:27017/" + argv.db, function(err, db) {
+		var speed, energy, soc, vals;
 		if(err) {
 			console.log('error connecting to database:', err);
 			return;
@@ -247,12 +249,15 @@ app.get('/energy', function(req, res) {
 		collection = db.collection("tesla_stream");
 		collection.find({"ts": {$gte: +from, $lte: +to}}).toArray(function(err,docs) {
 			docs.forEach(function(doc) {
-				var vals = doc.record.toString().replace(",,",",0,").split(",");
+				vals = doc.record.toString().replace(",,",",0,").split(",");
+				speed = parseInt(vals[1]);
+				energy = parseInt(vals[8]);
+				soc = parseInt(vals[3]);
 				if (firstDate === 0) {
-					firstDate = lastDate = doc.ts;
+					firstDate = lastDate = prevTS = doc.ts;
 					outputE = "[" + (+from) + ",0]";
 					outputS = "[" + (+from) + ",0]";
-					outputSOC = "[" + (+from) + "," + vals[3] + "],null";
+					outputSOC = "[" + (+from) + "," + soc + "],null";
 				}
 				if (doc.ts >= lastDate) {
 					if (doc.ts > lastDate + increment) {
@@ -271,14 +276,26 @@ app.get('/energy', function(req, res) {
 						maxE = maxS = maxSOC = -1000;
 						minE = minS = minSOC = 1000;
 					}
-					if (+vals[8] > +maxE) maxE = vals[8];
-					if (+vals[8] < +minE) minE = vals[8];
-					if (+vals[1] > +maxS) maxS = vals[1];
-					if (+vals[1] < +minS) minS = vals[1];
-					if (+vals[3] > +maxSOC) maxSOC = vals[3];
-					if (+vals[3] < +minSOC) minSOC = vals[3];
+					if (energy > 0) cumulE += energy * (doc.ts - prevTS);
+					if (energy < 0) cumulR += energy * (doc.ts - prevTS);
+					if (energy > maxE) maxE = energy;
+					if (energy < minE) minE = energy;
+					if (speed > maxS) maxS = speed;
+					if (speed < minS) minS = speed;
+					if (soc > maxSOC) maxSOC = soc;
+					if (soc < minSOC) minSOC = soc;
+					prevTS = doc.ts;
 				}
 			});
+			cumulE = cumulE / 3600000;
+			cumulR = cumulR / 3600000;
+			if (cumulE > 1) {
+				cumulES = cumulE.toFixed(1) + "kWh";
+				cumulRS = (-cumulR).toFixed(1) + "kWh";
+			} else {
+				cumulES = (cumulE * 1000).toFixed(0) + "Wh";
+				cumulRS = (-cumulR * 1000).toFixed(0) + "Wh";
+			}
 			var chartEnd = lastDate;
 
 			// now look for data in the aux collection
@@ -340,6 +357,8 @@ app.get('/energy', function(req, res) {
 						.replace("MAGIC_MIN_ENG", gMinE)
 						.replace("MAGIC_MAX_SPD", gMaxS)
 						.replace("MAGIC_MIN_SPD", gMinS)
+						.replace("MAGIC_CUMUL_E", cumulES)
+						.replace("MAGIC_CUMUL_R", cumulRS)
 						.replace("MAGIC_VOLT", outputVolt)
 						.replace("MAGIC_AMP", outputAmp)
 						.replace("MAGIC_MAX_VOLT", maxVolt)

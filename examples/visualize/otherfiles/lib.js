@@ -55,7 +55,11 @@ function datepickers(url) {
 		onClose: function(dateText, inst) {
 			var dt = dateText.replace(' ','-');
 			if (dt.length > 10 && compareTime(dt, datepickers.fromQ) != 0) {
-				self.location = url + "?from=" + dt + "&to=" + datepickers.toQ.replace(' ','-')
+				if (compareTime(dt, datepickers.toQ.replace(' ','-')) < 0) {
+					self.location = url + "?from=" + dt + "&to=" + datepickers.toQ.replace(' ','-');
+				} else {
+					datepickers.fromQ = dt;
+				}
 			}
 		}
 	});
@@ -67,7 +71,11 @@ function datepickers(url) {
 		onClose: function(dateText, inst) {
 			var dt = dateText.replace(' ','-');
 			if (dt.length > 10 && compareTime(dt, datepickers.toQ) != 0) {
-				self.location = url + "?from=" + datepickers.fromQ.replace(' ','-') + "&to=" + dt
+				if (compareTime(datepickers.fromQ.replace(' ','-'), dt) < 0) {
+					self.location = url + "?from=" + datepickers.fromQ.replace(' ','-') + "&to=" + dt
+				} else {
+					datepickers.toQ = dt;
+				}
 			}
 		}
 	});
