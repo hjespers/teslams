@@ -55,6 +55,7 @@ Use these programs at your own risk. The authors do not guaranteed the proper fu
 #Contributors
 Marshall Rose (https://github.com/mrose17)
 Dirk Hohndel (https://github.com/dirkhh)
+Arthur Blake (https://github.com/arthurblake)
 
 #Installation
 
@@ -172,22 +173,23 @@ For help run :
 
 	teslacmd --help
 
-	Usage: teslacmd.js -u <username> -p <password> -cdFgHimPtvw -A [on|off] -C [start|stop] 
+	Usage: teslacmd.js -u <username> -p <password> -acdFgHimPtvw -A [on|off] -C [start|stop] 
 	                   -R [std|max|50-100] -S [close|vent|comfort|open|0-100] -L [lock|unlock] -T <temp>
 
 	Options:
 	  -u, --username  Teslamotors.com login                                        [required]
 	  -p, --password  Teslamotors.com password                                     [required]
+	  -a, --all       Print info for all vehicle on the users account              [boolean]
 	  -c              Display the charge state                                     [boolean]
 	  -d, --drive     Display the drive state                                      [boolean]
 	  -F, --flash     Flash the car headlights                                     [boolean]
 	  -g, --gui       Display the GUI settings                                     [boolean]
 	  -H, --honk      Honk the car horn                                            [boolean]
+	  -i, --info      Print vehicle info                                           [boolean]
 	  -m, --mobile    Display the mobile state                                     [boolean]
 	  -P, --port      Open charge port door                                        [boolean]
 	  -t              Display the climate/temp state                               [boolean]
 	  -v              Display the vehicle state                                    [boolean]
-	  -i, --id        Print vehicle identification "--no-i" for silent mode        [boolean]  [default: true]
 	  -w, --wake      Wake up the car telemetry                                    [boolean]
 	  -R, --range     Charging range mode: "std", "max", or %limit (50% or more)                       
 	  -S, --roof      Move the car sunroof to any position or %open
