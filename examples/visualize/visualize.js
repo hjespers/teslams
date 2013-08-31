@@ -239,6 +239,7 @@ app.get('/energy', function(req, res) {
 	var gMaxE = -1000, gMaxS = -1000;
 	var gMinE = 1000, gMinS = 1000;
 	MongoClient.connect("mongodb://127.0.0.1:27017/" + argv.db, function(err, db) {
+		var speed, energy, soc, vals;
 		if(err) {
 			console.log('error connecting to database:', err);
 			return;
@@ -247,12 +248,15 @@ app.get('/energy', function(req, res) {
 		collection = db.collection("tesla_stream");
 		collection.find({"ts": {$gte: +from, $lte: +to}}).toArray(function(err,docs) {
 			docs.forEach(function(doc) {
-				var vals = doc.record.toString().replace(",,",",0,").split(",");
+				vals = doc.record.toString().replace(",,",",0,").split(",");
+				speed = parseInt(vals[1]);
+				energy = parseInt(vals[8]);
+				soc = parseInt(vals[3]);
 				if (firstDate === 0) {
 					firstDate = lastDate = doc.ts;
 					outputE = "[" + (+from) + ",0]";
 					outputS = "[" + (+from) + ",0]";
-					outputSOC = "[" + (+from) + "," + vals[3] + "],null";
+					outputSOC = "[" + (+from) + "," + soc + "],null";
 				}
 				if (doc.ts >= lastDate) {
 					if (doc.ts > lastDate + increment) {
@@ -271,12 +275,12 @@ app.get('/energy', function(req, res) {
 						maxE = maxS = maxSOC = -1000;
 						minE = minS = minSOC = 1000;
 					}
-					if (+vals[8] > +maxE) maxE = vals[8];
-					if (+vals[8] < +minE) minE = vals[8];
-					if (+vals[1] > +maxS) maxS = vals[1];
-					if (+vals[1] < +minS) minS = vals[1];
-					if (+vals[3] > +maxSOC) maxSOC = vals[3];
-					if (+vals[3] < +minSOC) minSOC = vals[3];
+					if (energy > maxE) maxE = energy;
+					if (energy < minE) minE = energy;
+					if (speed > maxS) maxS = speed;
+					if (speed < minS) minS = speed;
+					if (soc > maxSOC) maxSOC = soc;
+					if (soc < minSOC) minSOC = soc;
 				}
 			});
 			var chartEnd = lastDate;
