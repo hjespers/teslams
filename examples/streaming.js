@@ -90,7 +90,7 @@ function tsla_poll( vid, long_vid, token ) {
 					tsla_poll( vid, long_vid, token ); // poll again
 				}, 1000);
 			} else if (response.statusCode == 200) { // HTTP OK
-				if (!argv.silent) {
+				if (!argv.silent && body != undefined) {
 					//console.log(body);
 					util.log(body); // this way we get a human readable timestamp from the server too
 				}
