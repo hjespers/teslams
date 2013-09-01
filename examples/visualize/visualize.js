@@ -131,6 +131,36 @@ app.get('/', function(req, res) {
 	});
 });
 
+app.get('/getdata', function (req, res) {
+	var ts, options, vals;
+	MongoClient.connect("mongodb://127.0.0.1:27017/" + argv.db, function(err, db) {
+		if(err) {
+			console.log('error connecting to database:', err);
+			return;
+		}
+		collection = db.collection("tesla_stream");
+		if (req.query.at === null) {
+			console.log("why is there no 'at' parameter???");
+			return;
+		}
+		// get the data at time 'at'
+		ts = +req.query.at;
+		options = { 'sort': [['ts', 'desc']], 'limit': 1};
+		collection.find({"ts": {"$lte": +ts}}, options).toArray(function(err,docs) {
+			if (argv.verbose) console.log("got datasets:", docs.length);
+			if (docs.length === 0) {
+				// that shouldn't happen unless the database is empty...
+				console.log("no data found for /getdata request at time", util.log(new Date(ts)));
+				return;
+			}
+			res.setHeader("Content-Type", "application/json");
+			vals = docs[0].record.toString().replace(",,",",0,").split(",");
+			res.write("[" + JSON.stringify(vals) + "]", "utf-8");
+			db.close();
+		});
+	});
+});
+
 app.get('/update', function (req, res) {
 	// we don't keep the database connection as that has caused occasional random issues while testing
 	if (!started)
@@ -145,7 +175,7 @@ app.get('/update', function (req, res) {
 			console.log("why is there no 'until' parameter???");
 			return;
 		}
-		// get the data unti 'until'
+		// get the data until 'until'
 		// but not past the end of the requested segment and not past the current time
 		var endTime = +req.query.until;
 		if (to && +endTime > +to)
