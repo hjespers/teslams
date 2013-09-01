@@ -13,37 +13,39 @@
 <link rel="stylesheet" media="all" type="text/css" href="jquery-ui.css" />
 <script language="javascript" type="text/javascript" src="url.min.js"></script>
 <script type="text/javascript">
-var myUrl, started = false;
 function getData(ts) {
-	$.getJSON(myUrl + "/getdata", { 'at': +ts})
+	console.log('calling /getdata with argument at:', +ts);
+	$.getJSON(getData.myUrl + "/getdata", { 'at': +ts})
 	.done(function (d, textStatus, jqXHR) {
 		//console.log("length", d.length, "end", +getMore.endTimestamp, "last", +getMore.lastTimestamp);
 		return(d[0]);
 	})
-	.fail(function(jqXHR, textStatus, errorThrown) { console.log(myUrl + "/getdata : ajax fail", textStatus, errorThrown); });
+	.fail(function(jqXHR, textStatus, errorThrown) { console.log(getData.myUrl + "/getdata : ajax fail", textStatus, errorThrown); });
 	return null;
 }
 function startStopFunction() {
-	console.log("startStopFunction");
-	if (started) {
-		$('#startStopN').html = "Stop trip";
-		stopTime = new Date().getTime();
-		stopData = getData(stopTime);
-		console.dir(stopData);
-	} else {
-		$('#startStopN').html = "Start trip";
+	var startTime, startData, stopTime, stopData;
+	if (!startStopFunction.started) {
+		startStopFunction.started = true;
+		$('#startStopButton').html = "Stop trip";
 		startTime = new Date().getTime();
 		startData = getData(startTime);
-		console.dir(startData);
+		console.dir('started', startData);
+	} else {
+		startStopFunction.started = false;
+		$('#startStopButton').html = "Start trip";
+		stopTime = new Date().getTime();
+		stopData = getData(stopTime);
+		console.dir('stopped', stopData);
 	}
 }
-
 $(function() {
-	myUrl = $.url('protocol') + "://" + $.url('auth') + (($.url('auth').length > 0) ? "@" : "") +
+	startStopFunction.started = false;
+	getData.myUrl = $.url('protocol') + "://" + $.url('auth') + (($.url('auth').length > 0) ? "@" : "") +
 		$.url('hostname') + ":" + $.url('port');
-	$("#maplink").attr("href", myUrl + "/map");
-	$("#energylink").attr("href", myUrl + "/energy");
-	$("#statslink").attr("href", myUrl + "/stats");
+	$("#maplink").attr("href", getData.myUrl + "/map");
+	$("#energylink").attr("href", getData.myUrl + "/energy");
+	$("#statslink").attr("href", getData.myUrl + "/stats");
 });
 </script>
 </head>
@@ -56,7 +58,7 @@ label { padding: 1em; }
 #nameDiv { padding: 1em; float: left; width: 50%; }
 </style>
 <body>
-	<h2>Tesla Mileage Tracker<small>(switch to <a id="maplink" href="">Map</a>, <a id="energylink" href="">Energy Chart</a>, <a id="summarylink" href="" >Daily Summary Chart</a>)</small></h2>
+	<h2>Tesla Mileage Tracker<small>(switch to <a id="maplink" href="">Map</a>, <a id="energylink" href="">Energy Chart</a>, <a id="statslink" href="" >Daily Summary Chart</a>)</small></h2>
 	<hr>
 	<p>
 	<button id="startStopButton" onclick="startStopFunction()">Start trip</button>

@@ -133,6 +133,7 @@ app.get('/', function(req, res) {
 
 app.get('/getdata', function (req, res) {
 	var ts, options, vals;
+	console.log('/getdata with',req.query.at);
 	MongoClient.connect("mongodb://127.0.0.1:27017/" + argv.db, function(err, db) {
 		if(err) {
 			console.log('error connecting to database:', err);
@@ -150,7 +151,7 @@ app.get('/getdata', function (req, res) {
 			if (argv.verbose) console.log("got datasets:", docs.length);
 			if (docs.length === 0) {
 				// that shouldn't happen unless the database is empty...
-				console.log("no data found for /getdata request at time", util.log(new Date(ts)));
+				console.log("no data found for /getdata request at time", console.log(new Date(+ts).toString));
 				return;
 			}
 			res.setHeader("Content-Type", "application/json");
