@@ -489,6 +489,14 @@ app.get('/stats', function(req, res) {
 	});
 });
 
+app.get('/trip', function(req, res) {
+	res.setHeader("Content-Type", "text/html");
+	fs.readFile(__dirname + "/trip.html", "utf-8", function(err, data) {
+		if (err) throw err;
+		res.end(data, "utf-8");
+	});
+});
+
 // that's all it takes to deliver the static files in the otherfiles subdirectory
 app.use(express.static(__dirname + '/otherfiles'));
 
