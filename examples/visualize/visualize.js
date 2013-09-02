@@ -408,7 +408,8 @@ app.get('/energy', function(req, res) {
 						.replace("MAGIC_MAX_VOLT", maxVolt)
 						.replace("MAGIC_MAX_AMP", maxAmp)
 						.replace("MAGIC_MAX_KW", maxKw.toFixed(1))
-						.replace("MAGIC_MAX_MPH", maxMph);
+						.replace("MAGIC_MAX_MPH", maxMph)
+						.replace("MAGIC_CAPACITY", capacity);
 					res.end(response, "utf-8");
 					if (argv.verbose) console.log("delivered", outputSOC.length,"records and", response.length, "bytes");
 				});
