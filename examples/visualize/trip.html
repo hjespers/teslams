@@ -51,7 +51,10 @@ function startStopFunction() {
 			updateDisplay.startOdo = startData[2];
 			updateDisplay.stopOdo = null;
 			if (!updateDisplay.ID) {
-				updateDisplay.ID = setInterval(updateDisplay, 1000);
+				// we're calling this every two seconds to keep the load
+				// on client and server really low. That still should be
+				// frequently enough to make it feel fluid.
+				updateDisplay.ID = setInterval(updateDisplay, 2000);
 			}
 		});
 	} else {
@@ -93,8 +96,8 @@ label { padding: 1em; }
 	<hr>
 	<p>
 	<button id="startStopButton" onclick="startStopFunction()">Start trip</button>
-	<div id="costDiv"><label id="costLabel">Cost of this trip</label><label id="costDisplay">$0.00</label></div>
-	<div id="costDiv"><label id="milesLabel">Miles driven</label><label id="milesDisplay">0.0</label></div>
+	<!-- <div id="costDiv"><label id="costLabel">Cost of this trip</label><label id="costDisplay">$0.00</label></div> -->
+	<div id="milesDiv"><label id="milesLabel">Miles driven</label><label id="milesDisplay">0.0 miles</label></div>
 	<div id="nameDiv"><label id="tripNameLabel">Text for trip</label><input id="tripName" type="text" value="" /></div>
 	</p>
 </body>
