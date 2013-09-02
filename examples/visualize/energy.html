@@ -135,19 +135,34 @@ $(function() {
 
 	// finally the SOC / range chart
 
+	function getRange(ts) {
+		for (var i = 0; i < d4.length; i++)
+			if (d4[i][0] >= ts)
+				return d4[i][1];
+		return d4[d4.length - 1][1];
+	}
+	function getSOC(ts) {
+		for (var i = 0; i < d3.length; i++)
+			if (d3[i] && d3[i][0] >= ts)
+				return d3[i][1];
+		return d3[d3.length - 1][1];
+	}
 	socchart = $("#socchart");
 	previousPointSOC = null;
 	d3 = [MAGIC_SOC];
 	d4 = [MAGIC_RANGE];
 	socchart.bind("plothover", function (event, pos, item) {
+		var x, whenS, whm, valueS, soc, range;
 		if (item) {
 			if (previousPointSOC != item.dataIndex) {
 				previousPointSOC = item.dataIndex;
 				$("#tooltip").remove();
-				var x = item.datapoint[0];
-				x = new Date(x);
-				var whenS = (x.getMonth() + 1) + '/' + x.getDate() + ' ' + x.getHours() + ':' + x.getMinutes();
-				var valueS = d3[item.dataIndex][1] + '% / ' + d4[item.dataIndex][1].toFixed(1) + 'miles';
+				x = new Date(+item.datapoint[0]);
+				soc = getSOC(item.datapoint[0]);
+				range = getRange(item.datapoint[0]);
+				whenS = (x.getMonth() + 1) + '/' + x.getDate() + ' ' + x.getHours() + ':' + x.getMinutes();
+				whm = soc * MAGIC_CAPACITY / range * 10;
+				valueS =  soc + '% / ' + range.toFixed(1) + 'miles (~' + whm.toFixed(1) + 'Wh/mile)';
 				showTooltip(item.pageX, item.pageY, valueS + " at " + whenS);
 			}
 		} else {
