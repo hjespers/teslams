@@ -1,14 +1,17 @@
 
 html { height: 100% }
-body { height: 100%; margin: 0; padding: 1em; background-color: #EEE; }
+body { height: 100%; margin: 0; padding: 1em; background-color: #F8F8F8; }
 label { font: larger; padding: 1em 1em 1em 0; }
 #map-canvas { height:85%; }
 #speedSlider { width: 30%; }
 #top { padding-bottom: 0.5em; }
 #speed { border: 0; background-color: #EEE; }
-#frompicker, #topicker { width:20em; background-color: #DDD; border:solid 1px #BBB; color: #222; height: 28px; padding-left: 0 1em 0 1em; box-shadow: 2px 2px 0 #828181 inset; }
+#frompicker, #topicker { width:20em; background-color: #DDD; border:solid 1px #BBB; color: #222; height: 28px; padding: 0 1em 0 1em; box-shadow: 2px 2px 0 #828181 inset; }
 div#sliders { height: 6em; position: relative; }
 div.label { margin-top: .5em; }
+div#dates { margin-bottom: 1em;
+	    margin-left: 1.5em;
+}
 section {
 	width: 30%;
 	height: auto;
@@ -16,6 +19,7 @@ section {
 	position: absolute;
 	left: 2em
 }
+h2 { margin-left: 1em; }
 #sliderS { position: absolute; left: 0; }
 #sliderR { position: absolute; left: 20em; }
 #speedTT { margin-left: -1em; width: 2em; }
