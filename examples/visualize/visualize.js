@@ -544,6 +544,6 @@ app.get('/trip', function(req, res) {
 // that's all it takes to deliver the static files in the otherfiles subdirectory
 app.use(express.static(__dirname + '/otherfiles'));
 
-app.listen(8766);
+app.listen(argv.port);
 
-if (!argv.silent) console.log("Server running");
+if (!argv.silent) console.log("Server running on port " + argv.port);
