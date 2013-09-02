@@ -81,11 +81,11 @@ function dashDate(date, filler) { // date-time with all '-'
 	return c[0] + '-' + c[1] + '-' + c[2] + '-' + c[3] + '-' + c[4] + '-' + c[5];
 }
 function parseDates(fromQ, toQ) {
-	if (toQ === null || toQ === "" || toQ.split('-').count < 2) // no valid to argument -> to = now
+	if (toQ == undefined || toQ === null || toQ === "" || toQ.split('-').count < 2) // no valid to argument -> to = now
 		this.toQ = dateString(new Date());
 	else
 		this.toQ = dashDate(toQ,['00','00','00']);
-	if (fromQ === null || fromQ === "" || fromQ.split('-').count < 2) // no valid from argument -> 12h before to
+	if (fromQ == undefined || fromQ === null || fromQ === "" || fromQ.split('-').count < 2) // no valid from argument -> 12h before to
 		this.fromQ = dashDate(dateString(makeDate(this.toQ, -12 * 3600 * 1000)));
 	else
 		this.fromQ = dashDate(fromQ,['23','59','59']);
@@ -266,7 +266,7 @@ app.get('/energy', function(req, res) {
 	// don't deliver more than 10000 data points (that's one BIG screen)
 	var halfIncrement =  Math.round((+to - +from) / 20000);
 	var increment = 2 + halfIncrement;
-	var outputE = "", outputS = "", outputSOC = "", firstDate = 0, lastDate = 0;
+	var outputE = "", outputS = "", outputSOC = "", outputRange = "", firstDate = 0, lastDate = 0;
 	var minE = 1000, minS = 1000, minSOC = 1000;
 	var maxE = -1000, maxS = -1000, maxSOC = -1000;
 	var gMaxE = -1000, gMaxS = -1000;
@@ -341,6 +341,7 @@ app.get('/energy', function(req, res) {
 				if (argv.verbose) console.log("Found " + docs.length + " entries in aux DB");
 				ouputAmp = "[" + (+firstDate) + ",0]";
 				ouputColt = "[" + (+firstDate) + ",0]";
+				comma = "";
 				docs.forEach(function(doc) {
 					if(typeof doc.chargeState !== 'undefined') {
 						if (doc.chargeState.charge_rate > maxMph) {
@@ -357,9 +358,18 @@ app.get('/energy', function(req, res) {
 							outputAmp += ",[" + (doc.ts - 60000) + ",0]";
 							outputVolt += ",[" + (doc.ts - 60000) + ",0]";
 						}
-						outputAmp += ",[" + doc.ts + "," + doc.chargeState.charger_actual_current + "]";
-						outputVolt += ",[" + doc.ts + "," + doc.chargeState.charger_voltage + "]";
-						lastDate = doc.ts;
+						if (doc.chargeState.charger_actual_current !== undefined) {
+							outputAmp += ",[" + doc.ts + "," + doc.chargeState.charger_actual_current + "]";
+							lastDate = doc.ts;
+						}
+						if (doc.chargeState.charger_voltage !== undefined) {
+							outputVolt += ",[" + doc.ts + "," + doc.chargeState.charger_voltage + "]";
+							lastDate = doc.ts;
+						}
+						if (doc.chargeState.battery_range !== undefined) {
+							outputRange += comma + "[" + doc.ts + "," + doc.chargeState.battery_range + "]";
+							comma = ",";
+						}
 					}
 				});
 				outputAmp += ",[" + (lastDate + 60000) + ",0]";
@@ -394,6 +404,7 @@ app.get('/energy', function(req, res) {
 						.replace("MAGIC_CUMUL_R", cumulRS)
 						.replace("MAGIC_VOLT", outputVolt)
 						.replace("MAGIC_AMP", outputAmp)
+						.replace("MAGIC_RANGE", outputRange)
 						.replace("MAGIC_MAX_VOLT", maxVolt)
 						.replace("MAGIC_MAX_AMP", maxAmp)
 						.replace("MAGIC_MAX_KW", maxKw.toFixed(1))

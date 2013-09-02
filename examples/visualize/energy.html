@@ -133,11 +133,12 @@ $(function() {
 	};
 	$.plot(chargechart, data, options);
 
-	// finally the SOC chart
+	// finally the SOC / range chart
 
 	socchart = $("#socchart");
 	previousPointSOC = null;
 	d3 = [MAGIC_SOC];
+	d4 = [MAGIC_RANGE];
 	socchart.bind("plothover", function (event, pos, item) {
 		if (item) {
 			if (previousPointSOC != item.dataIndex) {
@@ -146,7 +147,7 @@ $(function() {
 				var x = item.datapoint[0];
 				x = new Date(x);
 				var whenS = (x.getMonth() + 1) + '/' + x.getDate() + ' ' + x.getHours() + ':' + x.getMinutes();
-				var valueS = d3[item.dataIndex][1] + '%';
+				var valueS = d3[item.dataIndex][1] + '% / ' + d4[item.dataIndex][1].toFixed(1) + 'miles';
 				showTooltip(item.pageX, item.pageY, valueS + " at " + whenS);
 			}
 		} else {
@@ -162,10 +163,16 @@ $(function() {
 		color: "#008000",
 		fillColor: { colors: [{ opacity: 0.8 }, { opacity: 0.1 }] },
 		threshold: [{below: 101, color: "#c02020"},{below: 91, color: "#008000"}, {below: 10, color: "#FF2020"}]
+	},{
+		data: d4,
+		lines: { show: true },
+		label: "rated range (miles)",
+		color: "#2020C0",
+		yaxis: 2
 	}];
 	socOptions = {
 		grid: { hoverable: true },
-		yaxis: { max: 119 },
+		yaxes: [{ max: 119 },{ position: 'right', min: 0}],
 		xaxis: { mode: "time",
 			 timezone: "browser"}
 	};
@@ -189,7 +196,7 @@ $(function() {
 			<div id="explanation2" style="width:70%">Voltage and current while charging.</div>
 			<div id="maxima" style="width:70%">Maximum charge power: MAGIC_MAX_VOLT V / MAGIC_MAX_AMP A (MAGIC_MAX_KW kW or ~ MAGIC_MAX_MPH miles/hour)</div>
 			<div id="socchart" style="height:300px; width:90%"></div>
-			<div id="explanation2" style="width:70%">SOC</div>
+			<div id="explanation2" style="width:70%">SOC and rated range</div>
 		</div><center>
 	</div>
 </body>
