@@ -156,7 +156,9 @@ app.get('/getdata', function (req, res) {
 			}
 			res.setHeader("Content-Type", "application/json");
 			vals = docs[0].record.toString().replace(",,",",0,").split(",");
+			console.dir(vals);
 			res.write("[" + JSON.stringify(vals) + "]", "utf-8");
+			res.end();
 			db.close();
 		});
 	});

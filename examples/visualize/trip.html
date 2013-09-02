@@ -13,15 +13,31 @@
 <link rel="stylesheet" media="all" type="text/css" href="jquery-ui.css" />
 <script language="javascript" type="text/javascript" src="url.min.js"></script>
 <script type="text/javascript">
-function getData(ts) {
+function getData(ts, cb) {
 	console.log('calling /getdata with argument at:', +ts);
 	$.getJSON(getData.myUrl + "/getdata", { 'at': +ts})
 	.done(function (d, textStatus, jqXHR) {
-		//console.log("length", d.length, "end", +getMore.endTimestamp, "last", +getMore.lastTimestamp);
-		return(d[0]);
+		console.log('return data with ts', d[0][0]);
+		if (cb !== undefined) {
+			cb(d[0]);
+		}
 	})
 	.fail(function(jqXHR, textStatus, errorThrown) { console.log(getData.myUrl + "/getdata : ajax fail", textStatus, errorThrown); });
-	return null;
+}
+function updateDisplay() {
+	var dist;
+	if (!updateDisplay.startOdo) {
+		return;
+	}
+	if (updateDisplay.stopOdo) {
+		dist = updateDisplay.stopOdo - updateDisplay.startOdo;
+		$("#milesDisplay").html(dist.toFixed(1) + " miles");
+		return;
+	}
+	getData(new Date().getTime(), function(data) {
+		dist = data[2] - updateDisplay.startOdo;
+		$("#milesDisplay").html(dist.toFixed(1) + " miles");
+	});
 }
 function startStopFunction() {
 	var startTime, startData, stopTime, stopData;
@@ -29,14 +45,29 @@ function startStopFunction() {
 		startStopFunction.started = true;
 		$('#startStopButton').html("Stop trip");
 		startTime = new Date().getTime();
-		startData = getData(startTime);
-		console.dir('started', startData);
+		getData(startTime, function(data) {
+			startData = data;
+			console.dir('started', startData);
+			updateDisplay.startOdo = startData[2];
+			updateDisplay.stopOdo = null;
+			if (!updateDisplay.ID) {
+				updateDisplay.ID = setInterval(updateDisplay, 1000);
+			}
+		});
 	} else {
 		startStopFunction.started = false;
 		$('#startStopButton').html("Start trip");
 		stopTime = new Date().getTime();
-		stopData = getData(stopTime);
-		console.dir('stopped', stopData);
+		getData(stopTime, function(data){
+			stopData = data;
+			console.dir('stopped', stopData);
+			updateDisplay.stopOdo = stopData[2];
+			if (updateDisplay.ID) {
+				clearInterval(updateDisplay.ID);
+				updateDisplay.ID = null;
+			}
+			updateDisplay();
+		});
 	}
 }
 $(function() {
@@ -63,7 +94,7 @@ label { padding: 1em; }
 	<p>
 	<button id="startStopButton" onclick="startStopFunction()">Start trip</button>
 	<div id="costDiv"><label id="costLabel">Cost of this trip</label><label id="costDisplay">$0.00</label></div>
-	<div id="costDiv"><label id="milesLabel">Miles driven</label><label id="costDisplay">$0.00</label></div>
+	<div id="costDiv"><label id="milesLabel">Miles driven</label><label id="milesDisplay">0.0</label></div>
 	<div id="nameDiv"><label id="tripNameLabel">Text for trip</label><input id="tripName" type="text" value="" /></div>
 	</p>
 </body>
