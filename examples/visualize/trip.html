@@ -27,13 +27,13 @@ function startStopFunction() {
 	var startTime, startData, stopTime, stopData;
 	if (!startStopFunction.started) {
 		startStopFunction.started = true;
-		$('#startStopButton').html = "Stop trip";
+		$('#startStopButton').html("Stop trip");
 		startTime = new Date().getTime();
 		startData = getData(startTime);
 		console.dir('started', startData);
 	} else {
 		startStopFunction.started = false;
-		$('#startStopButton').html = "Start trip";
+		$('#startStopButton').html("Start trip");
 		stopTime = new Date().getTime();
 		stopData = getData(stopTime);
 		console.dir('stopped', stopData);
