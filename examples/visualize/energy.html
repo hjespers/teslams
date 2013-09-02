@@ -135,6 +135,18 @@ $(function() {
 
 	// finally the SOC / range chart
 
+	function getRange(ts) {
+		for (var i = 0; i < d4.length; i++)
+			if (d4[i][0] >= ts)
+				return d4[i][1];
+		return d4[d4.length - 1][1];
+	}
+	function getSOC(ts) {
+		for (var i = 0; i < d3.length; i++)
+			if (d3[i] && d3[i][0] >= ts)
+				return d3[i][1];
+		return d3[d3.length - 1][1];
+	}
 	socchart = $("#socchart");
 	previousPointSOC = null;
 	d3 = [MAGIC_SOC];
@@ -146,8 +158,8 @@ $(function() {
 				previousPointSOC = item.dataIndex;
 				$("#tooltip").remove();
 				x = new Date(+item.datapoint[0]);
-				soc = d3[item.dataIndex][1];
-				range = d4[item.dataIndex][1]
+				soc = getSOC(item.datapoint[0]);
+				range = getRange(item.datapoint[0]);
 				whenS = (x.getMonth() + 1) + '/' + x.getDate() + ' ' + x.getHours() + ':' + x.getMinutes();
 				whm = soc * MAGIC_CAPACITY / range * 10;
 				valueS =  soc + '% / ' + range.toFixed(1) + 'miles (~' + whm.toFixed(1) + 'Wh/mile)';
