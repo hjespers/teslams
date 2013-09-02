@@ -1,0 +1,104 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Tesla Mileage Tracker</title>
+<script language="javascript" type="text/javascript" src="jquery-1.9.1.js"></script>
+<script language="javascript" type="text/javascript" src="jquery.flot.js"></script>
+<script language="javascript" type="text/javascript" src="jquery.flot.time.min.js"></script>
+<script language="javascript" type="text/javascript" src="jquery.flot.threshold.min.js"></script>
+<script language="javascript" type="text/javascript" src="jquery.flot.orderBars.js"></script>
+<script language="javascript" type="text/javascript" src="jquery-ui-1.10.3.custom.min.js"></script>
+<script language="javascript" type="text/javascript" src="jquery-ui-timepicker-addon.js"></script>
+<script language="javascript" type="text/javascript" src="lib.js"></script>
+<link rel="stylesheet" media="all" type="text/css" href="jquery-ui-timepicker-addon.css" />
+<link rel="stylesheet" media="all" type="text/css" href="jquery-ui.css" />
+<script language="javascript" type="text/javascript" src="url.min.js"></script>
+<script type="text/javascript">
+function getData(ts, cb) {
+	console.log('calling /getdata with argument at:', +ts);
+	$.getJSON(getData.myUrl + "/getdata", { 'at': +ts})
+	.done(function (d, textStatus, jqXHR) {
+		console.log('return data with ts', d[0][0]);
+		if (cb !== undefined) {
+			cb(d[0]);
+		}
+	})
+	.fail(function(jqXHR, textStatus, errorThrown) { console.log(getData.myUrl + "/getdata : ajax fail", textStatus, errorThrown); });
+}
+function updateDisplay() {
+	var dist;
+	if (!updateDisplay.startOdo) {
+		return;
+	}
+	if (updateDisplay.stopOdo) {
+		dist = updateDisplay.stopOdo - updateDisplay.startOdo;
+		$("#milesDisplay").html(dist.toFixed(1) + " miles");
+		return;
+	}
+	getData(new Date().getTime(), function(data) {
+		dist = data[2] - updateDisplay.startOdo;
+		$("#milesDisplay").html(dist.toFixed(1) + " miles");
+	});
+}
+function startStopFunction() {
+	var startTime, startData, stopTime, stopData;
+	if (!startStopFunction.started) {
+		startStopFunction.started = true;
+		$('#startStopButton').html("Stop trip");
+		startTime = new Date().getTime();
+		getData(startTime, function(data) {
+			startData = data;
+			console.dir('started', startData);
+			updateDisplay.startOdo = startData[2];
+			updateDisplay.stopOdo = null;
+			if (!updateDisplay.ID) {
+				// we're calling this every two seconds to keep the load
+				// on client and server really low. That still should be
+				// frequently enough to make it feel fluid.
+				updateDisplay.ID = setInterval(updateDisplay, 2000);
+			}
+		});
+	} else {
+		startStopFunction.started = false;
+		$('#startStopButton').html("Start trip");
+		stopTime = new Date().getTime();
+		getData(stopTime, function(data){
+			stopData = data;
+			console.dir('stopped', stopData);
+			updateDisplay.stopOdo = stopData[2];
+			if (updateDisplay.ID) {
+				clearInterval(updateDisplay.ID);
+				updateDisplay.ID = null;
+			}
+			updateDisplay();
+		});
+	}
+}
+$(function() {
+	startStopFunction.started = false;
+	getData.myUrl = $.url('protocol') + "://" + $.url('auth') + (($.url('auth').length > 0) ? "@" : "") +
+		$.url('hostname') + ":" + $.url('port');
+	$("#maplink").attr("href", getData.myUrl + "/map");
+	$("#energylink").attr("href", getData.myUrl + "/energy");
+	$("#statslink").attr("href", getData.myUrl + "/stats");
+});
+</script>
+</head>
+<style>
+body { font-size: 24pt;}
+p { position: relative; }
+label { padding: 1em; }
+#startStopButton { margin-left: 2em; padding: 2em; font-size: 30pt; float: left; }
+#costDiv {  padding: 1em; float: left; width: 50%; }
+#nameDiv { padding: 1em; float: left; width: 50%; }
+</style>
+<body>
+	<h2>Tesla Mileage Tracker<small>(switch to <a id="maplink" href="">Map</a>, <a id="energylink" href="">Energy Chart</a>, <a id="statslink" href="" >Daily Summary Chart</a>)</small></h2>
+	<hr>
+	<p>
+	<button id="startStopButton" onclick="startStopFunction()">Start trip</button>
+	<!-- <div id="costDiv"><label id="costLabel">Cost of this trip</label><label id="costDisplay">$0.00</label></div> -->
+	<div id="milesDiv"><label id="milesLabel">Miles driven</label><label id="milesDisplay">0.0 miles</label></div>
+	<div id="nameDiv"><label id="tripNameLabel">Text for trip</label><input id="tripName" type="text" value="" /></div>
+	</p>
+</body>
+</html>
