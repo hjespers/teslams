@@ -48,6 +48,7 @@ var express = require('express');
 var app = express();
 var passport = require('passport'), LocalStrategy = require('passport-local').Strategy;
 var speedup = 60000;
+var nav = "";
 
 passport.use(new LocalStrategy(
 	function(username, password, done) {
@@ -63,6 +64,12 @@ passport.use(new LocalStrategy(
 		});
 	}
 ));
+
+fs.readFile(__dirname + "/otherfiles/nav.html", "utf-8", function(err, data) {
+	if (err) throw err;
+	nav = data;
+});
+
 function makeDate(string, offset) {
 	var args = string.split('-');
 	var date = new Date(args[0], args[1]-1, args[2], args[3], args[4], args[5]);
@@ -127,7 +134,7 @@ app.get('/', function(req, res) {
 	// friendly welcome screen
 	fs.readFile(__dirname + "/welcome.html", "utf-8", function(err, data) {
 		if (err) throw err;
-		res.send(data);
+		res.send(data.replace("MAGIC_NAV",nav));
 	});
 });
 
@@ -242,7 +249,8 @@ app.get('/map', function(req, res) {
 				fs.readFile(__dirname + "/map.html", "utf-8", function(err, data) {
 					if (err) throw err;
 					var response = data.replace("MAGIC_APIKEY", apiKey)
-						.replace("MAGIC_FIRST_LOC", vals[6] + "," + vals[7]);
+						.replace("MAGIC_FIRST_LOC", vals[6] + "," + vals[7])
+						.replace("MAGIC_NAV", nav);
 					res.end(response, "utf-8");
 				});
 			});
@@ -392,7 +400,8 @@ app.get('/energy', function(req, res) {
 					}
 					gMinS = gMinE / 2;
 					var maxKw = maxVolt * maxAmp / 1000;
-					var response = data.replace("MAGIC_ENERGY", outputE)
+					var response = data.replace("MAGIC_NAV", nav)
+						.replace("MAGIC_ENERGY", outputE)
 						.replace("MAGIC_SPEED", outputS)
 						.replace("MAGIC_SOC", outputSOC)
 						.replace("MAGIC_START", startDate)
@@ -523,7 +532,8 @@ app.get('/stats', function(req, res) {
 				if (err) throw err;
 				var fD = new Date(firstDate);
 				var startDate = (fD.getMonth() + 1) + "/" + fD.getDate() + "/" + fD.getFullYear();
-				var response = data.replace("MAGIC_DISTANCE", outputD)
+				var response = data.replace("MAGIC_NAV", nav)
+					.replace("MAGIC_DISTANCE", outputD)
 					.replace("MAGIC_CHARGE", outputC)
 					.replace("MAGIC_AVERAGE", outputA)
 					.replace("MAGIC_KWH", outputW)
