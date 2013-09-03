@@ -179,6 +179,7 @@ function initialize() {
 	datepickers(myUrl + '/map');
 	$("#energylink").attr("href", myUrl + "/energy?from=" + datepickers.fromQ + "&to=" + datepickers.toQ);
 	$("#statslink").attr("href", myUrl + "/stats?from=" + datepickers.fromQ + "&to=" + datepickers.toQ);
+	$("#triplink").attr("href", myUrl + "/trip");
 	speedup = $.url("?speed");
 	if (speedup === null || speedup === "")
 		speedup = 30;
