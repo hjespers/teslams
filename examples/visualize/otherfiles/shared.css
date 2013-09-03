@@ -7,7 +7,7 @@ label { font: larger; padding: 1em 1em 1em 0; }
 #top { padding-bottom: 0.5em; }
 #speed { border: 0; background-color: #EEE; }
 #frompicker, #topicker { width:20em; background-color: #DDD; border:solid 1px #BBB; color: #222; height: 28px; padding: 0 1em 0 1em; box-shadow: 2px 2px 0 #828181 inset; }
-div#sliders { height: 6em; position: relative; }
+div#sliders { height: 6em; position: relative; margin-left: 1.5em; }
 div.label { margin-top: .5em; }
 div#dates { margin-bottom: 1em;
 	    margin-left: 1.5em;
