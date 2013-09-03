@@ -33,7 +33,7 @@ function updateDisplay() {
 	});
 }
 function startStopFunction() {
-	var tripName, msgText;
+	var tripName, tripType, tripDist, msgText, from, to;
 	if (!startStopFunction.started) {
 		startStopFunction.started = true;
 		startStopFunction.stopTime = null;
@@ -60,11 +60,23 @@ function startStopFunction() {
 				updateDisplay.ID = null;
 			}
 			updateDisplay();
+			tripType = "unknown";
+			var selected = $("#radioDiv input[type='radio']:checked");
+			if (selected.length > 0)
+				tripType = selected.val();
 			tripName = $("#tripName").val();
-			msgText = 'trip "' + tripName + '" from ' + startStopFunction.startTime.toString() +
-				' until ' + startStopFunction.stopTime.toString() + ' for ' +
-				(updateDisplay.stopOdo - updateDisplay.startOdo).toFixed(1) + " miles";
+			tripDist = (updateDisplay.stopOdo - updateDisplay.startOdo).toFixed(1);
+			from = startStopFunction.startTime;
+			to = startStopFunction.stopTime;
+			msgText = tripType + ' trip "' + tripName + '" from ' + from.toString() + ' until ' + to.toString() +
+				' for ' + tripDist + " miles";
 			console.log(msgText);
+			$.getJSON(getData.myUrl + "/storetrip", { 'name': tripName, 'type': tripType, 'dist': tripDist,
+								  'from': from.getTime(), 'to': to.getTime()})
+				.done(function (d, textStatus, jqXHR) {
+					console.log(d);
+				});
+
 		});
 	}
 }
@@ -82,9 +94,16 @@ $(function() {
 body { font-size: 20pt;}
 p { position: relative; }
 label { padding: 1em; }
-#startStopButton { margin-left: 2em; padding: 2em; font-size: 30pt; float: left; }
-#costDiv { padding: 1em; float: left; width: 50%; }
-#nameDiv { padding: 1em; float: left; width: 50%; }
+#startStopButton { margin-left: 2em;
+		   padding: 2em;
+		   font-size: 30pt;
+		   float: left;
+}
+#milesDiv,#nameDiv,#radioDiv { padding-left: 1em;
+			       padding-right: 1em;
+			       padding-top: 1em;
+			       float: left;
+			       width: 50%; }
 </style>
 <body>
 MAGIC_NAV
@@ -96,6 +115,10 @@ MAGIC_NAV
 	<!-- <div id="costDiv"><label id="costLabel">Cost of this trip</label><label id="costDisplay">$0.00</label></div> -->
 	<div id="milesDiv"><label id="milesLabel">Miles driven</label><label id="milesDisplay">0.0 miles</label></div>
 	<div id="nameDiv"><label id="tripNameLabel">Text for trip</label><input id="tripName" type="text" value="" /></div>
+	<div id="radioDiv">
+	  <label><input type="radio" name="tripType" value="personal"><span>personal trip</span></label>
+	  <label><input type="radio" name="tripType" value="business"><span>business trip</span></label>
+	</div>
 	</p>
 </div>
 </body>

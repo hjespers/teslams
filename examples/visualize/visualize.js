@@ -171,6 +171,23 @@ app.get('/getdata', function (req, res) {
 	});
 });
 
+app.get('/storetrip', function(req, res) {
+	MongoClient.connect("mongodb://127.0.0.01:27017/" + argv.db, function(err, db) {
+		if (err) {
+			console.log('error connecting to database:', err);
+			return;
+		}
+		collection = db.collection("trip_data");
+		collection.insert(req.query, { 'safe': true }, function(err,docs) {
+			if (err) {
+				res.send(err);
+			} else {
+				res.send("OK");
+			}
+		});
+	});
+});
+
 app.get('/update', function (req, res) {
 	// we don't keep the database connection as that has caused occasional random issues while testing
 	if (!started)
