@@ -1,6 +1,6 @@
 
 html { height: 100% }
-body { height: 100%; margin: 0; padding: 1em; background-color: #F8F8F8; }
+body { height: 100%; margin: 0; padding: 1em; background-color: #FFFFFF; }
 label { font: larger; padding: 1em 1em 1em 0; }
 #map-canvas { height:85%; }
 #speedSlider { width: 30%; }
@@ -75,7 +75,13 @@ h3 { margin-left: 1.5em; }
 	height: 100%;
 	border-radius: 25px;
 }
-
+div#container { margin-top: 0;
+		padding-top: 1em;
+		padding-bottom: 1em;
+		border-radius: 0 0 10px 10px;
+		background-color: rgba(244,244,244,0.9);
+		border: 3px solid rgba(2,2,2,0.28);
+}
 nav#main { border-radius: 10px 10px 0 0;
 	   border-right: 1px solid rbga(2,2,2,0.28);
 	   border-left: 1px solid rgba(2,2,2,0.28);
