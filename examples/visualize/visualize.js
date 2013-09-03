@@ -548,7 +548,7 @@ app.get('/trip', function(req, res) {
 	res.setHeader("Content-Type", "text/html");
 	fs.readFile(__dirname + "/trip.html", "utf-8", function(err, data) {
 		if (err) throw err;
-		res.end(data, "utf-8");
+		res.end(data.replace("MAGIC_NAV", nav), "utf-8");
 	});
 });
 

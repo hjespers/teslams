@@ -2,15 +2,10 @@
 <html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 <title>Tesla Mileage Tracker</title>
 <script language="javascript" type="text/javascript" src="jquery-1.9.1.js"></script>
-<script language="javascript" type="text/javascript" src="jquery.flot.js"></script>
-<script language="javascript" type="text/javascript" src="jquery.flot.time.min.js"></script>
-<script language="javascript" type="text/javascript" src="jquery.flot.threshold.min.js"></script>
-<script language="javascript" type="text/javascript" src="jquery.flot.orderBars.js"></script>
 <script language="javascript" type="text/javascript" src="jquery-ui-1.10.3.custom.min.js"></script>
-<script language="javascript" type="text/javascript" src="jquery-ui-timepicker-addon.js"></script>
 <script language="javascript" type="text/javascript" src="lib.js"></script>
-<link rel="stylesheet" media="all" type="text/css" href="jquery-ui-timepicker-addon.css" />
 <link rel="stylesheet" media="all" type="text/css" href="jquery-ui.css" />
+<link rel="stylesheet" media="all" type="text/css" href="shared.css" />
 <script language="javascript" type="text/javascript" src="url.min.js"></script>
 <script type="text/javascript">
 function getData(ts, cb) {
@@ -84,15 +79,17 @@ $(function() {
 </script>
 </head>
 <style>
-body { font-size: 24pt;}
+body { font-size: 20pt;}
 p { position: relative; }
 label { padding: 1em; }
 #startStopButton { margin-left: 2em; padding: 2em; font-size: 30pt; float: left; }
-#costDiv {  padding: 1em; float: left; width: 50%; }
+#costDiv { padding: 1em; float: left; width: 50%; }
 #nameDiv { padding: 1em; float: left; width: 50%; }
 </style>
 <body>
-	<h2>Tesla Mileage Tracker<small>(switch to <a id="maplink" href="">Map</a>, <a id="energylink" href="">Energy Chart</a>, <a id="statslink" href="" >Daily Summary Chart</a>)</small></h2>
+MAGIC_NAV
+<div id='container'>
+	<h2>Tesla Mileage Tracker</h2>
 	<hr>
 	<p>
 	<button id="startStopButton" onclick="startStopFunction()">Start trip</button>
@@ -100,5 +97,6 @@ label { padding: 1em; }
 	<div id="milesDiv"><label id="milesLabel">Miles driven</label><label id="milesDisplay">0.0 miles</label></div>
 	<div id="nameDiv"><label id="tripNameLabel">Text for trip</label><input id="tripName" type="text" value="" /></div>
 	</p>
+</div>
 </body>
 </html>
