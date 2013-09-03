@@ -454,8 +454,8 @@ app.get('/stats', function(req, res) {
 		res.redirect('/stats?from=' + dates.fromQ + '&to=' + dates.toQ);
 		return;
 	}
-	var outputD = "", outputC = "", outputA = "", outputW = "", comma, firstDate = 0, lastDay = 0, lastDate = 0;
-	var startOdo = 0, charge = 0, minSOC = 101, maxSOC = -1, increment = 0, kWs = 0;
+	var outputD = "", outputC = "", outputA = "", outputW = "", outputV = "", comma, firstDate = 0, lastDay = 0, lastDate = 0;
+	var startOdo = 0, charge = 0, minSOC = 101, maxSOC = -1, increment = 0, kWs = 0, vampkWs = 0;
 	MongoClient.connect("mongodb://127.0.0.1:27017/" + argv.db, function(err, db) {
 		if(err) {
 			console.log('error connecting to database:', err);
@@ -475,6 +475,7 @@ app.get('/stats', function(req, res) {
 					minSOC = 101;
 					maxSOC = -1;
 					kWs = 0;
+					vampkWs = 0;
 					comma = "";
 				}
 				if (doc.ts > lastDate) { // we don't want to go back in time
@@ -489,7 +490,7 @@ app.get('/stats', function(req, res) {
 								increment = maxSOC - minSOC;
 							} else { // parked & consuming
 								if (vals[8] > 0)
-									kWs += (doc.ts - lastDate) / 1000 * vals[8];
+									vampkWs += (doc.ts - lastDate) / 1000 * vals[8];
 								// if we were charging before, add the estimate to the total
 								if (increment > 0) {
 									charge += increment * capacity / 100;
@@ -506,6 +507,7 @@ app.get('/stats', function(req, res) {
 						lastDay = day;
 						var dist = +vals[2] - startOdo;
 						var kWh = kWs / 3600;
+						var vampkWh = vampkWs / 3600;
 						var ts = new Date(lastDate);
 						var midnight = new Date(ts.getFullYear(), ts.getMonth(), ts.getDate(), 0, 0, 0);
 						charge += increment;
@@ -516,12 +518,14 @@ app.get('/stats', function(req, res) {
 						} else {
 							outputA += comma + "null";
 						}
+						outputV += comma + "[" + (+midnight)  + "," + vampkWh + "]";
 						outputW += comma + "[" + (+midnight) + "," + kWh + "]";
 						startOdo = vals[2];
 						charge = 0;
 						minSOC = 101;
 						maxSOC = -1;
 						kWs = 0;
+						vampkWs = 0;
 						comma = ",";
 					}
 					lastDate = doc.ts;
@@ -532,6 +536,7 @@ app.get('/stats', function(req, res) {
 
 			var dist = +vals[2] - startOdo;
 			var kWh = kWs / 3600;
+			var vampkWh = vampkWs / 3600;
 			var ts = new Date(lastDate);
 			var midnight = new Date(ts.getFullYear(), ts.getMonth(), ts.getDate(), 0, 0, 0);
 			charge += increment;
@@ -543,6 +548,7 @@ app.get('/stats', function(req, res) {
 				outputA += comma + "null";
 			}
 			outputW += comma + "[" + (+midnight) + "," + kWh + "]";
+			outputV += comma + "[" + (+midnight)  + "," + vampkWh + "]";
 
 			db.close();
 			fs.readFile(__dirname + "/stats.html", "utf-8", function(err, data) {
@@ -554,6 +560,7 @@ app.get('/stats', function(req, res) {
 					.replace("MAGIC_CHARGE", outputC)
 					.replace("MAGIC_AVERAGE", outputA)
 					.replace("MAGIC_KWH", outputW)
+					.replace("MAGIC_VKWH", outputV)
 					.replace("MAGIC_START", startDate);
 				res.end(response, "utf-8");
 			});
