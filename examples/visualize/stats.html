@@ -57,6 +57,7 @@ $(function() {
 	datepickers(myUrl + '/stats');
 	$("#maplink").attr("href", myUrl + "/map?from=" + datepickers.fromQ + "&to=" + datepickers.toQ);
 	$("#energylink").attr("href", myUrl + "/energy?from=" + datepickers.fromQ + "&to=" + datepickers.toQ);
+	$("#triplink").attr("href", myUrl + "/trip");
 	d1 = [MAGIC_DISTANCE];
 	d4 = [MAGIC_KWH];
 	d2 = [MAGIC_CHARGE];
@@ -121,6 +122,7 @@ $(function() {
 </head>
 <body>
 MAGIC_NAV
+<div id="container">
 	<h2>Daily Summary Chart</h2>
 	<div id="dates">
 		<label>Start time</label><input id="frompicker" type="text">
@@ -132,5 +134,6 @@ MAGIC_NAV
 			<div id="explanation" style="width:70%">Daily distance, charge and Wh/mile plot, starting MAGIC_START.</div>
 		</div><center>
 	</div>
+</div>
 </body>
 </html>

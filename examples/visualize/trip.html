@@ -2,22 +2,15 @@
 <html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 <title>Tesla Mileage Tracker</title>
 <script language="javascript" type="text/javascript" src="jquery-1.9.1.js"></script>
-<script language="javascript" type="text/javascript" src="jquery.flot.js"></script>
-<script language="javascript" type="text/javascript" src="jquery.flot.time.min.js"></script>
-<script language="javascript" type="text/javascript" src="jquery.flot.threshold.min.js"></script>
-<script language="javascript" type="text/javascript" src="jquery.flot.orderBars.js"></script>
 <script language="javascript" type="text/javascript" src="jquery-ui-1.10.3.custom.min.js"></script>
-<script language="javascript" type="text/javascript" src="jquery-ui-timepicker-addon.js"></script>
 <script language="javascript" type="text/javascript" src="lib.js"></script>
-<link rel="stylesheet" media="all" type="text/css" href="jquery-ui-timepicker-addon.css" />
 <link rel="stylesheet" media="all" type="text/css" href="jquery-ui.css" />
+<link rel="stylesheet" media="all" type="text/css" href="shared.css" />
 <script language="javascript" type="text/javascript" src="url.min.js"></script>
 <script type="text/javascript">
 function getData(ts, cb) {
-	console.log('calling /getdata with argument at:', +ts);
 	$.getJSON(getData.myUrl + "/getdata", { 'at': +ts})
 	.done(function (d, textStatus, jqXHR) {
-		console.log('return data with ts', d[0][0]);
 		if (cb !== undefined) {
 			cb(d[0]);
 		}
@@ -40,15 +33,14 @@ function updateDisplay() {
 	});
 }
 function startStopFunction() {
-	var startTime, startData, stopTime, stopData;
+	var tripName, tripType, tripDist, msgText, from, to;
 	if (!startStopFunction.started) {
 		startStopFunction.started = true;
+		startStopFunction.stopTime = null;
 		$('#startStopButton').html("Stop trip");
-		startTime = new Date().getTime();
-		getData(startTime, function(data) {
-			startData = data;
-			console.dir('started', startData);
-			updateDisplay.startOdo = startData[2];
+		startStopFunction.startTime = new Date();
+		getData(startStopFunction.startTime.getTime(), function(data) {
+			updateDisplay.startOdo = parseFloat(data[2]);
 			updateDisplay.stopOdo = null;
 			if (!updateDisplay.ID) {
 				// we're calling this every two seconds to keep the load
@@ -60,16 +52,31 @@ function startStopFunction() {
 	} else {
 		startStopFunction.started = false;
 		$('#startStopButton').html("Start trip");
-		stopTime = new Date().getTime();
-		getData(stopTime, function(data){
-			stopData = data;
-			console.dir('stopped', stopData);
-			updateDisplay.stopOdo = stopData[2];
+		startStopFunction.stopTime = new Date();
+		getData(startStopFunction.stopTime.getTime(), function(data){
+			updateDisplay.stopOdo = parseFloat(data[2]);
 			if (updateDisplay.ID) {
 				clearInterval(updateDisplay.ID);
 				updateDisplay.ID = null;
 			}
 			updateDisplay();
+			tripType = "unknown";
+			var selected = $("#radioDiv input[type='radio']:checked");
+			if (selected.length > 0)
+				tripType = selected.val();
+			tripName = $("#tripName").val();
+			tripDist = (updateDisplay.stopOdo - updateDisplay.startOdo).toFixed(1);
+			from = startStopFunction.startTime;
+			to = startStopFunction.stopTime;
+			msgText = tripType + ' trip "' + tripName + '" from ' + from.toString() + ' until ' + to.toString() +
+				' for ' + tripDist + " miles";
+			console.log(msgText);
+			$.getJSON(getData.myUrl + "/storetrip", { 'name': tripName, 'type': tripType, 'dist': tripDist,
+								  'from': from.getTime(), 'to': to.getTime()})
+				.done(function (d, textStatus, jqXHR) {
+					console.log(d);
+				});
+
 		});
 	}
 }
@@ -84,21 +91,35 @@ $(function() {
 </script>
 </head>
 <style>
-body { font-size: 24pt;}
+body { font-size: 20pt;}
 p { position: relative; }
 label { padding: 1em; }
-#startStopButton { margin-left: 2em; padding: 2em; font-size: 30pt; float: left; }
-#costDiv {  padding: 1em; float: left; width: 50%; }
-#nameDiv { padding: 1em; float: left; width: 50%; }
+#startStopButton { margin-left: 2em;
+		   padding: 2em;
+		   font-size: 30pt;
+		   float: left;
+}
+#milesDiv,#nameDiv,#radioDiv { padding-left: 1em;
+			       padding-right: 1em;
+			       padding-top: 1em;
+			       float: left;
+			       width: 50%; }
 </style>
 <body>
-	<h2>Tesla Mileage Tracker<small>(switch to <a id="maplink" href="">Map</a>, <a id="energylink" href="">Energy Chart</a>, <a id="statslink" href="" >Daily Summary Chart</a>)</small></h2>
+MAGIC_NAV
+<div id='container'>
+	<h2>Tesla Mileage Tracker</h2>
 	<hr>
 	<p>
 	<button id="startStopButton" onclick="startStopFunction()">Start trip</button>
 	<!-- <div id="costDiv"><label id="costLabel">Cost of this trip</label><label id="costDisplay">$0.00</label></div> -->
 	<div id="milesDiv"><label id="milesLabel">Miles driven</label><label id="milesDisplay">0.0 miles</label></div>
 	<div id="nameDiv"><label id="tripNameLabel">Text for trip</label><input id="tripName" type="text" value="" /></div>
+	<div id="radioDiv">
+	  <label><input type="radio" name="tripType" value="personal"><span>personal trip</span></label>
+	  <label><input type="radio" name="tripType" value="business"><span>business trip</span></label>
+	</div>
 	</p>
+</div>
 </body>
 </html>
