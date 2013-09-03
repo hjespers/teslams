@@ -9,10 +9,8 @@
 <script language="javascript" type="text/javascript" src="url.min.js"></script>
 <script type="text/javascript">
 function getData(ts, cb) {
-	console.log('calling /getdata with argument at:', +ts);
 	$.getJSON(getData.myUrl + "/getdata", { 'at': +ts})
 	.done(function (d, textStatus, jqXHR) {
-		console.log('return data with ts', d[0][0]);
 		if (cb !== undefined) {
 			cb(d[0]);
 		}
@@ -35,15 +33,14 @@ function updateDisplay() {
 	});
 }
 function startStopFunction() {
-	var startTime, startData, stopTime, stopData;
+	var tripName, msgText;
 	if (!startStopFunction.started) {
 		startStopFunction.started = true;
+		startStopFunction.stopTime = null;
 		$('#startStopButton').html("Stop trip");
-		startTime = new Date().getTime();
-		getData(startTime, function(data) {
-			startData = data;
-			console.dir('started', startData);
-			updateDisplay.startOdo = startData[2];
+		startStopFunction.startTime = new Date();
+		getData(startStopFunction.startTime.getTime(), function(data) {
+			updateDisplay.startOdo = parseFloat(data[2]);
 			updateDisplay.stopOdo = null;
 			if (!updateDisplay.ID) {
 				// we're calling this every two seconds to keep the load
@@ -55,16 +52,19 @@ function startStopFunction() {
 	} else {
 		startStopFunction.started = false;
 		$('#startStopButton').html("Start trip");
-		stopTime = new Date().getTime();
-		getData(stopTime, function(data){
-			stopData = data;
-			console.dir('stopped', stopData);
-			updateDisplay.stopOdo = stopData[2];
+		startStopFunction.stopTime = new Date();
+		getData(startStopFunction.stopTime.getTime(), function(data){
+			updateDisplay.stopOdo = parseFloat(data[2]);
 			if (updateDisplay.ID) {
 				clearInterval(updateDisplay.ID);
 				updateDisplay.ID = null;
 			}
 			updateDisplay();
+			tripName = $("#tripName").val();
+			msgText = 'trip "' + tripName + '" from ' + startStopFunction.startTime.toString() +
+				' until ' + startStopFunction.stopTime.toString() + ' for ' +
+				(updateDisplay.stopOdo - updateDisplay.startOdo).toFixed(1) + " miles";
+			console.log(msgText);
 		});
 	}
 }
