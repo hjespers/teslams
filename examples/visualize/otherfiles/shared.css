@@ -20,6 +20,7 @@ section {
 	left: 2em
 }
 h2 { margin-left: 1em; }
+h3 { margin-left: 1.5em; }
 #sliderS { position: absolute; left: 0; }
 #sliderR { position: absolute; left: 20em; }
 #speedTT { margin-left: -1em; width: 2em; }
