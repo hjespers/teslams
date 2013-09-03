@@ -24,6 +24,7 @@ $(function() {
 	datepickers(myUrl + '/energy');
 	$("#maplink").attr("href", myUrl + "/map?from=" + datepickers.fromQ + "&to=" + datepickers.toQ);
 	$("#statslink").attr("href", myUrl + "/stats?from=" + datepickers.fromQ + "&to=" + datepickers.toQ);
+	$("#triplink").attr("href", myUrl + "/trip");
 	d1 = [MAGIC_ENERGY];
 	d2 = [MAGIC_SPEED];
 	data = [{
@@ -199,6 +200,7 @@ $(function() {
 </head>
 <body>
 MAGIC_NAV
+<div id="container">
 	<h2>Energy Chart</h2>
 	<div id="dates">
 		<label>Start time</label><input id="frompicker" type="text">
@@ -216,5 +218,6 @@ MAGIC_NAV
 			<div id="explanation2" style="width:70%">SOC and rated range</div>
 		</div><center>
 	</div>
+</div>
 </body>
 </html>

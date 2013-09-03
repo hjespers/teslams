@@ -1,13 +1,13 @@
 
 html { height: 100% }
-body { height: 100%; margin: 0; padding: 1em; background-color: #F8F8F8; }
+body { height: 100%; margin: 0; padding: 1em; background-color: #FFFFFF; }
 label { font: larger; padding: 1em 1em 1em 0; }
 #map-canvas { height:85%; }
 #speedSlider { width: 30%; }
 #top { padding-bottom: 0.5em; }
 #speed { border: 0; background-color: #EEE; }
 #frompicker, #topicker { width:20em; background-color: #DDD; border:solid 1px #BBB; color: #222; height: 28px; padding: 0 1em 0 1em; box-shadow: 2px 2px 0 #828181 inset; }
-div#sliders { height: 6em; position: relative; }
+div#sliders { height: 6em; position: relative; margin-left: 1.5em; }
 div.label { margin-top: .5em; }
 div#dates { margin-bottom: 1em;
 	    margin-left: 1.5em;
@@ -20,6 +20,7 @@ section {
 	left: 2em
 }
 h2 { margin-left: 1em; }
+h3 { margin-left: 1.5em; }
 #sliderS { position: absolute; left: 0; }
 #sliderR { position: absolute; left: 20em; }
 #speedTT { margin-left: -1em; width: 2em; }
@@ -74,13 +75,22 @@ h2 { margin-left: 1em; }
 	height: 100%;
 	border-radius: 25px;
 }
-
+div#container { margin-top: 0;
+		padding-top: 1em;
+		padding-bottom: 1em;
+		border-radius: 0 0 10px 10px;
+		background-color: rgba(244,244,244,0.9);
+		border: 3px solid rgba(2,2,2,0.28);
+		width: 100%;
+		height: 95%;
+}
 nav#main { border-radius: 10px 10px 0 0;
 	   border-right: 1px solid rbga(2,2,2,0.28);
 	   border-left: 1px solid rgba(2,2,2,0.28);
 	   border-top: 1px solid rgba(2,2,2,0.28);
 	   background-color: rgba(12,12,12,0.1);
 	   display: block;
+	   width: 100%
 }
 .clearfix:before, .clearfix:after { content: " ";
 				    display: table;

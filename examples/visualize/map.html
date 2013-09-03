@@ -179,6 +179,7 @@ function initialize() {
 	datepickers(myUrl + '/map');
 	$("#energylink").attr("href", myUrl + "/energy?from=" + datepickers.fromQ + "&to=" + datepickers.toQ);
 	$("#statslink").attr("href", myUrl + "/stats?from=" + datepickers.fromQ + "&to=" + datepickers.toQ);
+	$("#triplink").attr("href", myUrl + "/trip");
 	speedup = $.url("?speed");
 	if (speedup === null || speedup === "")
 		speedup = 30;
@@ -243,6 +244,7 @@ google.maps.event.addDomListener(window, 'load', initialize);
 </head>
 <body>
 MAGIC_NAV
+<div id="container">
 	<h2>Tesla Tracker</h2>
 	<div id="top">
 		<div id="dates">
@@ -264,4 +266,5 @@ MAGIC_NAV
 		</div>
 	</div>
 	<div id='map-canvas'/>
+</div>
 </body> </html>
