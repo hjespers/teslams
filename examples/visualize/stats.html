@@ -15,7 +15,7 @@
 <script language="javascript" type="text/javascript" src="url.min.js"></script>
 <script type="text/javascript">
 $(function() {
-	var previousPoint, myUrl, d1, d2, d3, d4, data, options, eschart;
+	var previousPoint, myUrl, d1, d2, d3, d4, d5, data, options, eschart;
 	function showTooltip(x, y, contents) {
 		$('<div id="tooltip">' + contents + '</div>').css( {
 			position: 'absolute',
@@ -30,18 +30,19 @@ $(function() {
 	}
 	previousPoint = null;
 	$("#dcachart").bind("plothover", function (event, pos, item) {
-		var x, xS, y;
+		var x, y;
 		if (item) {
 			if (previousPoint != item.dataIndex) {
 				previousPoint = item.dataIndex;
 
 				$("#tooltip").remove();
 				x = new Date(Math.round(item.datapoint[0] / (24 * 3600000)) * 24 * 3600000);
-				xS = (x.getMonth() + 1) + "/" + x.getDate();
 				y = item.datapoint[1].toFixed(1);
-
+				if (item.seriesIndex == 1) {
+					y += " + " + (d5[item.dataIndex][1]).toFixed(1) + " vampire loss";
+				}
 				showTooltip(item.pageX, item.pageY,
-							item.series.label + " on " + xS + " : " + y);
+							item.series.label + " : " + y);
 			}
 		} else {
 			$("#tooltip").remove();
@@ -60,6 +61,7 @@ $(function() {
 	$("#triplink").attr("href", myUrl + "/trip");
 	d1 = [MAGIC_DISTANCE];
 	d4 = [MAGIC_KWH];
+	d5 = [MAGIC_VKWH];
 	d2 = [MAGIC_CHARGE];
 	d3 = [MAGIC_AVERAGE];
 	data = [{
