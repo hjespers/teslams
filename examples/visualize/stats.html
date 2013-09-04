@@ -30,20 +30,19 @@ $(function() {
 	}
 	previousPoint = null;
 	$("#dcachart").bind("plothover", function (event, pos, item) {
-		var x, xS, y;
+		var x, y;
 		if (item) {
 			if (previousPoint != item.dataIndex) {
 				previousPoint = item.dataIndex;
 
 				$("#tooltip").remove();
 				x = new Date(Math.round(item.datapoint[0] / (24 * 3600000)) * 24 * 3600000);
-				xS = (x.getMonth() + 1) + "/" + x.getDate();
 				y = item.datapoint[1].toFixed(1);
 				if (item.seriesIndex == 1) {
-					y += "+ " + (d5[item.dataIndex][1]).toFixed(1) + "kWh vampire loss";
+					y += " + " + (d5[item.dataIndex][1]).toFixed(1) + " vampire loss";
 				}
 				showTooltip(item.pageX, item.pageY,
-							item.series.label + " on " + xS + " : " + y);
+							item.series.label + " : " + y);
 			}
 		} else {
 			$("#tooltip").remove();

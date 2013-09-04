@@ -444,9 +444,33 @@ app.get('/energy', function(req, res) {
 	});
 });
 
+function countVamp(ts) {
+	if (!countVamp.start)
+		countVamp.start = ts;
+}
+function stopCountingVamp(ts) {
+	if (countVamp.start && ts - countVamp.start > 60000) // at least a minute
+		countVamp.vampInt.push([countVamp.start,ts]);
+	countVamp.start = null;
+}
+function calculateLoss(d1, d2) {
+	var cS1 = d1.chargeState, cS2 = d2.chargeState;
+	if (!cS1 || !cS2 || !cS1.battery_level || !cS2.battery_level || cS2.battery_range > cS1.battery_range) {
+		return 0;
+	}
+	var ratedWh = 5 * ((cS1.battery_level * capacity / cS1.battery_range) + (cS2.battery_level * capacity / cS2.battery_range));
+	var loss = ratedWh * (cS1.battery_range - cS2.battery_range);
+//	if (argv.verbose) { // great for debugging
+//		console.log(new Date(d1.ts), new Date(d2.ts), "ratedWh", ratedWh.toFixed(1),
+//			    "lost range", (cS1.battery_range - cS2.battery_range).toFixed(1) ,"loss", loss.toFixed(1));
+//	}
+	return loss / 1000;
+}
 app.get('/stats', function(req, res) {
 	var path = req.path;
 	var dates = new parseDates(req.query.from, req.query.to);
+	countVamp.vampInt = [];
+	countVamp.start = null;
 	from = makeDate(dates.fromQ);
 	to = makeDate(dates.toQ);
 	if (req.query.to === undefined || req.query.to.split('-').length < 6 ||
@@ -454,8 +478,8 @@ app.get('/stats', function(req, res) {
 		res.redirect('/stats?from=' + dates.fromQ + '&to=' + dates.toQ);
 		return;
 	}
-	var outputD = "", outputC = "", outputA = "", outputW = "", outputV = "", comma, firstDate = 0, lastDay = 0, lastDate = 0;
-	var startOdo = 0, charge = 0, minSOC = 101, maxSOC = -1, increment = 0, kWs = 0, vampkWs = 0;
+	var outputD = "", outputC = "", outputA = "", outputW = "", comma, firstDate = 0, lastDay = 0, lastDate = 0;
+	var startOdo = 0, charge = 0, minSOC = 101, maxSOC = -1, increment = 0, kWs = 0;
 	MongoClient.connect("mongodb://127.0.0.1:27017/" + argv.db, function(err, db) {
 		if(err) {
 			console.log('error connecting to database:', err);
@@ -475,7 +499,6 @@ app.get('/stats', function(req, res) {
 					minSOC = 101;
 					maxSOC = -1;
 					kWs = 0;
-					vampkWs = 0;
 					comma = "";
 				}
 				if (doc.ts > lastDate) { // we don't want to go back in time
@@ -485,12 +508,12 @@ app.get('/stats', function(req, res) {
 						// the aux database and use the actual charge info
 						if (vals[9] != 'R' && vals[9] != 'D') { // we are not driving
 							if (vals[8] < 0) { // parked & charging
+								stopCountingVamp(doc.ts);
 								if (vals[3] < minSOC) minSOC = vals[3];
 								if (vals[3] > maxSOC) maxSOC = vals[3];
 								increment = maxSOC - minSOC;
 							} else { // parked & consuming
-								if (vals[8] > 0)
-									vampkWs += (doc.ts - lastDate) / 1000 * vals[8];
+								countVamp(doc.ts);
 								// if we were charging before, add the estimate to the total
 								if (increment > 0) {
 									charge += increment * capacity / 100;
@@ -502,12 +525,13 @@ app.get('/stats', function(req, res) {
 						} else {
 							// we're driving - add up the energy used / regen
 							kWs += (doc.ts - lastDate) / 1000 * (vals[8] - 0.25); // this correction is needed to match in car data???
+							stopCountingVamp(doc.ts);
 						}
 					} else {
 						lastDay = day;
+						stopCountingVamp(lastDate);
 						var dist = +vals[2] - startOdo;
 						var kWh = kWs / 3600;
-						var vampkWh = vampkWs / 3600;
 						var ts = new Date(lastDate);
 						var midnight = new Date(ts.getFullYear(), ts.getMonth(), ts.getDate(), 0, 0, 0);
 						charge += increment;
@@ -518,14 +542,12 @@ app.get('/stats', function(req, res) {
 						} else {
 							outputA += comma + "null";
 						}
-						outputV += comma + "[" + (+midnight)  + "," + vampkWh + "]";
 						outputW += comma + "[" + (+midnight) + "," + kWh + "]";
 						startOdo = vals[2];
 						charge = 0;
 						minSOC = 101;
 						maxSOC = -1;
 						kWs = 0;
-						vampkWs = 0;
 						comma = ",";
 					}
 					lastDate = doc.ts;
@@ -536,7 +558,6 @@ app.get('/stats', function(req, res) {
 
 			var dist = +vals[2] - startOdo;
 			var kWh = kWs / 3600;
-			var vampkWh = vampkWs / 3600;
 			var ts = new Date(lastDate);
 			var midnight = new Date(ts.getFullYear(), ts.getMonth(), ts.getDate(), 0, 0, 0);
 			charge += increment;
@@ -548,21 +569,65 @@ app.get('/stats', function(req, res) {
 				outputA += comma + "null";
 			}
 			outputW += comma + "[" + (+midnight) + "," + kWh + "]";
-			outputV += comma + "[" + (+midnight)  + "," + vampkWh + "]";
+			stopCountingVamp(lastDate);
 
-			db.close();
-			fs.readFile(__dirname + "/stats.html", "utf-8", function(err, data) {
-				if (err) throw err;
-				var fD = new Date(firstDate);
-				var startDate = (fD.getMonth() + 1) + "/" + fD.getDate() + "/" + fD.getFullYear();
-				var response = data.replace("MAGIC_NAV", nav)
-					.replace("MAGIC_DISTANCE", outputD)
-					.replace("MAGIC_CHARGE", outputC)
-					.replace("MAGIC_AVERAGE", outputA)
-					.replace("MAGIC_KWH", outputW)
-					.replace("MAGIC_VKWH", outputV)
-					.replace("MAGIC_START", startDate);
-				res.end(response, "utf-8");
+			// now analyze the charging data
+			collection = db.collection("tesla_aux");
+			collection.find({"chargeState": {$exists: true}, "ts": {$gte: +from, $lte: +to}}).toArray(function(err,docs) {
+				var i = 0, vampirekWh, day, lastDay = -1, lastDate = null, comma = "", outputY = "";
+				var cState1 = null, cState2 = null;
+				docs.forEach(function(doc) {
+					var maxI = countVamp.vampInt.length;
+					day = new Date(doc.ts).getDay();
+					if (!doc || !doc.chargeState || !doc.chargeState.battery_level)
+						return;
+					cState2 = doc;
+					if (day != lastDay) {
+						if (lastDate) {
+							if (cState1) {
+								vampirekWh += calculateLoss(cState1, cState2);
+								cState1 = cState2;
+							}
+							ts = new Date(lastDate);
+							midnight = new Date(ts.getFullYear(), ts.getMonth(), ts.getDate(), 0, 0, 0);
+							outputY += comma + "[" + midnight.getTime() + "," + vampirekWh + "]";
+							comma = ",";
+						}
+						lastDate = doc.ts;
+						lastDay = day;
+						vampirekWh = 0;
+					}
+					if (i < maxI && cState1 === null && doc.ts >= countVamp.vampInt[i][0])
+						cState1 = cState2;
+					if (i < maxI && doc.ts >= countVamp.vampInt[i][1]) {
+						vampirekWh += calculateLoss(cState1, cState2);
+						cState1 = null;
+						i++;
+					}
+				});
+				if (cState1) {
+					vampirekWh += calculateLoss(cState1, cState2);
+					cState1 = cState2;
+				}
+				ts = new Date(lastDate);
+				midnight = new Date(ts.getFullYear(), ts.getMonth(), ts.getDate(), 0, 0, 0);
+				outputY += comma + "[" + midnight.getTime() + "," + vampirekWh + "]";
+				db.close();
+				fs.readFile(__dirname + "/stats.html", "utf-8", function(err, data) {
+					if (err) throw err;
+					var fD = new Date(firstDate);
+					var startDate = (fD.getMonth() + 1) + "/" + fD.getDate() + "/" + fD.getFullYear();
+					var response = data
+						.replace("MAGIC_NAV", nav)
+						.replace("MAGIC_DISTANCE", outputD)
+						.replace("MAGIC_CHARGE", outputC)
+						.replace("MAGIC_AVERAGE", outputA)
+						.replace("MAGIC_KWH", outputW)
+						.replace("MAGIC_VKWH", outputY)
+						.replace("MAGIC_START", startDate);
+					res.end(response, "utf-8");
+				});
+
 			});
 		});
 	});
