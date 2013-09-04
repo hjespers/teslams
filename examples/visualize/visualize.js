@@ -466,6 +466,31 @@ function calculateLoss(d1, d2) {
 //	}
 	return loss / 1000;
 }
+app.get('/test', function(req, res) {
+	MongoClient.connect("mongodb://127.0.0.1:27017/" + argv.db, function(err, db) {
+		if(err) {
+			console.log('error connecting to database:', err);
+			return;
+		}
+		var output = "";
+		var collection = db.collection("tesla_aux");
+		var options = { 'sort': [['chargeState.battery_range', 'desc']] };
+		collection.find({"chargeState": {$exists: true}}).toArray(function(err,docs) {
+			var comma = "";
+			docs.forEach(function(doc) {
+				if (doc.chargeState.battery_level !== undefined) {
+					output += comma + "\n[" + doc.chargeState.battery_level + "," + doc.chargeState.battery_range + "]";
+					comma = ',';
+				}
+			});
+			db.close();
+			fs.readFile(__dirname + "/test.html", "utf-8", function(err, data) {
+				if (err) throw err;
+				res.send(data.replace("MAGIC_TEST", output))
+			});
+		});
+	});
+});
 app.get('/stats', function(req, res) {
 	var path = req.path;
 	var dates = new parseDates(req.query.from, req.query.to);

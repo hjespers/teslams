@@ -1,0 +1,86 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Tesla DB Data Analysis</title>
+<script language="javascript" type="text/javascript" src="jquery-1.9.1.js"></script>
+<script language="javascript" type="text/javascript" src="jquery.flot.js"></script>
+<script language="javascript" type="text/javascript" src="jquery.flot.time.min.js"></script>
+<script language="javascript" type="text/javascript" src="jquery.flot.threshold.min.js"></script>
+<script language="javascript" type="text/javascript" src="jquery.flot.orderBars.js"></script>
+<script language="javascript" type="text/javascript" src="jquery-ui-1.10.3.custom.min.js"></script>
+<script language="javascript" type="text/javascript" src="jquery-ui-timepicker-addon.js"></script>
+<script language="javascript" type="text/javascript" src="lib.js"></script>
+<link rel="stylesheet" media="all" type="text/css" href="jquery-ui-timepicker-addon.css" />
+<link rel="stylesheet" media="all" type="text/css" href="jquery-ui.css" />
+<link rel="stylesheet" media="all" type="text/css" href="shared.css" />
+<script language="javascript" type="text/javascript" src="url.min.js"></script>
+<script type="text/javascript">
+$(function() {
+	var previousPoint, myUrl, d1, d2, d3, d4, d5, data, options, eschart;
+	function showTooltip(x, y, contents) {
+		$('<div id="tooltip">' + contents + '</div>').css( {
+			position: 'absolute',
+			display: 'none',
+			top: y + 5,
+			left: x + 5,
+			border: '1px solid #fdd',
+			padding: '2px',
+			'background-color': '#fee',
+			opacity: 0.80
+		}).appendTo("body").fadeIn(200);
+	}
+	previousPoint = null;
+	$("#datachart").bind("plothover", function (event, pos, item) {
+		var x, y;
+		if (item) {
+			if (previousPoint != item.dataIndex) {
+				previousPoint = item.dataIndex;
+
+				$("#tooltip").remove();
+				x = item.datapoint[0];
+				y = item.datapoint[1].toFixed(1);
+				showTooltip(item.pageX, item.pageY,
+							item.series.label + x + "% : " + y);
+			}
+		} else {
+			$("#tooltip").remove();
+			previousPoint = null;
+		}
+	});
+	d1 = [MAGIC_TEST];
+	d2 = [[7,0],[100,209]];
+	data = [{
+		data: d1,
+		points: {show:true},
+		label: "Distance (miles)",
+		color: "#808080",
+		yaxis: 1
+	},
+		{ data: d2, label: "267Wh/mile", color: "#6060FF"}
+	       ];
+	options = {
+		grid: { hoverable: true },
+		yaxes: [{
+		},{
+			position: 'right'
+		}],
+		xaxes: [{ min: 0, ticks: 50
+		}]
+	};
+	datachart = $("#datachart");
+	$.plot(datachart, data, options);
+
+});
+</script>
+</head>
+<body>
+<div id="container">
+	<h2>Tesla DB Data Analysis</h2>
+	<div id="content">
+		<center><div class="container">
+			<div id="datachart" style="height:450px; width:90%;"></div>
+			<div id="explanation" style="width:70%">Distance over charge %.</div>
+		</div><center>
+	</div>
+</div>
+</body>
+</html>
