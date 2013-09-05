@@ -458,7 +458,10 @@ function calculateLoss(d1, d2) {
 	if (!cS1 || !cS2 || !cS1.battery_level || !cS2.battery_level || cS2.battery_range > cS1.battery_range) {
 		return 0;
 	}
-	var ratedWh = 5 * ((cS1.battery_level * capacity / cS1.battery_range) + (cS2.battery_level * capacity / cS2.battery_range));
+//	var ratedWh = 5 * ((cS1.battery_level * capacity / cS1.battery_range) + (cS2.battery_level * capacity / cS2.battery_range));
+
+	// let's use the data that we seem to are converging on in the forums instead:
+	var ratedWh = (capacity == 85) ? 286 : 267;
 	var loss = ratedWh * (cS1.battery_range - cS2.battery_range);
 //	if (argv.verbose) { // great for debugging
 //		console.log(new Date(d1.ts), new Date(d2.ts), "ratedWh", ratedWh.toFixed(1),
