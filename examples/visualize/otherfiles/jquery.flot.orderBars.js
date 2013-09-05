@@ -1,7 +1,8 @@
 /*
- * Flot plugin to order bars side by side.
+ * Flot plugin to order bars side by side. This is improved version of Benjamin BUFFET work
+ * originally from http://en.benjaminbuffet.com/labs/flot/.
  * 
- * Released under the MIT license by Benjamin BUFFET, 20-Sep-2010.
+ * Released under the MIT license by Przemyslaw Koltermann, 12-Feb-2013.
  *
  * This plugin is an alpha version.
  *
@@ -9,7 +10,7 @@
  *
  *  $.plot($("#placeholder"), [{ data: [ ... ], bars :{ order = null or integer }])
  *
- * If 2 series have the same order param, they are ordered by the position in the array;
+ * If 2 series have the same order param, they are displayed in the same position;
  *
  * The plugin adjust the point by adding a value depanding of the barwidth
  * Exemple for 3 series (barwidth : 0.1) :
@@ -24,6 +25,8 @@
     function init(plot){
         var orderedBarSeries;
         var nbOfBarsToOrder;
+        var seriesPos = new Array();
+        var sameSeries = new Array();
         var borderWidth;
         var borderWidthInXabsWidth;
         var pixelInXWidthEquivalent = 1;
@@ -76,13 +79,8 @@
         function getAxeMinMaxValues(series,AxeIdx){
             var minMaxValues = new Array();
             for(var i = 0; i < series.length; i++){
-		var firstIdx = 0, lastIdx = series[i].data.length - 1;
-		while (series[i].data[firstIdx] == null && firstIdx < lastIdx)
-			firstIdx++;
-		while (series[i].data[lastIdx] == null && firstIdx < lastIdx)
-			lastIdx--;
-                minMaxValues[0] = series[i].data[firstIdx][AxeIdx];
-                minMaxValues[1] = series[i].data[lastIdx][AxeIdx];
+                minMaxValues[0] = series[i].data[0][AxeIdx];
+                minMaxValues[1] = series[i].data[series[i].data.length - 1][AxeIdx];
             }
             return minMaxValues;
         }
@@ -101,15 +99,89 @@
                 }
             }
 
-            return retSeries.sort(sortByOrder);
+            return sortByOrder(retSeries);
         }
 
-        function sortByOrder(serie1,serie2){
-            var x = serie1.bars.order;
-            var y = serie2.bars.order;
+        function sortByOrder(series){
+        	var n = series.length;
+        	do {
+	        	for (var i=0; i < n - 1; i++) {
+        			if (series[i].bars.order > series[i + 1].bars.order) {
+        				var tmp = series[i];
+        				series[i] = series[i + 1];
+        				series[i + 1] = tmp;
+        			}
+        			else if (series[i].bars.order == series[i + 1].bars.order) {
+        				
+        				//check if any of the series has set sameSeriesArrayIndex
+        				var sameSeriesIndex;
+        				if (series[i].sameSeriesArrayIndex) {
+        					if(series[i + 1].sameSeriesArrayIndex !== undefined) {
+        						sameSeriesIndex = series[i].sameSeriesArrayIndex;
+        						series[i + 1].sameSeriesArrayIndex = sameSeriesIndex;
+        						sameSeries[sameSeriesIndex].push(series[i + 1]);        						
+        						sameSeries[sameSeriesIndex].sort(sortByWidth);
+        						
+        						series[i] = sameSeries[sameSeriesIndex][0];
+        						removeElement(series, i + 1);
+        					}
+        				}
+        				
+        				else if (series[i + 1].sameSeriesArrayIndex) {
+        					if(series[i].sameSeriesArrayIndex !== undefined) {
+        						sameSeriesIndex = series[i + 1].sameSeriesArrayIndex;
+        						series[i].sameSeriesArrayIndex = sameSeriesIndex;
+        						sameSeries[sameSeriesIndex].push(series[i]);        						
+        						sameSeries[sameSeriesIndex].sort(sortByWidth);
+        						
+        						series[i] = sameSeries[sameSeriesIndex][0];
+        						removeElement(series, i + 1);
+        						
+        					}
+        				}
+        				
+        				else {
+        					sameSeriesIndex = sameSeries.length;
+        					sameSeries[sameSeriesIndex] = new Array();
+        					series[i].sameSeriesArrayIndex = sameSeriesIndex;
+        					series[i + 1].sameSeriesArrayIndex = sameSeriesIndex;
+    						sameSeries[sameSeriesIndex].push(series[i]);      
+    						sameSeries[sameSeriesIndex].push(series[i + 1]);  
+    						sameSeries[sameSeriesIndex].sort(sortByWidth);
+    						
+    						series[i] = sameSeries[sameSeriesIndex][0];
+    						removeElement(series, i + 1);
+        				}
+						i--;
+						n--;
+
+        				
+        				//leave the wider serie and the other one move to 
+        			}
+        		}
+	        	n = n-1;
+	        }
+        	while (n>1);
+        	for (var i=0; i < series.length; i++) {
+        		if (series[i].sameSeriesArrayIndex) {
+        			seriesPos[series[i].sameSeriesArrayIndex] = i;
+        		}
+        	}
+        	return series;
+        }
+        
+        function sortByWidth(serie1,serie2){
+            var x = serie1.bars.barWidth ? serie1.bars.barWidth : 1;
+            var y = serie2.bars.barWidth ? serie2.bars.barWidth : 1;
             return ((x < y) ? -1 : ((x > y) ? 1 : 0));
         }
-
+        function removeElement(arr, from, to) {
+		    var rest = arr.slice((to || from) + 1 || arr.length);
+		    arr.length = from < 0 ? arr.length + from : from;
+		    arr.push.apply(arr, rest);
+		    return arr;
+    	}
+        
         function  calculBorderAndBarWidth(serie){
             borderWidth = serie.bars.lineWidth ? serie.bars.lineWidth  : 2;
             borderWidthInXabsWidth = borderWidth * pixelInXWidthEquivalent;
@@ -122,14 +194,19 @@
         }
 
         function findPosition(serie){
-            var pos = 0
-            for (var i = 0; i < orderedBarSeries.length; ++i) {
-                if (serie == orderedBarSeries[i]){
-                    pos = i;
-                    break;
-                }
-            }
-
+        	var ss = sameSeries;
+        	var pos = 0;
+        	if (serie.sameSeriesArrayIndex) {
+        		pos = seriesPos[serie.sameSeriesArrayIndex];
+        	}
+        	else {
+	            for (var i = 0; i < orderedBarSeries.length; ++i) {
+	                if (serie == orderedBarSeries[i]){
+	                    pos = i;
+	                    break;
+	                }
+	            }
+        	}
             return pos+1;
         }
 
