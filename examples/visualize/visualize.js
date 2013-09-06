@@ -362,39 +362,52 @@ app.get('/energy', function(req, res) {
 			var maxAmp = 0, maxVolt = 0, maxMph = 0;
 			var outputAmp = "", outputVolt = "";
 			lastDate = +from;
-			collection.find({"ts": {$gte: +from, $lte: +to}}).toArray(function(err,docs) {
+			collection.find({"chargeState": {"$exists": true},
+					 "ts": {$gte: +from, $lte: +to}}).toArray(function(err,docs) {
 				if (argv.verbose) console.log("Found " + docs.length + " entries in aux DB");
 				ouputAmp = "[" + (+firstDate) + ",0]";
 				ouputColt = "[" + (+firstDate) + ",0]";
 				comma = "";
 				docs.forEach(function(doc) {
-					if(typeof doc.chargeState !== 'undefined') {
+					if(doc.chargeState.charging_state === 'Charging') {
+console.log(doc.chargeState);
 						if (doc.chargeState.charge_rate > maxMph) {
 							maxMph = doc.chargeState.charge_rate;
 							maxVolt = doc.chargeState.charger_voltage;
 							maxAmp = doc.chargeState.charger_actual_current;
+							if (maxAmp == 0) {
+								maxAmp = doc.chargeState.battery_current;
+							}		
 						}
 						// we get these in 60s increments, but only when charging;
 						// we might miss the occasional sample so if the time gap
 						// is more than 3 minutes, pull the lines down to zero
-						if (doc.ts - lastDate > 180000) {
-							outputAmp += ",[" + (lastDate + 60000) + ",0]";
-							outputVolt += ",[" + (lastDate + 60000) + ",0]";
-							outputAmp += ",[" + (doc.ts - 60000) + ",0]";
-							outputVolt += ",[" + (doc.ts - 60000) + ",0]";
-						}
+				// turns out that's a really bad plan if you charge in
+				// a place with rotten 3G connectivity (like Woodburn)
+				//		if (doc.ts - lastDate > 180000) {
+				//			outputAmp += ",[" + (lastDate + 60000) + ",0]";
+				//			outputVolt += ",[" + (lastDate + 60000) + ",0]";
+				//			outputAmp += ",[" + (doc.ts - 60000) + ",0]";
+				//			outputVolt += ",[" + (doc.ts - 60000) + ",0]";
+				//		}
 						if (doc.chargeState.charger_actual_current !== undefined) {
-							outputAmp += ",[" + doc.ts + "," + doc.chargeState.charger_actual_current + "]";
+							if (doc.chargeState.charger_actual_current !== 0)
+								outputAmp += ",[" + doc.ts + "," + doc.chargeState.charger_actual_current + "]";
+							else
+								outputAmp += ",[" + doc.ts + "," + doc.chargeState.battery_current + "]";
 							lastDate = doc.ts;
 						}
 						if (doc.chargeState.charger_voltage !== undefined) {
 							outputVolt += ",[" + doc.ts + "," + doc.chargeState.charger_voltage + "]";
 							lastDate = doc.ts;
 						}
-						if (doc.chargeState.battery_range !== undefined) {
-							outputRange += comma + "[" + doc.ts + "," + doc.chargeState.battery_range + "]";
-							comma = ",";
-						}
+					} else {
+						outputAmp += ",[" + doc.ts + ",0]";
+						outputVolt += ",[" + doc.ts + ",0]";
+					}
+					if (doc.chargeState.battery_range !== undefined) {
+						outputRange += comma + "[" + doc.ts + "," + doc.chargeState.battery_range + "]";
+						comma = ",";
 					}
 				});
 				outputAmp += ",[" + (lastDate + 60000) + ",0]";
@@ -458,7 +471,10 @@ function calculateLoss(d1, d2) {
 	if (!cS1 || !cS2 || !cS1.battery_level || !cS2.battery_level || cS2.battery_range > cS1.battery_range) {
 		return 0;
 	}
-	var ratedWh = 5 * ((cS1.battery_level * capacity / cS1.battery_range) + (cS2.battery_level * capacity / cS2.battery_range));
+//	var ratedWh = 5 * ((cS1.battery_level * capacity / cS1.battery_range) + (cS2.battery_level * capacity / cS2.battery_range));
+
+	// let's use the data that we seem to are converging on in the forums instead:
+	var ratedWh = (capacity == 85) ? 286 : 267;
 	var loss = ratedWh * (cS1.battery_range - cS2.battery_range);
 //	if (argv.verbose) { // great for debugging
 //		console.log(new Date(d1.ts), new Date(d2.ts), "ratedWh", ratedWh.toFixed(1),
@@ -549,7 +565,7 @@ app.get('/stats', function(req, res) {
 							}
 						} else {
 							// we're driving - add up the energy used / regen
-							kWs += (doc.ts - lastDate) / 1000 * (vals[8] - 0.25); // this correction is needed to match in car data???
+							kWs += (doc.ts - lastDate) / 1000 * (vals[8] - 0.12); // this correction is needed to match in car data???
 							stopCountingVamp(doc.ts);
 						}
 					} else {

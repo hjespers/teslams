@@ -137,7 +137,6 @@ $(function() {
 	var vOffset = [];
 	for (var i = 0; i < 4; i++) {
 		var series = p.getData()[i];
-	console.dir(series);
 		var scale = series.xaxis.box.width / (series.xaxis.max - series.xaxis.min);
 		var barWidth = scale * series.bars.barWidth;
 		var hOffset = ((i <= 1) ? i - 1.5 : i - 2.5) * barWidth;
@@ -151,7 +150,6 @@ $(function() {
 				vOffset[j] = top;
 			if (i == 2)
 				top -= (series.yaxis.box.height - vOffset[j]) - fontHeight / 2;
-	console.log(o.top, top);
 			$('<div class="data-point-label">' + el[1].toFixed(1) + '</div>').css( {
 				position: 'absolute',
 				left: left + 4,
