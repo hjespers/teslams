@@ -1,6 +1,6 @@
 {
   "name": "teslams",
-  "version": "0.6.10",
+  "version": "0.6.41",
   "description": "Utilities for the Tesla Model S ",
   "dependencies": {
     "request": "~2.14.0",
@@ -43,8 +43,16 @@
   },
   "contributors" : [
     {
+      "name" : "Marshall Rose",
+      "url" : "https://github.com/mrose17"
+    },
+    {
       "name" : "Dirk Hohndel",
       "url" : "https://github.com/dirkhh"
+    },
+    {
+      "name" : "Arthur Blake",
+      "url" : "https://github.com/arthurblake"
     }
   ],
   "license" : "BSD"
