@@ -2,12 +2,12 @@
 var util = require('util');
 var teslams = require('../teslams.js');
 var argv = require('optimist')
-	.usage('Usage: $0 -u <username> -p <password> -acdFgHimPtvw -A [on|off] -C [start|stop] -R [std|max|50-100] -S [close|vent|comfort|open|0-100] -L [lock|unlock] -T temp')
+	.usage('Usage: $0 -u <username> -p <password> -acdFgHimPtvwXZ -A [on|off] -C [start|stop] -R [std|max|50-100] -S [close|vent|comfort|open|0-100] -L [lock|unlock] -T temp')
 	.alias('u', 'username')
 	.describe('u', 'Teslamotors.com login')
 	.alias('p', 'password')
 	.describe('p', 'Teslamotors.com password')
-	.boolean(['a', 'c', 'd', 'F', 'g', 'H', 'i', 'm', 'P', 't', 'v', 'w'])
+	.boolean(['a', 'c', 'd', 'F', 'g', 'H', 'i', 'm', 'P', 't', 'v', 'w', 'Z'])
 	.alias('a', 'all')
 	.describe('a', 'Print information about all vehicles on the account')
 	.describe('c', 'Display the charge state')
@@ -29,6 +29,10 @@ var argv = require('optimist')
 	.describe('v', 'Display the vehicle state')
 	.alias('w', 'wake')
 	.describe('w', 'Wake up the car telemetry')
+	.alias('X', 'isplugged')
+	.describe('X', 'Check if car is plugged in and continue only if connected to a charger')
+	.alias('Z', 'isawake')
+	.describe('Z', 'Check if car is asleep and continue only if awake')
 	.alias('R', 'range')
 	.describe('R', 'Charging range mode: "std" or "max"')
 	.alias('S', 'roof')
@@ -52,7 +56,7 @@ var creds = require('./config.js').config(argv);
 argv = argv.argv;
 
 if ( argv.help == true ) {
-	console.log( 'Usage: teslacmd.js -u <username> -p <password> -cdFgHimPtvw');
+	console.log( 'Usage: teslacmd.js -u <username> -p <password> -acdFgHimPtvwXZ');
 	console.log( '                   -A [on|off] -C [start|stop] -R [std|max|50-100]');
 	console.log( '                   -S [close|vent|comfort|open|0-100] -L [lock|unlock] -T temp');
 	console.log( '\nOptions:');
@@ -70,12 +74,14 @@ if ( argv.help == true ) {
 	console.log( '  -v              Display the vehicle state                                                   [boolean]');
 	console.log( '  -i, --info      Print vehicle info                                                          [boolean]');
 	console.log( '  -w, --wake      Wake up the car telemetry                                                   [boolean]');
-	console.log( '  -R, --range     Charging range mode: "std" or "max" or any percent from 50-100            ');
-	console.log( '  -S, --roof      Move the car sunroof to: "close", "vent", "comfort", "open" or any percent');
-	console.log( '  -T, --temp      Set the car climate control temperature (in Celcius)                      ');
-	console.log( '  -L, --lock      Lock/Unlock the car doors                                                 ');
+	console.log( '  -X, --isplugged Check if car is plugged in and continue only if connected to a charger      [boolean]');
+	console.log( '  -Z, --isawake   Check if car is asleep and continue only if awake                           [boolean]');
 	console.log( '  -A, --climate   Turn the air conditioning and heating on/off                              ');
 	console.log( '  -C, --charge    Turn the charging on/off                                                  ');
+	console.log( '  -R, --range     Charging range mode: "std" or "max" or any percent from 50-100            ');
+	console.log( '  -S, --roof      Move the car sunroof to: "close", "vent", "comfort", "open" or any percent');
+	console.log( '  -L, --lock      Lock/Unlock the car doors                                                 ');
+	console.log( '  -T, --temp      Set the car climate control temperature (in Celcius)                      ');
 	console.log( '  -?, --help      Print usage information                                                   ');
 	process.exit(1);
 }
@@ -102,6 +108,22 @@ teslams.all( { email: creds.username, password: creds.password }, function ( err
 		pr( new Error('expecting vehicle ID from Tesla Motors cloud service'));
 		process.exit(1);
 	} else {
+		// first some checks to see if we should even continue
+		if (argv.isawake) {
+			if (vehicle.status == 'asleep') {
+				pr('Exiting because car is asleep');
+				process.exit(code=0);
+			}
+		}
+		if (argv.isplugged) {
+			teslams.get_charge_state( vid, function ( cs ) { 
+				if (cs.charger_pilot_current == 0) {
+					pr('Exiting because car is not plugged in');
+					process.exit(code=0);
+				}
+			});
+		}	
+		// passed through all exit condition checks 
 		if (argv.all) { pr(body); }
 		if (argv.i) { pr(vehicle); }
 		// wake up the car's telematics system

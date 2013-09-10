@@ -173,7 +173,7 @@ For help run :
 
 	teslacmd --help
 
-	Usage: teslacmd.js -u <username> -p <password> -acdFgHimPtvw -A [on|off] -C [start|stop] 
+	Usage: teslacmd.js -u <username> -p <password> -acdFgHimPtvwXZ -A [on|off] -C [start|stop] 
 	                   -R [std|max|50-100] -S [close|vent|comfort|open|0-100] -L [lock|unlock] -T <temp>
 
 	Options:
@@ -191,15 +191,16 @@ For help run :
 	  -t              Display the climate/temp state                               [boolean]
 	  -v              Display the vehicle state                                    [boolean]
 	  -w, --wake      Wake up the car telemetry                                    [boolean]
-	  -R, --range     Charging range mode: "std", "max", or %limit (50% or more)                       
-	  -S, --roof      Move the car sunroof to any position or %open
-	  -T, --temp      Set the car climate control temperature (in Celcius)       
-	  -L, --lock      Lock/Unlock the car doors                                  
+          -X, --isplugged Check if car is plugged in and continue only if connected    [boolean]
+          -Z, --isawake   Check if car is asleep and continue only if awake            [boolean]
 	  -A, --climate   Turn the air conditioning and heating on/off               
 	  -C, --charge    Turn the charging on/off                                   
+	  -R, --range     Charging range mode: "std", "max", or %limit (50% or more)                       
+	  -S, --roof      Move the car sunroof to any position or %open
+	  -L, --lock      Lock/Unlock the car doors                                  
+	  -T, --temp      Set the car climate control temperature (in Celcius)       
 	  -?, --help      Print usage information                                    
 	
-	Missing required arguments: u, p
 	
 #streaming.js - Capture and log real-time telemetry while driving
 
@@ -231,7 +232,6 @@ For help run :
 		  -v, --values    List of values to collect              [default: "speed,odometer,soc,elevation,est_heading,est_lat,est_lng,power,shift_state"]
 		  -?, --help      Print usage information                                            
 
-	Missing required arguments: u, p
 
 #visualize.js - Display historical or realtime streaming data in a browser using Google Maps and provide an energy/speed graph
 
@@ -258,7 +258,6 @@ For help run:
 	          -v, --verbose  Verbose mode: more output to console                [boolean]
 	          -?, --help     Print usage information
 
-        Missing required arguments: d
 
 Point your browser to http://localhost:8766 to view the various visualizations.
 
