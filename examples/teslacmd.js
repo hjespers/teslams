@@ -178,38 +178,41 @@ function parseArgs( vehicle ) {
 
 teslams.all( { email: creds.username, password: creds.password }, function ( error, response, body ) {
 	var data;
+	//check we got a valid JSON response from Tesla
 	try { 
 		data = JSON.parse(body); 
 	} catch(err) { 
 		pr(new Error('login failed')); 
 		process.exit(1);
 	}
-    	if (!util.isArray(data)) pr(new Error('expecting an array from Tesla Motors cloud service'));
+	//check we got an array of vehicles and get the first one
+    	if (!util.isArray(data)) {
+		pr(new Error('expecting an array from Tesla Motors cloud service'));
+		process.exit(1);
+	}
     	vehicle = data[0];
+	//check the vehicle has a valid id
 	if (vehicle.id == undefined) {
 		pr( new Error('expecting vehicle ID from Tesla Motors cloud service'));
 		process.exit(1);
+	}
+	// first some checks to see if we should even continue
+	if (argv.isawake && vehicle.status == 'asleep') {
+		pr(new Error('exiting because car is asleep'));
+		process.exit(1);
+	} else if (argv.isplugged) { 
+		// safe to call get_charge_state because not asleep or don't care
+		teslams.get_charge_state( vehicle.id, function ( cs ) { 
+			if (cs.charging_state == 'Disconnected') {
+				pr( new Error('exiting because car is not plugged in'));
+				process.exit(1);
+			} else { 
+				// passed through all exit condition checks 
+				parseArgs( vehicle );
+			}
+		});
 	} else {
-		// first some checks to see if we should even continue
-		if (argv.isawake && vehicle.status == 'asleep') {
-			pr('Exiting because car is asleep');
-			process.exit(code=0);
-		} else if (argv.isplugged) { 
-			// safe to call get_charge_state because not asleep or don't care
-			teslams.get_charge_state( vehicle.id, function ( cs ) { 
-				if (cs.charger_pilot_current == 0) {
-					pr('Exiting because car is not plugged in');
-					process.exit(code=0);
-				} else { 
-					// passed through all exit condition checks 
-					parseArgs( vehicle );
-				}
-			});
-		} else {
-			// passed through all exit condition checks 
-			parseArgs( vehicle );
-		}
+		// passed through all exit condition checks 
+		parseArgs( vehicle );
 	}
 });
-
-
