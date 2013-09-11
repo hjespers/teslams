@@ -90,10 +90,94 @@ function pr( stuff ) {
 	console.log( util.inspect(stuff) );
 }
 
-//teslams.vehicles( { email: creds.username, password: creds.password }, function ( vehicle ) {
+function parseArgs( vehicle ) {
+	var vid = vehicle.id;
+	if (argv.all) { pr(body); }
+	if (argv.i) { pr(vehicle); }
+	// wake up the car's telematics system
+	if (argv.w) {
+		teslams.wake_up( vid, pr );
+	}
+	//
+	// get some info
+	//
+	if (argv.m) {
+		teslams.mobile_enabled( vid, pr );
+	}
+	if (argv.c) {
+		teslams.get_charge_state( vid, pr );
+	}
+	if (argv.t) {
+		teslams.get_climate_state( vid, pr );
+	}
+	if (argv.d) {
+		teslams.get_drive_state( vid, pr );
+	}
+	if (argv.v) {
+		teslams.get_vehicle_state( vid, pr );
+	}
+	if (argv.g) {
+		teslams.get_gui_settings( vid, pr );
+	}
+	//
+	//  cute but annoying stuff while debugging
+	//
+	if (argv.F) {
+		teslams.flash( vid, pr ); 
+	}
+	if (argv.H) {
+		teslams.honk( vid, pr ); 
+	}
+	if (argv.P) {
+		teslams.open_charge_port( vid, pr ) 
+	}
+	//
+	// control some stuff
+	//
+	if ( argv.lock != undefined ) {
+		teslams.door_lock( {id: vid, lock: argv.lock }, pr );
+	}
+	if ( argv.roof != undefined ) {
+		if ( argv.roof >= 0 && argv.roof <= 100 ) {
+			teslams.sun_roof( {id: vid, roof: 'move', percent: argv.roof }, pr );
+		} else if (argv.roof == "open" || argv.roof == "close" || argv.roof == "comfort" || argv.roof == "vent") {
+			teslams.sun_roof( {id: vid, roof: argv.roof }, pr );
+		} else {
+			var err = new Error("Invalid sun roof state. Specify 0-100 percent, 'open', 'close', 'comfort' or 'vent'");
+			return pr( err );			
+		}
+	}
+	if ( argv.climate != undefined ) {
+		teslams.auto_conditioning( { id: vid, climate: argv.climate}, pr ); 
+	}
+	if ( argv.range != undefined ) {
+		if ( argv.range >= 50 && argv.range <= 100 ) {
+			teslams.charge_range( { id: vid, range: 'set', percent: argv.range }, pr );
+		} else {
+			teslams.charge_range( { id: vid, range: argv.range }, pr ); 
+		}
+	}
+	if ( argv.charge != undefined ) {
+		if (argv.charge == "start" || argv.charge == "stop" ) {
+			teslams.charge_state( { id: vid, charge: argv.charge }, pr ); 
+		} else {
+			var err = new Error("Invalid charge state. Use 'start' or 'stop'");
+			return pr( err );
+		}
+	}
+	if ( argv.temp != undefined ) {
+		if ( argv.temp <= teslams.TEMP_HI && argv.temp >= teslams.TEMP_LO) {
+			teslams.set_temperature( { id: vid, dtemp: argv.temp}, pr); 
+		} else {
+			var err = new Error("Invalid temperature. Valid range is " + teslams.TEMP_LO + " - " + teslams.TEMP_HI + " C" );
+			return pr( err );
+		}
+	}
+}
+
+
 teslams.all( { email: creds.username, password: creds.password }, function ( error, response, body ) {
 	var data;
-
 	try { 
 		data = JSON.parse(body); 
 	} catch(err) { 
@@ -102,108 +186,28 @@ teslams.all( { email: creds.username, password: creds.password }, function ( err
 	}
     	if (!util.isArray(data)) pr(new Error('expecting an array from Tesla Motors cloud service'));
     	vehicle = data[0];
-		
-	vid = vehicle.id;
-	if (vid == undefined) {
+	if (vehicle.id == undefined) {
 		pr( new Error('expecting vehicle ID from Tesla Motors cloud service'));
 		process.exit(1);
 	} else {
 		// first some checks to see if we should even continue
-		if (argv.isawake) {
-			if (vehicle.status == 'asleep') {
-				pr('Exiting because car is asleep');
-				process.exit(code=0);
-			}
-		}
-		if (argv.isplugged) {
-			teslams.get_charge_state( vid, function ( cs ) { 
+		if (argv.isawake && vehicle.status == 'asleep') {
+			pr('Exiting because car is asleep');
+			process.exit(code=0);
+		} else if (argv.isplugged) { 
+			// safe to call get_charge_state because not asleep or don't care
+			teslams.get_charge_state( vehicle.id, function ( cs ) { 
 				if (cs.charger_pilot_current == 0) {
 					pr('Exiting because car is not plugged in');
 					process.exit(code=0);
+				} else { 
+					// passed through all exit condition checks 
+					parseArgs( vehicle );
 				}
 			});
-		}	
-		// passed through all exit condition checks 
-		if (argv.all) { pr(body); }
-		if (argv.i) { pr(vehicle); }
-		// wake up the car's telematics system
-		if (argv.w) {
-			teslams.wake_up( vid, pr );
-		}
-		//
-		// get some info
-		//
-		if (argv.m) {
-			teslams.mobile_enabled( vid, pr );
-		}
-		if (argv.c) {
-			teslams.get_charge_state( vid, pr );
-		}
-		if (argv.t) {
-			teslams.get_climate_state( vid, pr );
-		}
-		if (argv.d) {
-			teslams.get_drive_state( vid, pr );
-		}
-		if (argv.v) {
-			teslams.get_vehicle_state( vid, pr );
-		}
-		if (argv.g) {
-			teslams.get_gui_settings( vid, pr );
-		}
-		//
-		//  cute but annoying stuff while debugging
-		//
-		if (argv.F) {
-			teslams.flash( vid, pr ); 
-		}
-		if (argv.H) {
-			teslams.honk( vid, pr ); 
-		}
-		if (argv.P) {
-			teslams.open_charge_port( vid, pr ) 
-		}
-		//
-		// control some stuff
-		//
-		if ( argv.lock != undefined ) {
-			teslams.door_lock( {id: vid, lock: argv.lock }, pr );
-		}
-		if ( argv.roof != undefined ) {
-			if ( argv.roof >= 0 && argv.roof <= 100 ) {
-				teslams.sun_roof( {id: vid, roof: 'move', percent: argv.roof }, pr );
-			} else if (argv.roof == "open" || argv.roof == "close" || argv.roof == "comfort" || argv.roof == "vent") {
-				teslams.sun_roof( {id: vid, roof: argv.roof }, pr );
-			} else {
-				var err = new Error("Invalid sun roof state. Specify 0-100 percent, 'open', 'close', 'comfort' or 'vent'");
-				return pr( err );			
-			}
-		}
-		if ( argv.climate != undefined ) {
-			teslams.auto_conditioning( { id: vid, climate: argv.climate}, pr ); 
-		}
-		if ( argv.range != undefined ) {
-			if ( argv.range >= 50 && argv.range <= 100 ) {
-				teslams.charge_range( { id: vid, range: 'set', percent: argv.range }, pr );
-			} else {
-				teslams.charge_range( { id: vid, range: argv.range }, pr ); 
-			}
-		}
-		if ( argv.charge != undefined ) {
-			if (argv.charge == "start" || argv.charge == "stop" ) {
-				teslams.charge_state( { id: vid, charge: argv.charge }, pr ); 
-			} else {
-				var err = new Error("Invalid charge state. Use 'start' or 'stop'");
-				return pr( err );
-			}
-		}
-		if ( argv.temp != undefined ) {
-			if ( argv.temp <= teslams.TEMP_HI && argv.temp >= teslams.TEMP_LO) {
-				teslams.set_temperature( { id: vid, dtemp: argv.temp}, pr); 
-			} else {
-				var err = new Error("Invalid temperature. Valid range is " + teslams.TEMP_LO + " - " + teslams.TEMP_HI + " C" );
-				return pr( err );
-			}
+		} else {
+			// passed through all exit condition checks 
+			parseArgs( vehicle );
 		}
 	}
 });
