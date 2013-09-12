@@ -47,6 +47,7 @@ $(function() {
 			axisLabel: "Energy",
 			min: MAGIC_MIN_ENG,
 			max: MAGIC_MAX_ENG,
+			font: {color: "#D07F27"},
 			ticks: function (axis) {
 				var ticks = [], y;
 				var bottomy = Math.floor(axis.min / 10) * 10;
@@ -62,6 +63,7 @@ $(function() {
 			max: MAGIC_MAX_SPD,
 			position: 'right',
 			alignTicksWithAxis: 1,
+			font: { color: "#0A9FD9"},
 			tickFormatter: function (val, axis) {
 				if  (val >= 0)
 					return val.toFixed(0);
@@ -132,9 +134,12 @@ $(function() {
 	options = {
 		grid: { hoverable: true },
 		yaxes: [{
+			font: { color: "#808080" }
 		},{
+			font: { color: "#D07F27" },
 			position: 'right'
 		},{
+			font: { color: "#F02F27" },
 			position: 'right'
 		}],
 		xaxes: [{
@@ -198,7 +203,14 @@ $(function() {
 	}];
 	socOptions = {
 		grid: { hoverable: true },
-		yaxes: [{ max: 119 },{ position: 'right', min: 0}],
+		yaxes: [{
+			max: 119,
+			font: { color: "#008000" }
+		},{
+			position: 'right',
+			font: { color: "#2020C0" },
+			min: 0
+		}],
 		xaxis: { mode: "time",
 			 timezone: "browser"}
 	};
