@@ -401,7 +401,7 @@ console.log(doc.chargeState);
 							outputVolt += ",[" + doc.ts + "," + doc.chargeState.charger_voltage + "]";
 							lastDate = doc.ts;
 						}
-					} else {
+					} else if (doc.chargeState.charging_state === 'Disconnected') {
 						outputAmp += ",[" + doc.ts + ",0]";
 						outputVolt += ",[" + doc.ts + ",0]";
 					}
