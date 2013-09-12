@@ -360,17 +360,19 @@ app.get('/energy', function(req, res) {
 
 			collection = db.collection("tesla_aux");
 			var maxAmp = 0, maxVolt = 0, maxMph = 0;
-			var outputAmp = "", outputVolt = "";
+			var outputAmp = "", outputVolt = "", outputPower = "";
+			var amp, volt;
 			lastDate = +from;
 			collection.find({"chargeState": {"$exists": true},
 					 "ts": {$gte: +from, $lte: +to}}).toArray(function(err,docs) {
 				if (argv.verbose) console.log("Found " + docs.length + " entries in aux DB");
 				ouputAmp = "[" + (+firstDate) + ",0]";
-				ouputColt = "[" + (+firstDate) + ",0]";
+				ouputVolt = "[" + (+firstDate) + ",0]";
+				ouputPower = "[" + (+firstDate) + ",0]";
 				comma = "";
 				docs.forEach(function(doc) {
+					amp = volt = 0;
 					if(doc.chargeState.charging_state === 'Charging') {
-console.log(doc.chargeState);
 						if (doc.chargeState.charge_rate > maxMph) {
 							maxMph = doc.chargeState.charge_rate;
 							maxVolt = doc.chargeState.charger_voltage;
@@ -391,19 +393,27 @@ console.log(doc.chargeState);
 				//			outputVolt += ",[" + (doc.ts - 60000) + ",0]";
 				//		}
 						if (doc.chargeState.charger_actual_current !== undefined) {
-							if (doc.chargeState.charger_actual_current !== 0)
-								outputAmp += ",[" + doc.ts + "," + doc.chargeState.charger_actual_current + "]";
-							else
-								outputAmp += ",[" + doc.ts + "," + doc.chargeState.battery_current + "]";
+							if (doc.chargeState.charger_actual_current !== 0) {
+								amp = doc.chargeState.charger_actual_current;
+							} else {
+								amp = doc.chargeState.battery_current;
+							}
+							outputAmp += ",[" + doc.ts + "," + amp + "]";
 							lastDate = doc.ts;
 						}
 						if (doc.chargeState.charger_voltage !== undefined) {
-							outputVolt += ",[" + doc.ts + "," + doc.chargeState.charger_voltage + "]";
+							volt = doc.chargeState.charger_voltage;
+							outputVolt += ",[" + doc.ts + "," + volt + "]";
 							lastDate = doc.ts;
 						}
-					} else if (doc.chargeState.charging_state === 'Disconnected') {
+						if (lastDate == doc.ts) { // we had valid values
+							outputPower += ",[" + doc.ts + "," + (parseFloat(volt) * parseFloat(amp) / 1000).toFixed(1) + "]";
+						}
+					} else if (doc.chargeState.charging_state === 'Disconnected' ||
+						   doc.chargeState.charging_state === 'Stopped') {
 						outputAmp += ",[" + doc.ts + ",0]";
 						outputVolt += ",[" + doc.ts + ",0]";
+						outputPower += ",[" + doc.ts + ",0]";
 					}
 					if (doc.chargeState.battery_range !== undefined) {
 						outputRange += comma + "[" + doc.ts + "," + doc.chargeState.battery_range + "]";
@@ -412,8 +422,10 @@ console.log(doc.chargeState);
 				});
 				outputAmp += ",[" + (lastDate + 60000) + ",0]";
 				outputVolt += ",[" + (lastDate + 60000) + ",0]";
+				outputPower += ",[" + (lastDate + 60000) + ",0]";
 				outputAmp += ",[" + (+chartEnd) + ",0]";
 				outputVolt += ",[" + (+chartEnd) + ",0]";
+				outputPower += ",[" + (+chartEnd) + ",0]";
 
 				db.close();
 				fs.readFile(__dirname + "/energy.html", "utf-8", function(err, data) {
@@ -443,6 +455,7 @@ console.log(doc.chargeState);
 						.replace("MAGIC_CUMUL_R", cumulRS)
 						.replace("MAGIC_VOLT", outputVolt)
 						.replace("MAGIC_AMP", outputAmp)
+						.replace("MAGIC_POWER", outputPower)
 						.replace("MAGIC_RANGE", outputRange)
 						.replace("MAGIC_MAX_VOLT", maxVolt)
 						.replace("MAGIC_MAX_AMP", maxAmp)

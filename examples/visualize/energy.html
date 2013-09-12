@@ -16,7 +16,7 @@
 $(function() {
 	var myUrl = $.url('protocol') + "://" + $.url('auth') + (($.url('auth').length > 0) ? "@" : "") +
 		$.url('hostname') + ":" + $.url('port');
-	var d1, d2, d3, d4, d5, d6, data, options, eschart, socData, socOptions, socchart, chargechart;
+	var d1, d2, d3, d4, d5, d6, d7, data, options, eschart, socData, socOptions, socchart, chargechart;
 	var previousPointVA, previousPointSOC;
 	parseDates($.url("?from"), $.url("?to"));
 	$("#frompicker").val(datepickers.fromQ);
@@ -92,6 +92,7 @@ $(function() {
 	}
 	d5 = [MAGIC_AMP];
 	d6 = [MAGIC_VOLT];
+	d7 = [MAGIC_POWER];
 	previousPointVA = null;
 	chargechart = $("#chargechart");
 	chargechart.bind("plothover", function (event, pos, item) {
@@ -102,7 +103,7 @@ $(function() {
 				var x = item.datapoint[0];
 				x = new Date(x);
 				var whenS = (x.getMonth() + 1) + '/' + x.getDate() + ' ' + x.getHours() + ':' + x.getMinutes();
-				var v = d6[item.dataIndex][1], a = d5[item.dataIndex][1], kw = a * v / 1000;
+				var v = d6[item.dataIndex][1], a = d5[item.dataIndex][1], kw = d7[item.dataIndex][1];
 				var valueS = v + 'V / ' + a + 'A ~ ' + kw.toFixed(1) + 'kW';
 				showTooltip(item.pageX, item.pageY, valueS + " at " + whenS);
 			}
@@ -121,10 +122,17 @@ $(function() {
 		label: "voltage (V)",
 		color: "#D07F27",
 		yaxis: 2
+	},{
+		data: d7,
+		label: "power (kW)",
+		color: "#F02F27",
+		yaxis: 3
 	}];
 	options = {
 		grid: { hoverable: true },
 		yaxes: [{
+		},{
+			position: 'right'
 		},{
 			position: 'right'
 		}],
