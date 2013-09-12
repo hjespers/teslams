@@ -69,7 +69,12 @@ $(function() {
 					return val.toFixed(0);
 				else
 						return "";
-			}}],
+			}},{
+			show: false,
+			position: 'right',
+			labelWidth: 20,
+			reserveSpace: true
+			}],
 		xaxes: [{
 			mode: "time",
 			timezone: "browser"
@@ -140,6 +145,7 @@ $(function() {
 			position: 'right'
 		},{
 			font: { color: "#F02F27" },
+			labelWidth: 20,
 			position: 'right'
 		}],
 		xaxes: [{
@@ -210,6 +216,11 @@ $(function() {
 			position: 'right',
 			font: { color: "#2020C0" },
 			min: 0
+		},{
+			show: false,
+			position: 'right',
+			labelWidth: 20,
+			reserveSpace: true
 		}],
 		xaxis: { mode: "time",
 			 timezone: "browser"}
