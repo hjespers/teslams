@@ -359,51 +359,50 @@ app.get('/energy', function(req, res) {
 			// now look for data in the aux collection
 
 			collection = db.collection("tesla_aux");
-			var maxAmp = 0, maxVolt = 0, maxMph = 0;
-			var outputAmp = "", outputVolt = "";
+			var maxAmp = 0, maxVolt = 0, maxMph = 0, maxPower = 0;
+			var outputAmp = "", outputVolt = "", outputPower = "";
+			var amp, volt, power;
 			lastDate = +from;
 			collection.find({"chargeState": {"$exists": true},
 					 "ts": {$gte: +from, $lte: +to}}).toArray(function(err,docs) {
 				if (argv.verbose) console.log("Found " + docs.length + " entries in aux DB");
 				ouputAmp = "[" + (+firstDate) + ",0]";
-				ouputColt = "[" + (+firstDate) + ",0]";
+				ouputVolt = "[" + (+firstDate) + ",0]";
+				ouputPower = "[" + (+firstDate) + ",0]";
 				comma = "";
 				docs.forEach(function(doc) {
+					amp = volt = 0;
 					if(doc.chargeState.charging_state === 'Charging') {
-console.log(doc.chargeState);
-						if (doc.chargeState.charge_rate > maxMph) {
-							maxMph = doc.chargeState.charge_rate;
-							maxVolt = doc.chargeState.charger_voltage;
-							maxAmp = doc.chargeState.charger_actual_current;
-							if (maxAmp == 0) {
-								maxAmp = doc.chargeState.battery_current;
-							}		
-						}
-						// we get these in 60s increments, but only when charging;
-						// we might miss the occasional sample so if the time gap
-						// is more than 3 minutes, pull the lines down to zero
-				// turns out that's a really bad plan if you charge in
-				// a place with rotten 3G connectivity (like Woodburn)
-				//		if (doc.ts - lastDate > 180000) {
-				//			outputAmp += ",[" + (lastDate + 60000) + ",0]";
-				//			outputVolt += ",[" + (lastDate + 60000) + ",0]";
-				//			outputAmp += ",[" + (doc.ts - 60000) + ",0]";
-				//			outputVolt += ",[" + (doc.ts - 60000) + ",0]";
-				//		}
 						if (doc.chargeState.charger_actual_current !== undefined) {
-							if (doc.chargeState.charger_actual_current !== 0)
-								outputAmp += ",[" + doc.ts + "," + doc.chargeState.charger_actual_current + "]";
-							else
-								outputAmp += ",[" + doc.ts + "," + doc.chargeState.battery_current + "]";
+							if (doc.chargeState.charger_actual_current !== 0) {
+								amp = doc.chargeState.charger_actual_current;
+							} else {
+								amp = doc.chargeState.battery_current;
+							}
+							outputAmp += ",[" + doc.ts + "," + amp + "]";
 							lastDate = doc.ts;
 						}
 						if (doc.chargeState.charger_voltage !== undefined) {
-							outputVolt += ",[" + doc.ts + "," + doc.chargeState.charger_voltage + "]";
+							volt = doc.chargeState.charger_voltage;
+							outputVolt += ",[" + doc.ts + "," + volt + "]";
 							lastDate = doc.ts;
 						}
-					} else {
+						if (lastDate == doc.ts) { // we had valid values
+							power = parseFloat(volt) * parseFloat(amp) / 1000;
+							outputPower += ",[" + doc.ts + "," + power.toFixed(1) + "]";
+							if (power > maxPower) {
+								maxPower = power;
+								maxAmp = amp;
+								maxVolt = volt;
+								maxMph = doc.chargeState.charge_rate;
+							}
+						}
+					} else if (doc.chargeState.charging_state === 'Disconnected' ||
+						   doc.chargeState.charging_state === 'Starting' ||
+						   doc.chargeState.charging_state === 'Stopped') {
 						outputAmp += ",[" + doc.ts + ",0]";
 						outputVolt += ",[" + doc.ts + ",0]";
+						outputPower += ",[" + doc.ts + ",0]";
 					}
 					if (doc.chargeState.battery_range !== undefined) {
 						outputRange += comma + "[" + doc.ts + "," + doc.chargeState.battery_range + "]";
@@ -412,8 +411,10 @@ console.log(doc.chargeState);
 				});
 				outputAmp += ",[" + (lastDate + 60000) + ",0]";
 				outputVolt += ",[" + (lastDate + 60000) + ",0]";
+				outputPower += ",[" + (lastDate + 60000) + ",0]";
 				outputAmp += ",[" + (+chartEnd) + ",0]";
 				outputVolt += ",[" + (+chartEnd) + ",0]";
+				outputPower += ",[" + (+chartEnd) + ",0]";
 
 				db.close();
 				fs.readFile(__dirname + "/energy.html", "utf-8", function(err, data) {
@@ -429,7 +430,6 @@ console.log(doc.chargeState);
 						gMaxS = gMaxE / 2;
 					}
 					gMinS = gMinE / 2;
-					var maxKw = maxVolt * maxAmp / 1000;
 					var response = data.replace("MAGIC_NAV", nav)
 						.replace("MAGIC_ENERGY", outputE)
 						.replace("MAGIC_SPEED", outputS)
@@ -443,10 +443,11 @@ console.log(doc.chargeState);
 						.replace("MAGIC_CUMUL_R", cumulRS)
 						.replace("MAGIC_VOLT", outputVolt)
 						.replace("MAGIC_AMP", outputAmp)
+						.replace("MAGIC_POWER", outputPower)
 						.replace("MAGIC_RANGE", outputRange)
 						.replace("MAGIC_MAX_VOLT", maxVolt)
 						.replace("MAGIC_MAX_AMP", maxAmp)
-						.replace("MAGIC_MAX_KW", maxKw.toFixed(1))
+						.replace("MAGIC_MAX_KW", maxPower.toFixed(1))
 						.replace("MAGIC_MAX_MPH", maxMph)
 						.replace("MAGIC_CAPACITY", capacity);
 					res.end(response, "utf-8");

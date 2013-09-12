@@ -16,7 +16,7 @@
 $(function() {
 	var myUrl = $.url('protocol') + "://" + $.url('auth') + (($.url('auth').length > 0) ? "@" : "") +
 		$.url('hostname') + ":" + $.url('port');
-	var d1, d2, d3, d4, d5, d6, data, options, eschart, socData, socOptions, socchart, chargechart;
+	var d1, d2, d3, d4, d5, d6, d7, data, options, eschart, socData, socOptions, socchart, chargechart;
 	var previousPointVA, previousPointSOC;
 	parseDates($.url("?from"), $.url("?to"));
 	$("#frompicker").val(datepickers.fromQ);
@@ -47,6 +47,7 @@ $(function() {
 			axisLabel: "Energy",
 			min: MAGIC_MIN_ENG,
 			max: MAGIC_MAX_ENG,
+			font: {color: "#D07F27"},
 			ticks: function (axis) {
 				var ticks = [], y;
 				var bottomy = Math.floor(axis.min / 10) * 10;
@@ -62,12 +63,18 @@ $(function() {
 			max: MAGIC_MAX_SPD,
 			position: 'right',
 			alignTicksWithAxis: 1,
+			font: { color: "#0A9FD9"},
 			tickFormatter: function (val, axis) {
 				if  (val >= 0)
 					return val.toFixed(0);
 				else
 						return "";
-			}}],
+			}},{
+			show: false,
+			position: 'right',
+			labelWidth: 20,
+			reserveSpace: true
+			}],
 		xaxes: [{
 			mode: "time",
 			timezone: "browser"
@@ -92,6 +99,7 @@ $(function() {
 	}
 	d5 = [MAGIC_AMP];
 	d6 = [MAGIC_VOLT];
+	d7 = [MAGIC_POWER];
 	previousPointVA = null;
 	chargechart = $("#chargechart");
 	chargechart.bind("plothover", function (event, pos, item) {
@@ -101,8 +109,9 @@ $(function() {
 				$("#tooltip").remove();
 				var x = item.datapoint[0];
 				x = new Date(x);
-				var whenS = (x.getMonth() + 1) + '/' + x.getDate() + ' ' + x.getHours() + ':' + x.getMinutes();
-				var v = d6[item.dataIndex][1], a = d5[item.dataIndex][1], kw = a * v / 1000;
+				var mins = '0' + x.getMinutes();
+				var whenS = (x.getMonth() + 1) + '/' + x.getDate() + ' ' + x.getHours() + ':' + mins.substr(mins.length - 2);
+				var v = d6[item.dataIndex][1], a = d5[item.dataIndex][1], kw = d7[item.dataIndex][1];
 				var valueS = v + 'V / ' + a + 'A ~ ' + kw.toFixed(1) + 'kW';
 				showTooltip(item.pageX, item.pageY, valueS + " at " + whenS);
 			}
@@ -121,11 +130,22 @@ $(function() {
 		label: "voltage (V)",
 		color: "#D07F27",
 		yaxis: 2
+	},{
+		data: d7,
+		label: "power (kW)",
+		color: "#F02F27",
+		yaxis: 3
 	}];
 	options = {
 		grid: { hoverable: true },
 		yaxes: [{
+			font: { color: "#808080" }
 		},{
+			font: { color: "#D07F27" },
+			position: 'right'
+		},{
+			font: { color: "#F02F27" },
+			labelWidth: 20,
 			position: 'right'
 		}],
 		xaxes: [{
@@ -189,7 +209,19 @@ $(function() {
 	}];
 	socOptions = {
 		grid: { hoverable: true },
-		yaxes: [{ max: 119 },{ position: 'right', min: 0}],
+		yaxes: [{
+			max: 119,
+			font: { color: "#008000" }
+		},{
+			position: 'right',
+			font: { color: "#2020C0" },
+			min: 0
+		},{
+			show: false,
+			position: 'right',
+			labelWidth: 20,
+			reserveSpace: true
+		}],
 		xaxis: { mode: "time",
 			 timezone: "browser"}
 	};
@@ -213,7 +245,7 @@ MAGIC_NAV
 				Total energy expended MAGIC_CUMUL_E, total energy regen MAGIC_CUMUL_R.</div>
 			<div id="chargechart" style="height:450px; width:90%;"></div>
 			<div id="explanation2" style="width:70%">Voltage and current while charging.</div>
-			<div id="maxima" style="width:70%">Maximum charge power: MAGIC_MAX_VOLT V / MAGIC_MAX_AMP A (MAGIC_MAX_KW kW or ~ MAGIC_MAX_MPH miles/hour)</div>
+			<div id="maxima" style="width:70%">Maximum charge power: MAGIC_MAX_KW kW (MAGIC_MAX_VOLT V / MAGIC_MAX_AMP A or ~ MAGIC_MAX_MPH miles/hour)</div>
 			<div id="socchart" style="height:300px; width:90%"></div>
 			<div id="explanation2" style="width:70%">SOC and rated range</div>
 		</div><center>
