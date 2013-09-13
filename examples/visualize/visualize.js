@@ -399,6 +399,7 @@ app.get('/energy', function(req, res) {
 						}
 					} else if (doc.chargeState.charging_state === 'Disconnected' ||
 						   doc.chargeState.charging_state === 'Complete' ||
+						   doc.chargeState.charging_state === 'Pending' ||
 						   doc.chargeState.charging_state === 'Starting' ||
 						   doc.chargeState.charging_state === 'Stopped') {
 						outputAmp += ",[" + doc.ts + ",0]";
