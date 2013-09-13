@@ -487,10 +487,10 @@ function calculateDelta(d1, d2) {
 	// let's use the data that we seem to are converging on in the forums instead:
 	var ratedWh = (capacity == 85) ? 286 : 267;
 	var delta = ratedWh * (cS1.battery_range - cS2.battery_range);
-	if (argv.verbose) { // great for debugging
-		console.log(new Date(d1.ts), new Date(d2.ts), "ratedWh", ratedWh.toFixed(1),
-			    "delta range", (cS1.battery_range - cS2.battery_range).toFixed(1) ,"delta", delta.toFixed(1));
-	}
+//	if (argv.verbose) { // great for debugging
+//		console.log(new Date(d1.ts), new Date(d2.ts), "ratedWh", ratedWh.toFixed(1),
+//			    "delta range", (cS1.battery_range - cS2.battery_range).toFixed(1) ,"delta", delta.toFixed(1));
+//	}
 	return delta / 1000;
 }
 app.get('/test', function(req, res) {
