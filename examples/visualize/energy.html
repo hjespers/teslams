@@ -103,16 +103,17 @@ $(function() {
 	previousPointVA = null;
 	chargechart = $("#chargechart");
 	chargechart.bind("plothover", function (event, pos, item) {
+		var x, whenS, v, valueS, mins;
 		if (item) {
 			if (previousPointVA != item.dataIndex) {
 				previousPointVA = item.dataIndex;
 				$("#tooltip").remove();
-				var x = item.datapoint[0];
+				x = item.datapoint[0];
 				x = new Date(x);
-				var mins = '0' + x.getMinutes();
-				var whenS = (x.getMonth() + 1) + '/' + x.getDate() + ' ' + x.getHours() + ':' + mins.substr(mins.length - 2);
-				var v = d6[item.dataIndex][1], a = d5[item.dataIndex][1], kw = d7[item.dataIndex][1];
-				var valueS = v + 'V / ' + a + 'A ~ ' + kw.toFixed(1) + 'kW';
+				mins = '0' + x.getMinutes();
+				whenS = (x.getMonth() + 1) + '/' + x.getDate() + ' ' + x.getHours() + ':' + mins.substr(mins.length - 2);
+				v = d6[item.dataIndex][1], a = d5[item.dataIndex][1], kw = d7[item.dataIndex][1];
+				valueS = v + 'V / ' + a + 'A ~ ' + kw.toFixed(1) + 'kW';
 				showTooltip(item.pageX, item.pageY, valueS + " at " + whenS);
 			}
 		} else {
@@ -174,7 +175,7 @@ $(function() {
 	d3 = [MAGIC_SOC];
 	d4 = [MAGIC_RANGE];
 	socchart.bind("plothover", function (event, pos, item) {
-		var x, whenS, whm, valueS, soc, range;
+		var x, whenS, whm, valueS, soc, range, mins;
 		if (item) {
 			if (previousPointSOC != item.dataIndex) {
 				previousPointSOC = item.dataIndex;
@@ -182,7 +183,8 @@ $(function() {
 				x = new Date(+item.datapoint[0]);
 				soc = getSOC(item.datapoint[0]);
 				range = getRange(item.datapoint[0]);
-				whenS = (x.getMonth() + 1) + '/' + x.getDate() + ' ' + x.getHours() + ':' + x.getMinutes();
+				mins = '0' + x.getMinutes();
+				whenS = (x.getMonth() + 1) + '/' + x.getDate() + ' ' + x.getHours() + ':' + mins.substr(mins.length - 2);
 				whm = soc * MAGIC_CAPACITY / range * 10;
 				valueS =  soc + '% / ' + range.toFixed(1) + 'miles (~' + whm.toFixed(1) + 'Wh/mile)';
 				showTooltip(item.pageX, item.pageY, valueS + " at " + whenS);

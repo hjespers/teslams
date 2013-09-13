@@ -399,6 +399,7 @@ app.get('/energy', function(req, res) {
 						}
 					} else if (doc.chargeState.charging_state === 'Disconnected' ||
 						   doc.chargeState.charging_state === 'Complete' ||
+						   doc.chargeState.charging_state === 'Pending' ||
 						   doc.chargeState.charging_state === 'Starting' ||
 						   doc.chargeState.charging_state === 'Stopped') {
 						outputAmp += ",[" + doc.ts + ",0]";
@@ -486,10 +487,10 @@ function calculateDelta(d1, d2) {
 	// let's use the data that we seem to are converging on in the forums instead:
 	var ratedWh = (capacity == 85) ? 286 : 267;
 	var delta = ratedWh * (cS1.battery_range - cS2.battery_range);
-	if (argv.verbose) { // great for debugging
-		console.log(new Date(d1.ts), new Date(d2.ts), "ratedWh", ratedWh.toFixed(1),
-			    "delta range", (cS1.battery_range - cS2.battery_range).toFixed(1) ,"delta", delta.toFixed(1));
-	}
+//	if (argv.verbose) { // great for debugging
+//		console.log(new Date(d1.ts), new Date(d2.ts), "ratedWh", ratedWh.toFixed(1),
+//			    "delta range", (cS1.battery_range - cS2.battery_range).toFixed(1) ,"delta", delta.toFixed(1));
+//	}
 	return delta / 1000;
 }
 app.get('/test', function(req, res) {
@@ -598,7 +599,8 @@ app.get('/stats', function(req, res) {
 						}
 					} else {
 						// we're driving - add up the energy used / regen
-						kWs += (doc.ts - lastDate) / 1000 * (energy - 0.12); // this correction is needed to match in car data???
+						if (lastDate > 0)
+							kWs += (doc.ts - lastDate) / 1000 * (energy - 0.12); // this correction is needed to match in car data???
 						stopCountingVamp(doc.ts);
 					}
 					lastDate = doc.ts;
