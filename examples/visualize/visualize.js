@@ -599,7 +599,8 @@ app.get('/stats', function(req, res) {
 						}
 					} else {
 						// we're driving - add up the energy used / regen
-						kWs += (doc.ts - lastDate) / 1000 * (energy - 0.12); // this correction is needed to match in car data???
+						if (lastDate > 0)
+							kWs += (doc.ts - lastDate) / 1000 * (energy - 0.12); // this correction is needed to match in car data???
 						stopCountingVamp(doc.ts);
 					}
 					lastDate = doc.ts;
