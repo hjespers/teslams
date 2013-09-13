@@ -458,6 +458,15 @@ app.get('/energy', function(req, res) {
 	});
 });
 
+function countCharge(ts) {
+	if (!countCharge.start)
+		countCharge.start = ts;
+}
+function stopCountingCharge(ts) {
+	if (countCharge.start && ts - countCharge.start > 60000) // at least a minute
+		countCharge.chargeInt.push([countCharge.start,ts]);
+	countCharge.start = null;
+}
 function countVamp(ts) {
 	if (!countVamp.start)
 		countVamp.start = ts;
@@ -467,21 +476,20 @@ function stopCountingVamp(ts) {
 		countVamp.vampInt.push([countVamp.start,ts]);
 	countVamp.start = null;
 }
-function calculateLoss(d1, d2) {
+function calculateDelta(d1, d2) {
 	var cS1 = d1.chargeState, cS2 = d2.chargeState;
 	if (!cS1 || !cS2 || !cS1.battery_level || !cS2.battery_level || cS2.battery_range > cS1.battery_range) {
 		return 0;
 	}
-//	var ratedWh = 5 * ((cS1.battery_level * capacity / cS1.battery_range) + (cS2.battery_level * capacity / cS2.battery_range));
-
+	// var ratedWh = 5 * ((cS1.battery_level * capacity / cS1.battery_range) + (cS2.battery_level * capacity / cS2.battery_range));
 	// let's use the data that we seem to are converging on in the forums instead:
 	var ratedWh = (capacity == 85) ? 286 : 267;
-	var loss = ratedWh * (cS1.battery_range - cS2.battery_range);
-//	if (argv.verbose) { // great for debugging
-//		console.log(new Date(d1.ts), new Date(d2.ts), "ratedWh", ratedWh.toFixed(1),
-//			    "lost range", (cS1.battery_range - cS2.battery_range).toFixed(1) ,"loss", loss.toFixed(1));
-//	}
-	return loss / 1000;
+	var delta = ratedWh * (cS1.battery_range - cS2.battery_range);
+	if (argv.verbose) { // great for debugging
+		console.log(new Date(d1.ts), new Date(d2.ts), "ratedWh", ratedWh.toFixed(1),
+			    "delta range", (cS1.battery_range - cS2.battery_range).toFixed(1) ,"delta", delta.toFixed(1));
+	}
+	return delta / 1000;
 }
 app.get('/test', function(req, res) {
 	MongoClient.connect("mongodb://127.0.0.1:27017/" + argv.db, function(err, db) {
@@ -512,6 +520,7 @@ app.get('/stats', function(req, res) {
 	var path = req.path;
 	var dates = new parseDates(req.query.from, req.query.to);
 	countVamp.vampInt = [];
+	countCharge.chargeInt = [];
 	countVamp.start = null;
 	from = makeDate(dates.fromQ);
 	to = makeDate(dates.toQ);
@@ -521,62 +530,41 @@ app.get('/stats', function(req, res) {
 		return;
 	}
 	var outputD = "", outputC = "", outputA = "", outputW = "", comma, firstDate = 0, lastDay = 0, lastDate = 0;
-	var startOdo = 0, charge = 0, minSOC = 101, maxSOC = -1, increment = 0, kWs = 0;
 	MongoClient.connect("mongodb://127.0.0.1:27017/" + argv.db, function(err, db) {
 		if(err) {
 			console.log('error connecting to database:', err);
 			return;
 		}
-		var vals = [];
 		res.setHeader("Content-Type", "text/html");
 		collection = db.collection("tesla_stream");
 		collection.find({"ts": {$gte: +from, $lte: +to}}).toArray(function(err,docs) {
+			var vals = [];
+			var odo, energy, state, soc;
+			var dist, kWh, ts, midnight;
+			var startOdo, charge, minSOC, maxSOC, increment, kWs;
 			docs.forEach(function(doc) {
 				var day = new Date(doc.ts).getDay();
 				vals = doc.record.toString().replace(",,",",0,").split(",");
+				odo = parseFloat(vals[2]);
+				soc = parseFloat(vals[3]); // sadly, this is an integer today :-(
+				energy = parseInt(vals[8]);
+				state = vals[9];
 				if (firstDate === 0) {
 					firstDate = doc.ts;
 					lastDay = day;
-					startOdo = vals[2];
-					minSOC = 101;
-					maxSOC = -1;
-					kWs = 0;
-					comma = "";
+					startOdo = odo;
+					minSOC = 101; maxSOC = -1; kWs = 0; charge = 0; increment = 0; comma = "";
 				}
 				if (doc.ts > lastDate) { // we don't want to go back in time
-					if (day == lastDay) {
-						// still the same day - accumulate stats for charging
-						// this is crude - it would be much better to get this from
-						// the aux database and use the actual charge info
-						if (vals[9] != 'R' && vals[9] != 'D') { // we are not driving
-							if (vals[8] < 0) { // parked & charging
-								stopCountingVamp(doc.ts);
-								if (vals[3] < minSOC) minSOC = vals[3];
-								if (vals[3] > maxSOC) maxSOC = vals[3];
-								increment = maxSOC - minSOC;
-							} else { // parked & consuming
-								countVamp(doc.ts);
-								// if we were charging before, add the estimate to the total
-								if (increment > 0) {
-									charge += increment * capacity / 100;
-									increment = 0;
-									minSOC = 101;
-									maxSOC = -1;
-								}
-							}
-						} else {
-							// we're driving - add up the energy used / regen
-							kWs += (doc.ts - lastDate) / 1000 * (vals[8] - 0.12); // this correction is needed to match in car data???
-							stopCountingVamp(doc.ts);
-						}
-					} else {
+					if (day != lastDay) {
 						lastDay = day;
 						stopCountingVamp(lastDate);
-						var dist = +vals[2] - startOdo;
-						var kWh = kWs / 3600;
-						var ts = new Date(lastDate);
-						var midnight = new Date(ts.getFullYear(), ts.getMonth(), ts.getDate(), 0, 0, 0);
-						charge += increment;
+						stopCountingCharge(lastDate);
+						charge += increment * capacity / 100;
+						dist = odo - startOdo;
+						kWh = kWs / 3600;
+						ts = new Date(lastDate);
+						midnight = new Date(ts.getFullYear(), ts.getMonth(), ts.getDate(), 0, 0, 0);
 						outputD += comma + "[" + (+midnight)  + "," + dist + "]";
 						outputC += comma + "[" + (+midnight)  + "," + charge + "]";
 						if (dist > 0) {
@@ -585,12 +573,32 @@ app.get('/stats', function(req, res) {
 							outputA += comma + "null";
 						}
 						outputW += comma + "[" + (+midnight) + "," + kWh + "]";
-						startOdo = vals[2];
-						charge = 0;
-						minSOC = 101;
-						maxSOC = -1;
-						kWs = 0;
-						comma = ",";
+						startOdo = odo;
+						minSOC = 101; maxSOC = -1; kWs = 0; charge = 0; increment = 0; comma = ",";
+					}
+					// this is crude - it would be much better to get this from
+					// the aux database and use the actual charge info
+					if (state != 'R' && state != 'D') { // we are not driving
+						if (energy < 0) { // parked & charging
+							stopCountingVamp(doc.ts);
+							countCharge(doc.ts);
+							if (soc < minSOC) minSOC = soc;
+							if (soc > maxSOC) maxSOC = soc;
+							increment = maxSOC - minSOC;
+						} else { // parked & consuming
+							countVamp(doc.ts);
+							stopCountingCharge(doc.ts);
+							// if we were charging before, add the estimate to the total
+							// this a quite coarse as SOC is in full percent - bad granularity
+							if (increment > 0) {
+								charge += increment * capacity / 100;
+								increment = 0; minSOC = 101; maxSOC = -1;
+							}
+						}
+					} else {
+						// we're driving - add up the energy used / regen
+						kWs += (doc.ts - lastDate) / 1000 * (energy - 0.12); // this correction is needed to match in car data???
+						stopCountingVamp(doc.ts);
 					}
 					lastDate = doc.ts;
 				}
@@ -598,11 +606,13 @@ app.get('/stats', function(req, res) {
 
 			// we still need to add the last day
 
-			var dist = +vals[2] - startOdo;
-			var kWh = kWs / 3600;
-			var ts = new Date(lastDate);
-			var midnight = new Date(ts.getFullYear(), ts.getMonth(), ts.getDate(), 0, 0, 0);
-			charge += increment;
+			stopCountingVamp(lastDate);
+			stopCountingCharge(lastDate);
+			charge += increment * capacity / 100;
+			dist = odo - startOdo;
+			kWh = kWs / 3600;
+			ts = new Date(lastDate);
+			midnight = new Date(ts.getFullYear(), ts.getMonth(), ts.getDate(), 0, 0, 0);
 			outputD += comma + "[" + (+midnight)  + "," + dist + "]";
 			outputC += comma + "[" + (+midnight)  + "," + charge + "]";
 			if (dist > 0) {
@@ -611,49 +621,68 @@ app.get('/stats', function(req, res) {
 				outputA += comma + "null";
 			}
 			outputW += comma + "[" + (+midnight) + "," + kWh + "]";
-			stopCountingVamp(lastDate);
 
 			// now analyze the charging data
 			collection = db.collection("tesla_aux");
 			collection.find({"chargeState": {$exists: true}, "ts": {$gte: +from, $lte: +to}}).toArray(function(err,docs) {
-				var i = 0, vampirekWh, day, lastDay = -1, lastDate = null, comma = "", outputY = "";
-				var cState1 = null, cState2 = null;
+				var i = 0, vampirekWh = 0, day, lastDay = -1, lastDate = null, comma = "", outputY = "";
+				var j = 0, chargekWh = 0, outputCN = "";
+				var vState1 = null;
+				var cState1 = null;
+				var lastDoc;
+				var maxI = countVamp.vampInt.length;
+				var maxJ = countCharge.chargeInt.length;
 				docs.forEach(function(doc) {
-					var maxI = countVamp.vampInt.length;
 					day = new Date(doc.ts).getDay();
 					if (!doc || !doc.chargeState || !doc.chargeState.battery_level)
 						return;
-					cState2 = doc;
+					lastDoc = doc;
 					if (day != lastDay) {
 						if (lastDate) {
+							if (vState1) {
+								vampirekWh += calculateDelta(vState1, doc);
+								vState1 = doc;
+							}
 							if (cState1) {
-								vampirekWh += calculateLoss(cState1, cState2);
-								cState1 = cState2;
+								chargekWh += calculateDelta(doc, cState1);
+								cState1 = doc;
 							}
 							ts = new Date(lastDate);
 							midnight = new Date(ts.getFullYear(), ts.getMonth(), ts.getDate(), 0, 0, 0);
 							outputY += comma + "[" + midnight.getTime() + "," + vampirekWh + "]";
+							outputCN += comma + "[" + midnight.getTime() + "," + chargekWh + "]";
 							comma = ",";
 						}
 						lastDate = doc.ts;
 						lastDay = day;
 						vampirekWh = 0;
+						chargekWh = 0;
 					}
-					if (i < maxI && cState1 === null && doc.ts >= countVamp.vampInt[i][0])
-						cState1 = cState2;
+					if (i < maxI && vState1 === null && doc.ts >= countVamp.vampInt[i][0])
+						vState1 = doc;
 					if (i < maxI && doc.ts >= countVamp.vampInt[i][1]) {
-						vampirekWh += calculateLoss(cState1, cState2);
-						cState1 = null;
+						vampirekWh += calculateDelta(vState1, doc);
+						vState1 = null;
 						i++;
 					}
+					if (j < maxJ && cState1 === null && doc.ts >= countCharge.chargeInt[j][0])
+						cState1 = doc;
+					if (j < maxJ && doc.ts >= countCharge.chargeInt[j][1]) {
+						chargekWh += calculateDelta(doc, cState1);
+						cState1 = null;
+						j++;
+					}
 				});
+				if (vState1) {
+					vampirekWh += calculateDelta(vState1, lastDoc);
+				}
 				if (cState1) {
-					vampirekWh += calculateLoss(cState1, cState2);
-					cState1 = cState2;
+					chargekWh += calculateDelta(doc, cState1);
 				}
 				ts = new Date(lastDate);
 				midnight = new Date(ts.getFullYear(), ts.getMonth(), ts.getDate(), 0, 0, 0);
 				outputY += comma + "[" + midnight.getTime() + "," + vampirekWh + "]";
+				outputCN += comma + "[" + midnight.getTime() + "," + chargekWh + "]";
 				db.close();
 				fs.readFile(__dirname + "/stats.html", "utf-8", function(err, data) {
 					if (err) throw err;
@@ -662,7 +691,7 @@ app.get('/stats', function(req, res) {
 					var response = data
 						.replace("MAGIC_NAV", nav)
 						.replace("MAGIC_DISTANCE", outputD)
-						.replace("MAGIC_CHARGE", outputC)
+						.replace("MAGIC_CHARGE", outputCN)
 						.replace("MAGIC_AVERAGE", outputA)
 						.replace("MAGIC_KWH", outputW)
 						.replace("MAGIC_VKWH", outputY)
