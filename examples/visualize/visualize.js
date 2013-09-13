@@ -629,9 +629,10 @@ app.get('/stats', function(req, res) {
 			collection = db.collection("tesla_aux");
 			collection.find({"chargeState": {$exists: true}, "ts": {$gte: +from, $lte: +to}}).toArray(function(err,docs) {
 				var i = 0, vampirekWh = 0, day, lastDay = -1, lastDate = null, comma = "", outputY = "";
-				var j = 0, chargekWh = 0, outputCN = "";
+				var j = 0, chargekWh = 0, outputCN = "", usedkWh = 0, outputUsed = "";
 				var vState1 = null;
 				var cState1 = null;
+				var uState1 = null;
 				var lastDoc;
 				var maxI = countVamp.vampInt.length;
 				var maxJ = countCharge.chargeInt.length;
@@ -650,29 +651,49 @@ app.get('/stats', function(req, res) {
 								chargekWh += calculateDelta(doc, cState1);
 								cState1 = doc;
 							}
+							if (uState1) {
+								usedkWh += calculateDelta(uState1, doc);
+								uState1 = doc;
+							}
 							ts = new Date(lastDate);
 							midnight = new Date(ts.getFullYear(), ts.getMonth(), ts.getDate(), 0, 0, 0);
 							outputY += comma + "[" + midnight.getTime() + "," + vampirekWh + "]";
 							outputCN += comma + "[" + midnight.getTime() + "," + chargekWh + "]";
+							outputUsed += comma + "[" + midnight.getTime() + "," + usedkWh + "]";
 							comma = ",";
 						}
 						lastDate = doc.ts;
 						lastDay = day;
 						vampirekWh = 0;
 						chargekWh = 0;
+						usedkWh = 0;
 					}
-					if (i < maxI && vState1 === null && doc.ts >= countVamp.vampInt[i][0])
+					if (uState1 === null && vState1 === null && cState1 === null)
+						uState1 = doc;
+					if (i < maxI && vState1 === null && doc.ts >= countVamp.vampInt[i][0]) {
+						if (uState1 !== null && doc !== null && uState1.ts < doc.ts) {
+							usedkWh += calculateDelta(uState1, doc);
+						}
+						uState1 = null;
 						vState1 = doc;
+					}
 					if (i < maxI && doc.ts >= countVamp.vampInt[i][1]) {
 						vampirekWh += calculateDelta(vState1, doc);
 						vState1 = null;
+						uState1 = doc;
 						i++;
 					}
-					if (j < maxJ && cState1 === null && doc.ts >= countCharge.chargeInt[j][0])
+					if (j < maxJ && cState1 === null && doc.ts >= countCharge.chargeInt[j][0]) {
+						if (uState1 !== null && doc !== null && uState1.ts < doc.ts) {
+							usedkWh += calculateDelta(uState1, doc);
+						}
+						uState1 = null;
 						cState1 = doc;
+					}
 					if (j < maxJ && doc.ts >= countCharge.chargeInt[j][1]) {
 						chargekWh += calculateDelta(doc, cState1);
 						cState1 = null;
+						uState1 = doc;
 						j++;
 					}
 				});
@@ -680,12 +701,16 @@ app.get('/stats', function(req, res) {
 					vampirekWh += calculateDelta(vState1, lastDoc);
 				}
 				if (cState1) {
-					chargekWh += calculateDelta(doc, cState1);
+					chargekWh += calculateDelta(lastDoc, cState1);
+				}
+				if (uState1) {
+					usedkWh += calculateDelta(uState1, lastDoc);
 				}
 				ts = new Date(lastDate);
 				midnight = new Date(ts.getFullYear(), ts.getMonth(), ts.getDate(), 0, 0, 0);
 				outputY += comma + "[" + midnight.getTime() + "," + vampirekWh + "]";
 				outputCN += comma + "[" + midnight.getTime() + "," + chargekWh + "]";
+				outputUsed += comma + "[" + midnight.getTime() + "," + usedkWh + "]";
 				db.close();
 				fs.readFile(__dirname + "/stats.html", "utf-8", function(err, data) {
 					if (err) throw err;
@@ -696,6 +721,7 @@ app.get('/stats', function(req, res) {
 						.replace("MAGIC_DISTANCE", outputD)
 						.replace("MAGIC_CHARGE", outputCN)
 						.replace("MAGIC_AVERAGE", outputA)
+					//	.replace("MAGIC_KWH", outputUsed)   // this needs more testing
 						.replace("MAGIC_KWH", outputW)
 						.replace("MAGIC_VKWH", outputY)
 						.replace("MAGIC_START", startDate);
