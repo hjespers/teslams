@@ -92,7 +92,6 @@ function pr( stuff ) {
 
 function parseArgs( vehicle ) {
 	var vid = vehicle.id;
-	if (argv.all) { pr(body); }
 	if (argv.i) { pr(vehicle); }
 	// wake up the car's telematics system
 	if (argv.w) {
@@ -196,6 +195,7 @@ teslams.all( { email: creds.username, password: creds.password }, function ( err
 		pr( new Error('expecting vehicle ID from Tesla Motors cloud service'));
 		process.exit(1);
 	}
+	if (argv.all) { pr(body); }
 	// first some checks to see if we should even continue
 	if (argv.isawake && vehicle.status == 'asleep') {
 		pr(new Error('exiting because car is asleep'));
