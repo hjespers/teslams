@@ -2,7 +2,7 @@
 var util = require('util');
 var teslams = require('../teslams.js');
 var argv = require('optimist')
-	.usage('Usage: $0 -u <username> -p <password> -acdFgHimPtvwXZ -A [on|off] -C [start|stop] -R [std|max|50-100] -S [close|vent|comfort|open|0-100] -L [lock|unlock] -T temp')
+	.usage('Usage: $0 -u <username> -p <password> -acdFgHimPtvwXZ -A [on|off] -C [start|stop] -R [std|max|50-90,100] -S [close|vent|comfort|open|0-100] -L [lock|unlock] -T temp')
 	.alias('u', 'username')
 	.describe('u', 'Teslamotors.com login')
 	.alias('p', 'password')
@@ -57,7 +57,7 @@ argv = argv.argv;
 
 if ( argv.help == true ) {
 	console.log( 'Usage: teslacmd.js -u <username> -p <password> -acdFgHimPtvwXZ');
-	console.log( '                   -A [on|off] -C [start|stop] -R [std|max|50-100]');
+	console.log( '                   -A [on|off] -C [start|stop] -R [std|max|50-90|100]');
 	console.log( '                   -S [close|vent|comfort|open|0-100] -L [lock|unlock] -T temp');
 	console.log( '\nOptions:');
 	console.log( '  -u, --username  Teslamotors.com login                                                       [required]');
@@ -78,7 +78,7 @@ if ( argv.help == true ) {
 	console.log( '  -Z, --isawake   Check if car is asleep and continue only if awake                           [boolean]');
 	console.log( '  -A, --climate   Turn the air conditioning and heating on/off                              ');
 	console.log( '  -C, --charge    Turn the charging on/off                                                  ');
-	console.log( '  -R, --range     Charging range mode: "std" or "max" or any percent from 50-100            ');
+	console.log( '  -R, --range     Charging range mode: "std" or "max" or any percent from 50-90 or 100      ');
 	console.log( '  -S, --roof      Move the car sunroof to: "close", "vent", "comfort", "open" or any percent');
 	console.log( '  -L, --lock      Lock/Unlock the car doors                                                 ');
 	console.log( '  -T, --temp      Set the car climate control temperature (in Celcius)                      ');

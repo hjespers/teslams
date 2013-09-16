@@ -174,7 +174,7 @@ For help run :
 	teslacmd --help
 
 	Usage: teslacmd.js -u <username> -p <password> -acdFgHimPtvwXZ -A [on|off] -C [start|stop] 
-	                   -R [std|max|50-100] -S [close|vent|comfort|open|0-100] -L [lock|unlock] -T <temp>
+	                   -R [std|max|50-90|100] -S [close|vent|comfort|open|0-100] -L [lock|unlock] -T <temp>
 
 	Options:
 	  -u, --username  Teslamotors.com login                                        [required]
@@ -195,7 +195,7 @@ For help run :
           -Z, --isawake   Check if car is asleep and continue only if awake            [boolean]
 	  -A, --climate   Turn the air conditioning and heating on/off               
 	  -C, --charge    Turn the charging on/off                                   
-	  -R, --range     Charging range mode: "std", "max", or %limit (50% or more)                       
+	  -R, --range     Charging range mode: "std", "max", or %limit (50-90, or 100 )                       
 	  -S, --roof      Move the car sunroof to any position or %open
 	  -L, --lock      Lock/Unlock the car doors                                  
 	  -T, --temp      Set the car climate control temperature (in Celcius)       
