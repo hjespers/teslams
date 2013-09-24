@@ -450,8 +450,18 @@ exports.ROOF_VENT = ROOF_VENT;
 exports.ROOF_COMFORT = ROOF_COMFORT;
 exports.ROOF_OPEN = ROOF_OPEN;
 
+// Streaming API stuff is below. Everything above is the REST API 
+//
+// Required options to teslams.stream() are { 
+//              email: 'your teslamotors.com login', 
+//              password: 'token returned from a prior call to teslams.vehicles()',
+//              vehicle_id: 'Long form vehicle_id returned from a prior call to teslams.vehicles()'
+//              a callback that expects ( error, response, body) for the HTTP response
+// }
+// See examples/examplestream.js for a simple one poll working example of how to use this function
+// See examples/streaming.js for a more complicated but useful continuous polling example of streaming
 
- exports.stream_columns = [ 'speed'
+exports.stream_columns = [ 'speed'
                           , 'odometer'
                           , 'soc'
                           , 'elevation'
