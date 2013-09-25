@@ -139,6 +139,8 @@ $(function() {
 		var series = p.getData()[i];
 		var scale = series.xaxis.box.width / (series.xaxis.max - series.xaxis.min);
 		var barWidth = scale * series.bars.barWidth;
+		if (barWidth < 25)
+			continue;
 		var hOffset = ((i <= 1) ? i - 1.5 : i - 2.5) * barWidth;
 		var fontHeight = series.yaxis.labelHeight;
 		$.each(series.data, function(j, el){
