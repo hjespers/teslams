@@ -1,6 +1,6 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
 <html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<title>Tesla Trip Report</title>
+<title>Tesla Fahrtenbuch</title>
 <script language="javascript" type="text/javascript" src="jquery-1.9.1.js"></script>
 <script language="javascript" type="text/javascript" src="jquery-ui-1.10.3.custom.min.js"></script>
 <script language="javascript" type="text/javascript" src="jquery-ui-timepicker-addon.js"></script>
@@ -10,6 +10,12 @@
 <link rel="stylesheet" media="all" type="text/css" href="shared.css" />
 <script language="javascript" type="text/javascript" src="url.min.js"></script>
 <script type="text/javascript">
+function updateFahrer(name) {
+	$("#fahrername").html(name);
+}
+function updateKennzeichen(kennzeichen) {
+	$(".kennzeichen").html(kennzeichen);
+}
 $(function() {
 	var myUrl = $.url('protocol') + "://" + $.url('auth') + (($.url('auth').length > 0) ? "@" : "") +
 		$.url('hostname') + ":" + $.url('port');
@@ -27,12 +33,17 @@ $(function() {
 <body>
 MAGIC_NAV
 <div id="container">
-	<h2>Trip Report</h2>
+	<h2>Tesla Fahrtenbuch</h2>
 	<div id="dates">
-		<label>Start time</label><input id="frompicker" type="text">
-		<label>End time</label><input id="topicker" type="text">
+		<label class='grid'>Start time</label><input id="frompicker" type="text">
+		<label class='grid'>End time</label><input id="topicker" type="text">
 	</div>
-	<div id="content">
+	<div id="config">
+		<label class='grid'>Fahrer</label><input id="fahrer" onChange="updateFahrer(this.value)" type="text">
+		<label class='grid'>Kennzeichen</label><input id="kennzeichen" onChange="updateKennzeichen(this.value)" type="text">
+	</div>
+	<hr>
+	<div id="content" style="margin-top: 100px;">
 		<center><div class="container" id="trip_table">
 		<table id="triptable">MAGIC_TRIP_TABLE</table>
 		</div><center>

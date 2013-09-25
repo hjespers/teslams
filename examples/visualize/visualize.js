@@ -756,7 +756,7 @@ app.get('/fahrtenbuch', function(req, res) {
 	fs.readFile(__dirname + "/fahrtenbuch.html", "utf-8", function(err, data) {
 		if (err) throw err;
 		var table = "<thead><tr><th colspan=9 id='title'>Fahrtenbuch</th></tr>\n";
-		table += "<tr><th colspan=6 class='left' id='Fahrer'>Fahrer: Tesla Fahrer</th><th colspan=3 class='left'>Abgabedatum:</th></tr>\n";
+		table += "<tr><th colspan=6 class='left' id='Fahrer'>Fahrer: <span id='fahrername'>Tesla Fahrer</span></th><th colspan=3 class='left'>Abgabedatum:</th></tr>\n";
 		table += "<tr><th colspan=2>Abfahrt</th><th colspan=2>Ankunft</th>";
 		table += "<th rowspan=2>Wegstrecke</th><th rowspan=2>Reisezweck</th><th rowspan=2>Auto<br>Kennzeichen</th>";
 		table += "<th rowspan=2>KM Stand am<br>Zielort</th><th rowspan=2>Unterschrift</th></tr>";
@@ -782,7 +782,7 @@ app.get('/fahrtenbuch', function(req, res) {
 					table += "<td>" + arrive.getHours() + ":" + lZ(arrive.getMinutes())  + "</td>";
 					table += "<td>" + (1.609 * parseFloat(doc.dist)).toFixed(1) + "km</td>";
 					table += "<td>" + doc.name + "</td>";
-					table += "<td></td>";
+					table += "<td><span class='kennzeichen'/></td>";
 					table += "<td>" + (1.609 * parseFloat(doc.odo)).toFixed(1) + "</td>";
 					table += "<td></td>";
 					table += "</tr>\n";
