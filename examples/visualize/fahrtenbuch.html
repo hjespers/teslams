@@ -1,0 +1,42 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Tesla Trip Report</title>
+<script language="javascript" type="text/javascript" src="jquery-1.9.1.js"></script>
+<script language="javascript" type="text/javascript" src="jquery-ui-1.10.3.custom.min.js"></script>
+<script language="javascript" type="text/javascript" src="jquery-ui-timepicker-addon.js"></script>
+<script language="javascript" type="text/javascript" src="lib.js"></script>
+<link rel="stylesheet" media="all" type="text/css" href="jquery-ui-timepicker-addon.css" />
+<link rel="stylesheet" media="all" type="text/css" href="jquery-ui.css" />
+<link rel="stylesheet" media="all" type="text/css" href="shared.css" />
+<script language="javascript" type="text/javascript" src="url.min.js"></script>
+<script type="text/javascript">
+$(function() {
+	var myUrl = $.url('protocol') + "://" + $.url('auth') + (($.url('auth').length > 0) ? "@" : "") +
+		$.url('hostname') + ":" + $.url('port');
+	parseDates($.url("?from"), $.url("?to"));
+	$("#frompicker").val(datepickers.fromQ);
+	$("#topicker").val(datepickers.toQ);
+	datepickers(myUrl + '/report');
+	$("#statslink").attr("href", myUrl + "/stats?from=" + datepickers.fromQ + "&to=" + datepickers.toQ);
+	$("#maplink").attr("href", myUrl + "/map?from=" + datepickers.fromQ + "&to=" + datepickers.toQ);
+	$("#energylink").attr("href", myUrl + "/energy?from=" + datepickers.fromQ + "&to=" + datepickers.toQ);
+	$("#triplink").attr("href", myUrl + "/trip");
+});
+</script>
+</head>
+<body>
+MAGIC_NAV
+<div id="container">
+	<h2>Trip Report</h2>
+	<div id="dates">
+		<label>Start time</label><input id="frompicker" type="text">
+		<label>End time</label><input id="topicker" type="text">
+	</div>
+	<div id="content">
+		<center><div class="container" id="trip_table">
+		<table id="triptable">MAGIC_TRIP_TABLE</table>
+		</div><center>
+	</div>
+</div>
+</body>
+</html>

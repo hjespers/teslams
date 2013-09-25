@@ -131,3 +131,26 @@ nav ul { list-style: none;
 	 -webkit-margin-end: 0;
 	 -webkit-padding-start: 40px;
 }
+table#triptable {
+	margin: 0 auto;
+	clear: both;
+	width: 80%;
+}
+table#triptable thead th {
+	padding: 3px 18px 3px 10px;
+	border: 1px solid black;
+	font-weight: bold;
+	font-size: larger;
+}
+table#triptable thead th#title {
+	height: 75px;
+}
+table#triptable thead th.left {
+	text-align: left;
+	height: 45px;
+}
+table#triptable td {
+	padding: 15px 10px;
+	border: 1px solid black;
+}
+
