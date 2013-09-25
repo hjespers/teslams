@@ -41,6 +41,8 @@ function startStopFunction() {
 		startStopFunction.startTime = new Date();
 		getData(startStopFunction.startTime.getTime(), function(data) {
 			updateDisplay.startOdo = parseFloat(data[2]);
+			updateDisplay.startLat = parseFloat(data[6]);
+			updateDisplay.startLng = parseFloat(data[7]);
 			updateDisplay.stopOdo = null;
 			if (!updateDisplay.ID) {
 				// we're calling this every two seconds to keep the load
@@ -55,6 +57,8 @@ function startStopFunction() {
 		startStopFunction.stopTime = new Date();
 		getData(startStopFunction.stopTime.getTime(), function(data){
 			updateDisplay.stopOdo = parseFloat(data[2]);
+			updateDisplay.stopLat = parseFloat(data[6]);
+			updateDisplay.stopLng = parseFloat(data[7]);
 			if (updateDisplay.ID) {
 				clearInterval(updateDisplay.ID);
 				updateDisplay.ID = null;
@@ -72,6 +76,8 @@ function startStopFunction() {
 				' for ' + tripDist + " miles";
 			console.log(msgText);
 			$.getJSON(getData.myUrl + "/storetrip", { 'name': tripName, 'type': tripType, 'dist': tripDist, 'odo': updateDisplay.stopOdo,
+								  'start': { 'lat': updateDisplay.startLat , 'lng': updateDisplay.startLng },
+								  'end': { 'lat': updateDisplay.stopLat , 'lng': updateDisplay.stopLng },
 								  'from': from.getTime(), 'to': to.getTime()})
 				.done(function (d, textStatus, jqXHR) {
 					console.log(d);

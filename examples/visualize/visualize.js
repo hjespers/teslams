@@ -755,6 +755,7 @@ app.get('/fahrtenbuch', function(req, res) {
 	res.setHeader("Content-Type", "text/html");
 	fs.readFile(__dirname + "/fahrtenbuch.html", "utf-8", function(err, data) {
 		if (err) throw err;
+		var lltable = "[0,0,0,0]";
 		var table = "<thead><tr><th colspan=9 id='title'>Fahrtenbuch</th></tr>\n";
 		table += "<tr><th colspan=6 class='left' id='Fahrer'>Fahrer: <span id='fahrername'>Tesla Fahrer</span></th><th colspan=3 class='left'>Abgabedatum:</th></tr>\n";
 		table += "<tr><th colspan=2>Abfahrt</th><th colspan=2>Ankunft</th>";
@@ -770,9 +771,11 @@ app.get('/fahrtenbuch', function(req, res) {
 			// strangely the timestamps end up in the database as strings
 			var searchString = {$and: [ {'from': {$gte: ""+from.getTime()}}, {'to': {$lte: ""+to.getTime()}} ] };
 			collection.find(searchString).toArray(function(err,docs) {
+				var row = 0;
 				if (argv.verbose) console.log("got datasets:", docs.length);
 				table += "<tbody>\n";
 				docs.forEach(function(doc) {
+					row++;
 					table += "<tr>";
 					var depart = new Date(+doc.from);
 					var arrive = new Date(+doc.to);
@@ -781,16 +784,26 @@ app.get('/fahrtenbuch', function(req, res) {
 					table += "<td>" + arrive.getDate() + "." + (arrive.getMonth() + 1) + "." + (1900 + arrive.getYear()) +"</td>";
 					table += "<td>" + arrive.getHours() + ":" + lZ(arrive.getMinutes())  + "</td>";
 					table += "<td>" + (1.609 * parseFloat(doc.dist)).toFixed(1) + "km</td>";
-					table += "<td>" + doc.name + "</td>";
+					if (doc.type === "business")
+						table += "<td>" + doc.name + "</td>";
+					else
+						table += "<td>privat</td>";
 					table += "<td><span class='kennzeichen'/></td>";
 					table += "<td>" + (1.609 * parseFloat(doc.odo)).toFixed(1) + "</td>";
 					table += "<td></td>";
 					table += "</tr>\n";
+					// the client side of this then fills in the addresses
+					table += "<tr><td colspan=4 id='start" + row + "'/></td><td colspan=2 id='stop" + row + "'></td></tr>\n";
+					if (doc.type === "business" && doc.start !== undefined && doc.end !== undefined)
+						lltable += ",[" + doc.start.lat + "," + doc.start.lng + "," + doc.end.lat + "," + doc.end.lng + "]";
+					else
+						lltable += ",[0,0,0,0]";
 				});
 				table += "</tbody>\n";
 				db.close();
 				res.end(data.replace("MAGIC_NAV", nav)
-						.replace("MAGIC_TRIP_TABLE", table), "utf-8");
+						.replace("MAGIC_TRIP_TABLE", table)
+						.replace("MAGIC_ADDR_TABLE", lltable), "utf-8");
 			});
 		});
 	});
