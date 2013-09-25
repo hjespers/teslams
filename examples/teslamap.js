@@ -25,6 +25,7 @@ var argv = require('optimist')
 
 // get credentials either from command line or config.json in ~/.teslams/config.js
 var creds = require('./config.js').config(argv);
+var base_url = 'http://fiddle.jshell.net/ecmanaut/fvEqr/show/?';
 
 argv = argv.argv;
 
@@ -47,8 +48,8 @@ function ds( state ) {
 		} else {
 			console.log( state.latitude + ',' + state.longitude); 
 		}
-		if (argv.map) {
-			open('https://maps.google.com/maps?q=' + state.latitude + ',' + state.longitude);
+                if (argv.map) {
+                        open(base_url + 'lat=' + state.latitude + '&lng=' + state.longitude + '&angle=' + state.heading);
 		}
 	} else {
 		console.log( 'Error: undefined drive state returned from Tesla. Try again.');
@@ -58,4 +59,3 @@ function ds( state ) {
 teslams.get_vid( { email: creds.username, password: creds.password }, function ( id ) {
 	teslams.get_drive_state( id , ds ); 
 });
-
