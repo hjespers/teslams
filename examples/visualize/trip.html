@@ -71,7 +71,7 @@ function startStopFunction() {
 			msgText = tripType + ' trip "' + tripName + '" from ' + from.toString() + ' until ' + to.toString() +
 				' for ' + tripDist + " miles";
 			console.log(msgText);
-			$.getJSON(getData.myUrl + "/storetrip", { 'name': tripName, 'type': tripType, 'dist': tripDist,
+			$.getJSON(getData.myUrl + "/storetrip", { 'name': tripName, 'type': tripType, 'dist': tripDist, 'odo': updateDisplay.stopOdo,
 								  'from': from.getTime(), 'to': to.getTime()})
 				.done(function (d, textStatus, jqXHR) {
 					console.log(d);
