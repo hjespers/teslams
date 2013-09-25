@@ -1,0 +1,72 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Tesla Fahrtenbuch</title>
+<script language="javascript" type="text/javascript" src="jquery-1.9.1.js"></script>
+<script language="javascript" type="text/javascript" src="jquery-ui-1.10.3.custom.min.js"></script>
+<script language="javascript" type="text/javascript" src="jquery-ui-timepicker-addon.js"></script>
+<script language="javascript" type="text/javascript" src="lib.js"></script>
+<link rel="stylesheet" media="all" type="text/css" href="jquery-ui-timepicker-addon.css" />
+<link rel="stylesheet" media="all" type="text/css" href="jquery-ui.css" />
+<link rel="stylesheet" media="all" type="text/css" href="shared.css" />
+<script language="javascript" type="text/javascript" src="url.min.js"></script>
+<script type="text/javascript">
+function updateFahrer(name) {
+	$("#fahrername").html(name);
+}
+function updateKennzeichen(kennzeichen) {
+	$(".kennzeichen").html(kennzeichen);
+}
+$(function() {
+	var myUrl = $.url('protocol') + "://" + $.url('auth') + (($.url('auth').length > 0) ? "@" : "") +
+		$.url('hostname') + ":" + $.url('port');
+	parseDates($.url("?from"), $.url("?to"));
+	$("#frompicker").val(datepickers.fromQ);
+	$("#topicker").val(datepickers.toQ);
+	datepickers(myUrl + '/report');
+	$("#statslink").attr("href", myUrl + "/stats?from=" + datepickers.fromQ + "&to=" + datepickers.toQ);
+	$("#maplink").attr("href", myUrl + "/map?from=" + datepickers.fromQ + "&to=" + datepickers.toQ);
+	$("#energylink").attr("href", myUrl + "/energy?from=" + datepickers.fromQ + "&to=" + datepickers.toQ);
+	$("#triplink").attr("href", myUrl + "/trip");
+	var d = [MAGIC_ADDR_TABLE];
+	function getAddress(idx, startStop) {
+		console.log("http://maps.googleapis.com/maps/api/geocode/json?latlng=" + d[idx][0 + 2 * startStop] + "," + d[idx][1 + 2 * startStop] + "&sensor=true");
+		$.getJSON("http://maps.googleapis.com/maps/api/geocode/json?latlng=" + d[idx][0 + 2 * startStop] + "," + d[idx][1 + 2 * startStop] + "&sensor=true")
+		.done(function (doc, textStatus, jqXHR) {
+			if (doc.status === "ZERO_RESULTS" || doc.results[0].formatted_address === undefined) {
+				$("table#triptable tbody tr:eq(" + (2 * idx - 1) + ") td:eq(" + startStop + ")").html("ungülite GPS Daten");
+			} else {
+				console.log("table#triptable tbody tr:eq(" + (2*idx-1) + ") td:eq(" + startStop + ")", doc.results[0].formatted_address);
+				$("table#triptable tbody tr:eq(" + (2 * idx - 1) + ") td:eq(" + startStop + ")").html(doc.results[0].formatted_address);
+			}
+		});
+	}
+	for (var i = 1; i < d.length; i++) {
+		if (d[i][0] != 0 || d[i][1] != 0)
+			getAddress(i, 0);
+		if (d[i][2] != 0 || d[i][3] != 0)
+			getAddress(i, 1);
+	}
+});
+</script>
+</head>
+<body>
+MAGIC_NAV
+<div id="container">
+	<h2>Tesla Fahrtenbuch</h2>
+	<div id="dates">
+		<label class='grid'>Start time</label><input id="frompicker" type="text">
+		<label class='grid'>End time</label><input id="topicker" type="text">
+	</div>
+	<div id="config">
+		<label class='grid'>Fahrer</label><input id="fahrer" onChange="updateFahrer(this.value)" type="text">
+		<label class='grid'>Kennzeichen</label><input id="kennzeichen" onChange="updateKennzeichen(this.value)" type="text">
+	</div>
+	<hr>
+	<div id="content" style="margin-top: 100px;">
+		<center><div class="container" id="trip_table">
+		<table id="triptable">MAGIC_TRIP_TABLE</table>
+		</div><center>
+	</div>
+</div>
+</body>
+</html>

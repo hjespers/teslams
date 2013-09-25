@@ -70,6 +70,12 @@ fs.readFile(__dirname + "/otherfiles/nav.html", "utf-8", function(err, data) {
 	nav = data;
 });
 
+// shorthand to get leading zero when showing minutes
+function lZ(mins) {
+	var zmins = '0' + mins;
+	return zmins.substr(zmins.length - 2);
+}
+
 function makeDate(string, offset) {
 	var args = string.split('-');
 	var date = new Date(args[0], args[1]-1, args[2], args[3], args[4], args[5]);
@@ -629,9 +635,10 @@ app.get('/stats', function(req, res) {
 			collection = db.collection("tesla_aux");
 			collection.find({"chargeState": {$exists: true}, "ts": {$gte: +from, $lte: +to}}).toArray(function(err,docs) {
 				var i = 0, vampirekWh = 0, day, lastDay = -1, lastDate = null, comma = "", outputY = "";
-				var j = 0, chargekWh = 0, outputCN = "";
+				var j = 0, chargekWh = 0, outputCN = "", usedkWh = 0, outputUsed = "";
 				var vState1 = null;
 				var cState1 = null;
+				var uState1 = null;
 				var lastDoc;
 				var maxI = countVamp.vampInt.length;
 				var maxJ = countCharge.chargeInt.length;
@@ -650,29 +657,49 @@ app.get('/stats', function(req, res) {
 								chargekWh += calculateDelta(doc, cState1);
 								cState1 = doc;
 							}
+							if (uState1) {
+								usedkWh += calculateDelta(uState1, doc);
+								uState1 = doc;
+							}
 							ts = new Date(lastDate);
 							midnight = new Date(ts.getFullYear(), ts.getMonth(), ts.getDate(), 0, 0, 0);
 							outputY += comma + "[" + midnight.getTime() + "," + vampirekWh + "]";
 							outputCN += comma + "[" + midnight.getTime() + "," + chargekWh + "]";
+							outputUsed += comma + "[" + midnight.getTime() + "," + usedkWh + "]";
 							comma = ",";
 						}
 						lastDate = doc.ts;
 						lastDay = day;
 						vampirekWh = 0;
 						chargekWh = 0;
+						usedkWh = 0;
 					}
-					if (i < maxI && vState1 === null && doc.ts >= countVamp.vampInt[i][0])
+					if (uState1 === null && vState1 === null && cState1 === null)
+						uState1 = doc;
+					if (i < maxI && vState1 === null && doc.ts >= countVamp.vampInt[i][0]) {
+						if (uState1 !== null && doc !== null && uState1.ts < doc.ts) {
+							usedkWh += calculateDelta(uState1, doc);
+						}
+						uState1 = null;
 						vState1 = doc;
+					}
 					if (i < maxI && doc.ts >= countVamp.vampInt[i][1]) {
 						vampirekWh += calculateDelta(vState1, doc);
 						vState1 = null;
+						uState1 = doc;
 						i++;
 					}
-					if (j < maxJ && cState1 === null && doc.ts >= countCharge.chargeInt[j][0])
+					if (j < maxJ && cState1 === null && doc.ts >= countCharge.chargeInt[j][0]) {
+						if (uState1 !== null && doc !== null && uState1.ts < doc.ts) {
+							usedkWh += calculateDelta(uState1, doc);
+						}
+						uState1 = null;
 						cState1 = doc;
+					}
 					if (j < maxJ && doc.ts >= countCharge.chargeInt[j][1]) {
 						chargekWh += calculateDelta(doc, cState1);
 						cState1 = null;
+						uState1 = doc;
 						j++;
 					}
 				});
@@ -680,12 +707,16 @@ app.get('/stats', function(req, res) {
 					vampirekWh += calculateDelta(vState1, lastDoc);
 				}
 				if (cState1) {
-					chargekWh += calculateDelta(doc, cState1);
+					chargekWh += calculateDelta(lastDoc, cState1);
+				}
+				if (uState1) {
+					usedkWh += calculateDelta(uState1, lastDoc);
 				}
 				ts = new Date(lastDate);
 				midnight = new Date(ts.getFullYear(), ts.getMonth(), ts.getDate(), 0, 0, 0);
 				outputY += comma + "[" + midnight.getTime() + "," + vampirekWh + "]";
 				outputCN += comma + "[" + midnight.getTime() + "," + chargekWh + "]";
+				outputUsed += comma + "[" + midnight.getTime() + "," + usedkWh + "]";
 				db.close();
 				fs.readFile(__dirname + "/stats.html", "utf-8", function(err, data) {
 					if (err) throw err;
@@ -696,6 +727,7 @@ app.get('/stats', function(req, res) {
 						.replace("MAGIC_DISTANCE", outputD)
 						.replace("MAGIC_CHARGE", outputCN)
 						.replace("MAGIC_AVERAGE", outputA)
+					//	.replace("MAGIC_KWH", outputUsed)   // this needs more testing
 						.replace("MAGIC_KWH", outputW)
 						.replace("MAGIC_VKWH", outputY)
 						.replace("MAGIC_START", startDate);
@@ -712,6 +744,68 @@ app.get('/trip', function(req, res) {
 	fs.readFile(__dirname + "/trip.html", "utf-8", function(err, data) {
 		if (err) throw err;
 		res.end(data.replace("MAGIC_NAV", nav), "utf-8");
+	});
+});
+
+app.get('/fahrtenbuch', function(req, res) {
+	var path = req.path;
+	var dates = new parseDates(req.query.from, req.query.to);
+	var from = makeDate(dates.fromQ);
+	var to = makeDate(dates.toQ);
+	res.setHeader("Content-Type", "text/html");
+	fs.readFile(__dirname + "/fahrtenbuch.html", "utf-8", function(err, data) {
+		if (err) throw err;
+		var lltable = "[0,0,0,0]";
+		var table = "<thead><tr><th colspan=9 id='title'>Fahrtenbuch</th></tr>\n";
+		table += "<tr><th colspan=6 class='left' id='Fahrer'>Fahrer: <span id='fahrername'>Tesla Fahrer</span></th><th colspan=3 class='left'>Abgabedatum:</th></tr>\n";
+		table += "<tr><th colspan=2>Abfahrt</th><th colspan=2>Ankunft</th>";
+		table += "<th rowspan=2>Wegstrecke</th><th rowspan=2>Reisezweck</th><th rowspan=2>Auto<br>Kennzeichen</th>";
+		table += "<th rowspan=2>KM Stand am<br>Zielort</th><th rowspan=2>Unterschrift</th></tr>";
+		table += "<tr><th>Datum</th><th>Zeit</th><th>Datum</th><th>Zeit</th></tr></thead>";
+		MongoClient.connect("mongodb://127.0.0.1:27017/" + argv.db, function(err, db) {
+			if(err) {
+				console.log('error connecting to database:', err);
+				return;
+			}
+			collection = db.collection("trip_data");
+			// strangely the timestamps end up in the database as strings
+			var searchString = {$and: [ {'from': {$gte: ""+from.getTime()}}, {'to': {$lte: ""+to.getTime()}} ] };
+			collection.find(searchString).toArray(function(err,docs) {
+				var row = 0;
+				if (argv.verbose) console.log("got datasets:", docs.length);
+				table += "<tbody>\n";
+				docs.forEach(function(doc) {
+					row++;
+					table += "<tr>";
+					var depart = new Date(+doc.from);
+					var arrive = new Date(+doc.to);
+					table += "<td>" + depart.getDate() + "." + (depart.getMonth() + 1) + "." + (1900 + depart.getYear()) +"</td>";
+					table += "<td>" + depart.getHours() + ":" + lZ(depart.getMinutes())  + "</td>";
+					table += "<td>" + arrive.getDate() + "." + (arrive.getMonth() + 1) + "." + (1900 + arrive.getYear()) +"</td>";
+					table += "<td>" + arrive.getHours() + ":" + lZ(arrive.getMinutes())  + "</td>";
+					table += "<td>" + (1.609 * parseFloat(doc.dist)).toFixed(1) + "km</td>";
+					if (doc.type === "business")
+						table += "<td>" + doc.name + "</td>";
+					else
+						table += "<td>privat</td>";
+					table += "<td><span class='kennzeichen'/></td>";
+					table += "<td>" + (1.609 * parseFloat(doc.odo)).toFixed(1) + "</td>";
+					table += "<td></td>";
+					table += "</tr>\n";
+					// the client side of this then fills in the addresses
+					table += "<tr><td colspan=4 id='start" + row + "'/></td><td colspan=2 id='stop" + row + "'></td></tr>\n";
+					if (doc.type === "business" && doc.start !== undefined && doc.end !== undefined)
+						lltable += ",[" + doc.start.lat + "," + doc.start.lng + "," + doc.end.lat + "," + doc.end.lng + "]";
+					else
+						lltable += ",[0,0,0,0]";
+				});
+				table += "</tbody>\n";
+				db.close();
+				res.end(data.replace("MAGIC_NAV", nav)
+						.replace("MAGIC_TRIP_TABLE", table)
+						.replace("MAGIC_ADDR_TABLE", lltable), "utf-8");
+			});
+		});
 	});
 });
 
