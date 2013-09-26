@@ -146,7 +146,7 @@ app.get('/', function(req, res) {
 
 app.get('/getdata', function (req, res) {
 	var ts, options, vals;
-	console.log('/getdata with',req.query.at);
+	if (argv.verbose) console.log('/getdata with',req.query.at);
 	MongoClient.connect("mongodb://127.0.0.1:27017/" + argv.db, function(err, db) {
 		if(err) {
 			console.log('error connecting to database:', err);
@@ -154,7 +154,7 @@ app.get('/getdata', function (req, res) {
 		}
 		collection = db.collection("tesla_stream");
 		if (req.query.at === null) {
-			console.log("why is there no 'at' parameter???");
+			if (argv.verbose) console.log("why is there no 'at' parameter???");
 			return;
 		}
 		// get the data at time 'at'
