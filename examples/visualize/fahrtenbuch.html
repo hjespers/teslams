@@ -22,20 +22,19 @@ $(function() {
 	parseDates($.url("?from"), $.url("?to"));
 	$("#frompicker").val(datepickers.fromQ);
 	$("#topicker").val(datepickers.toQ);
-	datepickers(myUrl + '/report');
+	datepickers(myUrl + '/fahrtenbuch');
 	$("#statslink").attr("href", myUrl + "/stats?from=" + datepickers.fromQ + "&to=" + datepickers.toQ);
 	$("#maplink").attr("href", myUrl + "/map?from=" + datepickers.fromQ + "&to=" + datepickers.toQ);
 	$("#energylink").attr("href", myUrl + "/energy?from=" + datepickers.fromQ + "&to=" + datepickers.toQ);
 	$("#triplink").attr("href", myUrl + "/trip");
 	var d = [MAGIC_ADDR_TABLE];
 	function getAddress(idx, startStop) {
-		console.log("http://maps.googleapis.com/maps/api/geocode/json?latlng=" + d[idx][0 + 2 * startStop] + "," + d[idx][1 + 2 * startStop] + "&sensor=true");
+		// console.log("http://maps.googleapis.com/maps/api/geocode/json?latlng=" + d[idx][0 + 2 * startStop] + "," + d[idx][1 + 2 * startStop] + "&sensor=true");
 		$.getJSON("http://maps.googleapis.com/maps/api/geocode/json?latlng=" + d[idx][0 + 2 * startStop] + "," + d[idx][1 + 2 * startStop] + "&sensor=true")
 		.done(function (doc, textStatus, jqXHR) {
 			if (doc.status === "ZERO_RESULTS" || doc.results[0].formatted_address === undefined) {
 				$("table#triptable tbody tr:eq(" + (2 * idx - 1) + ") td:eq(" + startStop + ")").html("ungülite GPS Daten");
 			} else {
-				console.log("table#triptable tbody tr:eq(" + (2*idx-1) + ") td:eq(" + startStop + ")", doc.results[0].formatted_address);
 				$("table#triptable tbody tr:eq(" + (2 * idx - 1) + ") td:eq(" + startStop + ")").html(doc.results[0].formatted_address);
 			}
 		});
