@@ -22,7 +22,7 @@ $(function() {
 	parseDates($.url("?from"), $.url("?to"));
 	$("#frompicker").val(datepickers.fromQ);
 	$("#topicker").val(datepickers.toQ);
-	datepickers(myUrl + '/report');
+	datepickers(myUrl + '/fahrtenbuch');
 	$("#statslink").attr("href", myUrl + "/stats?from=" + datepickers.fromQ + "&to=" + datepickers.toQ);
 	$("#maplink").attr("href", myUrl + "/map?from=" + datepickers.fromQ + "&to=" + datepickers.toQ);
 	$("#energylink").attr("href", myUrl + "/energy?from=" + datepickers.fromQ + "&to=" + datepickers.toQ);
