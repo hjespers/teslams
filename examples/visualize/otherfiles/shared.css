@@ -1,7 +1,6 @@
 
 html { height: 100% }
 body { height: 100%; margin: 0; padding: 1em; background-color: #FFFFFF; }
-label { font-size: larger; padding: 1em ; }
 label.grid { display: inline-block; width: 5em; }
 #map-canvas { height:85%; }
 #speedSlider { width: 30%; }
@@ -13,6 +12,14 @@ div.label { margin-top: .5em; }
 div#dates, div#config { margin-bottom: 1em;
 	    margin-left: 1.5em;
 }
+div.switches { position: relative; width: 300px; float: left; }
+div.info { position: relative; width: 600px; float: left; }
+#milesDiv,#nameDiv,#radioDiv { padding-left: 1em;
+			       padding-right: 1em;
+			       padding-top: 1em;
+			       float: left; }
+label#milesLabel { display: inline-block; width: 200px; height: 80px; margin-top: 40px; }
+label#tripNameLabel { display: inline-block; width: 200px; height: 80px; margin-top: 0px; }
 section {
 	width: 30%;
 	height: auto;
@@ -82,16 +89,22 @@ div#container { margin-top: 0;
 		border-radius: 0 0 10px 10px;
 		background-color: rgba(244,244,244,0.9);
 		border: 3px solid rgba(2,2,2,0.28);
-		width: 100%;
-		height: 95%;
+		width: 94%;
+		left: 3%;
+		right: 3%;
+		position: absolute;
+		top: 74px;
 }
 nav#main { border-radius: 10px 10px 0 0;
-	   border-right: 1px solid rbga(2,2,2,0.28);
+	   border-right: 1px solid rgba(2,2,2,0.28);
 	   border-left: 1px solid rgba(2,2,2,0.28);
 	   border-top: 1px solid rgba(2,2,2,0.28);
 	   background-color: rgba(12,12,12,0.1);
 	   display: block;
-	   width: 100%
+	position: absolute;
+	top: 20px;
+	width: 94%;
+	left: 3%;
 }
 .clearfix:before, .clearfix:after { content: " ";
 				    display: table;
@@ -154,4 +167,51 @@ table#triptable td {
 	padding: 15px 10px;
 	border: 1px solid black;
 }
-
+.onoffswitch {
+    position: relative; width: 200px;
+    margin: 2em;
+    -webkit-user-select:none; -moz-user-select:none; -ms-user-select: none;
+}
+.onoffswitch-checkbox {
+    display: none;
+}
+.onoffswitch-label {
+    display: block; overflow: hidden; cursor: pointer;
+    border: 2px solid #999999; border-radius: 50px;
+}
+.onoffswitch-inner {
+    width: 200%; margin-left: -100%;
+    -moz-transition: margin 0.3s ease-in 0s; -webkit-transition: margin 0.3s ease-in 0s;
+    -o-transition: margin 0.3s ease-in 0s; transition: margin 0.3s ease-in 0s;
+}
+.onoffswitch-inner:before, .onoffswitch-inner:after {
+    float: left; width: 50%; height: 50px; padding: 0; line-height: 50px;
+    font-size: 20px; color: white; font-family: Trebuchet, Arial, sans-serif; font-weight: bold;
+    -moz-box-sizing: border-box; -webkit-box-sizing: border-box; box-sizing: border-box;
+}
+.onoffswitch-inner:before {
+    content: attr(data-content-before);
+    padding-left: 10px;
+    background-color: #D9D9D9; color: #FFFFFF;
+}
+.onoffswitch-inner:after {
+    content: attr(data-content-after);
+    padding-right: 10px;
+    background-color: #EEEEEE; color: #999999;
+    text-align: right;
+}
+.onoffswitch-switch {
+    width: 50px; margin: 0px;
+    background: #FFFFFF;
+    border: 2px solid #999999; border-radius: 50px;
+    position: absolute; top: 0; bottom: 0; right: 146px;
+    -moz-transition: all 0.3s ease-in 0s; -webkit-transition: all 0.3s ease-in 0s;
+    -o-transition: all 0.3s ease-in 0s; transition: all 0.3s ease-in 0s; 
+}
+.onoffswitch-checkbox:checked + .onoffswitch-label .onoffswitch-inner {
+    margin-left: 0;
+}
+.onoffswitch-checkbox:checked + .onoffswitch-label .onoffswitch-switch {
+    right: 0px; 
+}
+input#tripName { font-size: 24px; }

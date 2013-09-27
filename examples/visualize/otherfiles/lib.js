@@ -42,7 +42,7 @@ function parseDates(fromQ, toQ) {
 	else
 		datepickers.toQ = normalizeDate(toQ);
 	if (fromQ == null || fromQ == "" || fromQ.split('-').count < 2) // no valid from argument -> 12h before to
-		datepickers.fromQ = normalizeDate(new Date(toQ));
+		datepickers.fromQ = dateString(makeDate(datepickers.toQ, -12 * 3600 * 1000));
 	else
 		datepickers.fromQ = normalizeDate(fromQ);
 }
