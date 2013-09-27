@@ -169,7 +169,6 @@ app.get('/getdata', function (req, res) {
 			}
 			res.setHeader("Content-Type", "application/json");
 			vals = docs[0].record.toString().replace(",,",",0,").split(",");
-			console.dir(vals);
 			res.write("[" + JSON.stringify(vals) + "]", "utf-8");
 			res.end();
 			db.close();
@@ -184,12 +183,30 @@ app.get('/storetrip', function(req, res) {
 			return;
 		}
 		collection = db.collection("trip_data");
-		collection.insert(req.query, { 'safe': true }, function(err,docs) {
-			if (err) {
-				res.send(err);
-			} else {
-				res.send("OK");
-			}
+		collection.remove({ 'dist': '-1'}, function(err,docs) {
+			collection.insert(req.query, { 'safe': true }, function(err,docs) {
+				if (err) {
+					res.send(err);
+				} else {
+					res.send("OK");
+				}
+			});
+		});
+	});
+});
+
+app.get('/getlasttrip', function(req, res) {
+	MongoClient.connect("mongodb://127.0.0.01:27017/" + argv.db, function(err, db) {
+		if (err) {
+			console.log('error connecting to database:', err);
+			return;
+		}
+		collection = db.collection("trip_data");
+		var options = { 'sort': [['chargeState.battery_range', 'desc']] };
+		collection.find({},{ 'sort': [['from', 'desc']], 'limit': 1 }).toArray(function(err,docs) {
+			console.log(docs);
+			res.setHeader("Content-Type", "application/json");
+			res.send(docs);
 		});
 	});
 });

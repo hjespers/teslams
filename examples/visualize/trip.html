@@ -49,10 +49,17 @@ function startStopFunction() {
 				// frequently enough to make it feel fluid.
 				updateDisplay.ID = setInterval(updateDisplay, 2000);
 			}
+			tripName = $("#tripName").val();
+			// store a partial trip so we know where we at started (in case the user reloads the web page)
+			$.getJSON(getData.myUrl + "/storetrip", { 'name': tripName, 'type': startStopFunction.tripType, 'dist': -1, 'odo': updateDisplay.startOdo,
+								  'start': { 'lat': updateDisplay.startLat , 'lng': updateDisplay.startLng },
+								  'from': startStopFunction.startTime.getTime() })
+				.done(function (d, textStatus, jqXHR) {
+					console.log(d);
+				});
 		});
 	} else {
 		startStopFunction.started = false;
-		$('#startStopButton').html("Start trip");
 		startStopFunction.stopTime = new Date();
 		getData(startStopFunction.stopTime.getTime(), function(data){
 			updateDisplay.stopOdo = parseFloat(data[2]);
@@ -105,6 +112,34 @@ $(function() {
 	$("#maplink").attr("href", getData.myUrl + "/map");
 	$("#energylink").attr("href", getData.myUrl + "/energy");
 	$("#statslink").attr("href", getData.myUrl + "/stats");
+	// check if there is a partial trip that we should continue
+	$.getJSON(getData.myUrl + "/getlasttrip")
+		.done(function (d, textStatus, jqXHR) {
+			// console.log(d[0]);
+			if(d[0].dist !== undefined && d[0].dist === "-1") {
+				// console.log("found partial trip, setting up stuff");
+				updateDisplay.startOdo = d[0].odo;
+				updateDisplay.startLat = d[0].start.lat;
+				updateDisplay.startLng = d[0].start.lng;
+				if (d[0].type === "business") {
+					$("#personalbusiness").prop("checked", true);
+					$("#nameDiv").show();
+				} else {
+					$("#personalbusiness").prop("checked", false);
+					$("#nameDiv").hide();
+				}
+				$("#startstop").prop("checked", false);
+				$("#tripName").val(d[0].name);
+				startStopFunction.started = true;
+				startStopFunction.startTime = new Date(parseInt(d[0].from));
+				if (!updateDisplay.ID) {
+					// we're calling this every two seconds to keep the load
+					// on client and server really low. That still should be
+					// frequently enough to make it feel fluid.
+					updateDisplay.ID = setInterval(updateDisplay, 2000);
+				}
+			}
+		});
 });
 </script>
 </head>
