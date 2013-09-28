@@ -88,7 +88,7 @@ function tsla_poll( vid, long_vid, token ) {
 			if ( error ) { // HTTP Error
 				if (!argv.silent) { console.log( 'Long poll error - ' +error ); }
 				// put short delay to avoid stack overflow
-				setTimeout(function() { tsla_poll( vid, long_vid, token ) }, 1000);
+				setTimeout(function() { tsla_poll( vid, long_vid, token ) }, 10000);
 			} else if (response.statusCode == 200) { // HTTP OK
 				if (!argv.silent) {
 					//console.log(body);
@@ -99,7 +99,8 @@ function tsla_poll( vid, long_vid, token ) {
 				if (!argv.silent) {
 					util.log('WARN: HTTP 401: Unauthorized - token has likely expired, getting a new one');
 				}
-				initstream();
+				// put short delay to avoid stack overflow or getting cut off by Tesla
+				setTimeout(function() { initstream(); }, 10000);
 			} else {
 				if (!argv.silent) {
 					util.log('Problem with request:');
@@ -108,7 +109,7 @@ function tsla_poll( vid, long_vid, token ) {
 					util.log('Polling again...');
 				}
 				// put short delay to avoid stack overflow
-				setTimeout(function() { tsla_poll( vid, long_vid, token ) }, 1000);
+				setTimeout(function() { tsla_poll( vid, long_vid, token ) }, 10000);
 			}
 		}
 		).on('data', function(data) {
