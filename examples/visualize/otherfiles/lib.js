@@ -1,6 +1,6 @@
 function compareTime(a,b){
-	var as = (a+"-0").split("-");
-	var bs = (b+"-0").split("-");
+	var as = (a.replace(" ","-")+"-0").split("-");
+	var bs = (b.replace(" ","-")+"-0").split("-");
 	for (var i = 0; i < 6; i++) {
 		if (+as[i] < +bs[i])
 			return -1;
@@ -10,7 +10,6 @@ function compareTime(a,b){
 	return 0;
 }
 function sameDate(a, b) {
-	console.log(a,b);
 	var as = a.split("-");
 	var bs = b.split("-");
 	for (var i = 0; i < 3; i++) {
