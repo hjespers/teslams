@@ -575,7 +575,7 @@ app.get('/stats', function(req, res) {
 				energy = parseInt(vals[8]);
 				state = vals[9];
 				if (firstDate === 0) {
-					firstDate = doc.ts;
+					firstDate = doc.ts - 1;
 					lastDay = day;
 					startOdo = odo;
 					minSOC = 101; maxSOC = -1; kWs = 0; charge = 0; increment = 0; comma = "";
