@@ -389,9 +389,9 @@ app.get('/energy', function(req, res) {
 			collection.find({"chargeState": {"$exists": true},
 					 "ts": {$gte: +from, $lte: +to}}).toArray(function(err,docs) {
 				if (argv.verbose) console.log("Found " + docs.length + " entries in aux DB");
-				ouputAmp = "[" + (+firstDate) + ",0]";
-				ouputVolt = "[" + (+firstDate) + ",0]";
-				ouputPower = "[" + (+firstDate) + ",0]";
+				outputAmp = "[" + (+firstDate) + ",0]";
+				outputVolt = "[" + (+firstDate) + ",0]";
+				outputPower = "[" + (+firstDate) + ",0]";
 				comma = "";
 				docs.forEach(function(doc) {
 					amp = volt = 0;
