@@ -554,7 +554,7 @@ app.get('/stats', function(req, res) {
 		res.redirect('/stats?from=' + dates.fromQ + '&to=' + dates.toQ);
 		return;
 	}
-	var outputD = "", outputC = "", outputA = "", outputW = "", comma, firstDate = 0, lastDay = 0, lastDate = 0;
+	var outputD = "", outputC = "", outputA = "", comma, firstDate = 0, lastDay = 0, lastDate = 0, distHash = {}, useHash = {};
 	MongoClient.connect("mongodb://127.0.0.1:27017/" + argv.db, function(err, db) {
 		if(err) {
 			console.log('error connecting to database:', err);
@@ -562,11 +562,24 @@ app.get('/stats', function(req, res) {
 		}
 		res.setHeader("Content-Type", "text/html");
 		collection = db.collection("tesla_stream");
-		collection.find({"ts": {$gte: +from, $lte: +to}}).toArray(function(err,docs) {
+		collection.find({"ts": {"$gte": from.getTime(), "$lte": to.getTime()}}).toArray(function(err,docs) {
+			// this is really annoying - if for any reason you had to hand edit the database
+			// e.g., when the service was down and you need to correct what's in the database,
+			// the values are no longer in order - and the algorithm below will fail as it assumes
+			// the entries to be in order. So we need to sort here - the mongoDB sort function
+			// fails if the amount of data becomes too large :-(
+			docs.sort(function(a,b){return a.ts - b.ts;});
 			var vals = [];
 			var odo, energy, state, soc;
-			var dist, kWh, ts, midnight;
+			var dist, kWh, ts, midnight, used;
 			var startOdo, charge, minSOC, maxSOC, increment, kWs;
+			if (docs === null) {
+				if (argv.verbose) {
+					console.log(err);
+					console.log("no output for stream from", +from, "to", +to);
+				}
+				return;
+			}
 			docs.forEach(function(doc) {
 				var day = new Date(doc.ts).getDay();
 				vals = doc.record.toString().replace(",,",",0,").split(",");
@@ -592,12 +605,8 @@ app.get('/stats', function(req, res) {
 						midnight = new Date(ts.getFullYear(), ts.getMonth(), ts.getDate(), 0, 0, 0);
 						outputD += comma + "[" + (+midnight)  + "," + dist + "]";
 						outputC += comma + "[" + (+midnight)  + "," + charge + "]";
-						if (dist > 0) {
-							outputA += comma + "[" + (+midnight)  + "," + 1000 * kWh / dist + "]";
-						} else {
-							outputA += comma + "null";
-						}
-						outputW += comma + "[" + (+midnight) + "," + kWh + "]";
+						distHash[midnight.getTime()+""] = dist;
+						useHash[midnight.getTime()+""] = kWh;
 						startOdo = odo;
 						minSOC = 101; maxSOC = -1; kWs = 0; charge = 0; increment = 0; comma = ",";
 					}
@@ -641,12 +650,8 @@ app.get('/stats', function(req, res) {
 			midnight = new Date(ts.getFullYear(), ts.getMonth(), ts.getDate(), 0, 0, 0);
 			outputD += comma + "[" + (+midnight)  + "," + dist + "]";
 			outputC += comma + "[" + (+midnight)  + "," + charge + "]";
-			if (dist > 0) {
-				outputA += comma + "[" + (+midnight)  + "," + 1000 * kWh / dist + "]";
-			} else {
-				outputA += comma + "null";
-			}
-			outputW += comma + "[" + (+midnight) + "," + kWh + "]";
+			distHash[midnight.getTime()+""] = dist;
+			useHash[midnight.getTime()+""] = kWh;
 
 			// now analyze the charging data
 			collection = db.collection("tesla_aux");
@@ -679,10 +684,20 @@ app.get('/stats', function(req, res) {
 								uState1 = doc;
 							}
 							ts = new Date(lastDate);
-							midnight = new Date(ts.getFullYear(), ts.getMonth(), ts.getDate(), 0, 0, 0);
-							outputY += comma + "[" + midnight.getTime() + "," + vampirekWh + "]";
-							outputCN += comma + "[" + midnight.getTime() + "," + chargekWh + "]";
-							outputUsed += comma + "[" + midnight.getTime() + "," + usedkWh + "]";
+							midnight = new Date(ts.getFullYear(), ts.getMonth(), ts.getDate(), 0, 0, 0).getTime()+"";
+							outputY += comma + "[" + midnight + "," + vampirekWh + "]";
+							outputCN += comma + "[" + midnight + "," + chargekWh + "]";
+							// depending on what failed, sometimes the discrete integral is better (missing charge data)
+							// but usually the charge data derived usage is more accurate. Picking the higher of the two
+							// seems to get us the best results.
+							used = Math.max(useHash[midnight+""], usedkWh);
+							outputUsed += comma + "[" + midnight + "," + used + "]";
+							dist = distHash[midnight+""];
+							if (dist > 0) {
+								outputA += comma + "[" + midnight  + "," + 1000 * used / dist + "]";
+							} else {
+								outputA += comma + "null";
+							}
 							comma = ",";
 						}
 						lastDate = doc.ts;
@@ -730,10 +745,20 @@ app.get('/stats', function(req, res) {
 					usedkWh += calculateDelta(uState1, lastDoc);
 				}
 				ts = new Date(lastDate);
-				midnight = new Date(ts.getFullYear(), ts.getMonth(), ts.getDate(), 0, 0, 0);
-				outputY += comma + "[" + midnight.getTime() + "," + vampirekWh + "]";
-				outputCN += comma + "[" + midnight.getTime() + "," + chargekWh + "]";
-				outputUsed += comma + "[" + midnight.getTime() + "," + usedkWh + "]";
+				midnight = new Date(ts.getFullYear(), ts.getMonth(), ts.getDate(), 0, 0, 0).getTime()+"";
+				outputY += comma + "[" + midnight + "," + vampirekWh + "]";
+				outputCN += comma + "[" + midnight + "," + chargekWh + "]";
+				// depending on what failed, sometimes the discrete integral is better (missing charge data)
+				// but usually the charge data derived usage is more accurate. Picking the higher of the two
+				// seems to get us the best results.
+				used = Math.max(useHash[midnight+""], usedkWh);
+				outputUsed += comma + "[" + midnight + "," + used + "]";
+				dist = distHash[midnight+""];
+				if (dist > 0) {
+					outputA += comma + "[" + midnight  + "," + 1000 * used / dist + "]";
+				} else {
+					outputA += comma + "null";
+				}
 				db.close();
 				fs.readFile(__dirname + "/stats.html", "utf-8", function(err, data) {
 					if (err) throw err;
@@ -744,8 +769,7 @@ app.get('/stats', function(req, res) {
 						.replace("MAGIC_DISTANCE", outputD)
 						.replace("MAGIC_CHARGE", outputCN)
 						.replace("MAGIC_AVERAGE", outputA)
-					//	.replace("MAGIC_KWH", outputUsed)   // this needs more testing
-						.replace("MAGIC_KWH", outputW)
+						.replace("MAGIC_KWH", outputUsed)   // this needs more testing
 						.replace("MAGIC_VKWH", outputY)
 						.replace("MAGIC_START", startDate);
 					res.end(response, "utf-8");
