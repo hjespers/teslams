@@ -549,6 +549,7 @@ app.get('/test', function(req, res) {
 	});
 });
 app.get('/stats', function(req, res) {
+	var debugStartTime = new Date().getTime();
 	var path = req.path;
 	var dates = new parseDates(req.query.from, req.query.to);
 	countVamp.vampInt = [];
@@ -570,12 +571,14 @@ app.get('/stats', function(req, res) {
 		}
 		res.setHeader("Content-Type", "text/html");
 		collection = db.collection("tesla_stream");
+		if (argv.verbose)
+			console.log("starting DB request after", new Date().getTime() - debugStartTime, "ms");
 		collection.find({"ts": {"$gte": from.getTime(), "$lte": to.getTime()}}).toArray(function(err,docs) {
-			// this is really annoying - if for any reason you had to hand edit the database
-			// e.g., when the service was down and you need to correct what's in the database,
-			// the values are no longer in order - and the algorithm below will fail as it assumes
-			// the entries to be in order. So we need to sort here - the mongoDB sort function
-			// fails if the amount of data becomes too large :-(
+			if (argv.verbose)
+				console.log("processing data after", new Date().getTime() - debugStartTime, "ms");
+			// this is really annoying; the values from the database frequently aren't sorted by
+			// timestamp, even if you didn't edit the data. So we need to sort here - the mongoDB
+			// sort function fails if the amount of data becomes too large :-(
 			docs.sort(function(a,b){return a.ts - b.ts;});
 			var vals = [];
 			var odo, energy, state, soc;
@@ -803,6 +806,8 @@ app.get('/stats', function(req, res) {
 						.replace("MAGIC_WVKWH", outputWY)
 						.replace("MAGIC_START", startDate);
 					res.end(response, "utf-8");
+					if (argv.verbose)
+						console.log("total processing time", new Date().getTime() - debugStartTime, "ms");
 				});
 
 			});
