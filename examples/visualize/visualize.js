@@ -562,7 +562,7 @@ app.get('/stats', function(req, res) {
 		return;
 	}
 	var outputD = "", outputC = "", outputA = "", comma, firstDate = 0, lastDay = 0, lastDate = 0, distHash = {}, useHash = {};
-	var outputWD = "", outputWC = "", outputWA = "", commaW, lastWeek = 0, distWHash = {}, useWHash ={};
+	var outputWD = "", outputWC = "", outputWA = "", commaW, distWHash = {}, useWHash ={};
 	MongoClient.connect("mongodb://127.0.0.1:27017/" + argv.db, function(err, db) {
 		if(err) {
 			console.log('error connecting to database:', err);
@@ -595,11 +595,10 @@ app.get('/stats', function(req, res) {
 				if (lw == week && f !== true)
 					return;
 				var wts = ld.getTime() - 24 * 3600 * 1000 * ld.getDay() - 3600 * 1000 * ld.getHours()
-							- 60 * 1000 * ld.getMinutes() - 1000 * ld.getSeconds();
-	console.log(new Date(wts).toString());
+							- 60 * 1000 * ld.getMinutes() - 1000 * ld.getSeconds() - ld.getMilliseconds();
 				outputWD += commaW + "[" + wts + "," + distW + "]";
 				outputWC += commaW + "[" + wts + "," + chargeW + "]";
-				commaW = "";
+				commaW = ",";
 				distWHash[wts+""] = distW;
 				useWHash[wts+""] = kWhW;
 				distW = chargeW = distW = kWhW = 0;
@@ -631,7 +630,6 @@ app.get('/stats', function(req, res) {
 				if (firstDate === 0) {
 					firstDate = doc.ts - 1;
 					lastDay = day;
-					lastWeek = week;
 					startOdo = odo;
 					minSOC = 101; maxSOC = -1; kWs = 0; charge = 0; increment = 0; comma = ""; commaW = "";
 				}
@@ -673,18 +671,37 @@ app.get('/stats', function(req, res) {
 			// we still need to add the last day
 			updateValues();
 			updateWValues(true);
-console.log("dist", outputWD, "\ncharge", outputWC, "\ndistWHash" ,distWHash, "\nuseWHash", useWHash);
 			// now analyze the charging data
 			collection = db.collection("tesla_aux");
 			collection.find({"chargeState": {$exists: true}, "ts": {$gte: +from, $lte: +to}}).toArray(function(err,docs) {
-				var i = 0, vampirekWh = 0, day, lastDay = -1, lastDate = null, comma = "", outputY = "";
-				var j = 0, chargekWh = 0, outputCN = "", usedkWh = 0, outputUsed = "";
+				var i = 0, vampirekWh = 0, day, lastDay = -1, lastDate = null, comma = "", outputY = "", outputWY = "", commaW = "";
+				var j = 0, chargekWh = 0, outputCN = "", usedkWh = 0, outputUsed = "", outputWCN = "", outputWUsed = "";
+				var chargekWhW = 0, vampirekWhW = 0, usedW = 0;
 				var vState1 = null;
 				var cState1 = null;
 				var uState1 = null;
 				var lastDoc;
 				var maxI = countVamp.vampInt.length;
 				var maxJ = countCharge.chargeInt.length;
+				function updateChargeWValues(f) {
+					var lw = weekNr(lastDate);
+					var ld = new Date(lastDate);
+					if (lw == week && f !== true)
+						return;
+					var wts = ld.getTime() - 24 * 3600 * 1000 * ld.getDay() - 3600 * 1000 * ld.getHours()
+								- 60 * 1000 * ld.getMinutes() - 1000 * ld.getSeconds() - ld.getMilliseconds();
+					outputWY += commaW + "[" + wts + "," + vampirekWhW + "]";
+					outputWCN += commaW + "[" + wts + "," + chargekWhW + "]";
+					outputWUsed += commaW + "[" + wts + "," + usedW + "]";
+					dist = distWHash[wts+""];
+					if (dist > 0) {
+						outputWA += commaW + "[" + wts + "," + 1000 * usedW / dist + "]";
+					} else {
+						outputWA += commaW + "null";
+					}
+					commaW = ",";
+					chargekWhW = 0, vampirekWhW = 0, usedW = 0;
+				}
 				function updateChargeValues(d) {
 					if (vState1) {
 						vampirekWh += calculateDelta(vState1, d);
@@ -698,6 +715,8 @@ console.log("dist", outputWD, "\ncharge", outputWC, "\ndistWHash" ,distWHash, "\
 						usedkWh += calculateDelta(uState1, lastDoc);
 						uState1 = d;
 					}
+					vampirekWhW += vampirekWh;
+					chargekWhW += chargekWh;
 					ts = new Date(lastDate);
 					midnight = new Date(ts.getFullYear(), ts.getMonth(), ts.getDate(), 0, 0, 0).getTime()+"";
 					outputY += comma + "[" + midnight + "," + vampirekWh + "]";
@@ -706,6 +725,8 @@ console.log("dist", outputWD, "\ncharge", outputWC, "\ndistWHash" ,distWHash, "\
 					// but usually the charge data derived usage is more accurate. Picking the higher of the two
 					// seems to get us the best results.
 					used = Math.max(useHash[midnight+""], usedkWh);
+					// used = usedkWh;
+					usedW += usedkWh;
 					outputUsed += comma + "[" + midnight + "," + used + "]";
 					dist = distHash[midnight+""];
 					if (dist > 0) {
@@ -717,11 +738,14 @@ console.log("dist", outputWD, "\ncharge", outputWC, "\ndistWHash" ,distWHash, "\
 				}
 				docs.forEach(function(doc) {
 					day = new Date(doc.ts).getDay();
+					week = weekNr(doc.ts);
 					if (!doc || !doc.chargeState || !doc.chargeState.battery_level)
 						return;
 					if (day != lastDay) {
-						if (lastDate)
+						if (lastDate) {
 							updateChargeValues(doc);
+							updateChargeWValues();
+						}
 						lastDate = doc.ts;
 						lastDay = day;
 						vampirekWh = 0;
@@ -759,6 +783,7 @@ console.log("dist", outputWD, "\ncharge", outputWC, "\ndistWHash" ,distWHash, "\
 					}
 				});
 				updateChargeValues(lastDoc);
+				updateChargeWValues(true);
 				db.close();
 				fs.readFile(__dirname + "/stats.html", "utf-8", function(err, data) {
 					if (err) throw err;
@@ -767,10 +792,15 @@ console.log("dist", outputWD, "\ncharge", outputWC, "\ndistWHash" ,distWHash, "\
 					var response = data
 						.replace("MAGIC_NAV", nav)
 						.replace("MAGIC_DISTANCE", outputD)
+						.replace("MAGIC_WDISTANCE", outputWD)
 						.replace("MAGIC_CHARGE", outputCN)
+						.replace("MAGIC_WCHARGE", outputWCN)
 						.replace("MAGIC_AVERAGE", outputA)
-						.replace("MAGIC_KWH", outputUsed)   // this needs more testing
+						.replace("MAGIC_WAVERAGE", outputWA)
+						.replace("MAGIC_KWH", outputUsed)
+						.replace("MAGIC_WKWH", outputWUsed)
 						.replace("MAGIC_VKWH", outputY)
+						.replace("MAGIC_WVKWH", outputWY)
 						.replace("MAGIC_START", startDate);
 					res.end(response, "utf-8");
 				});
