@@ -17,7 +17,7 @@
 <script type="text/javascript">
 $(function() {
 	var p, previousPoint, myUrl, d1, d2, d3, d4, d5, data, options, eschart;
-	var pw, previousPoint, myUrl, dw1, dw2, dw3, dw4, dw5, dataw, optionsw, weschart;
+	var pw, previousPointW, myUrl, dw1, dw2, dw3, dw4, dw5, dataw, optionsw, weschart;
 	function showTooltip(x, y, contents) {
 		$('<div id="tooltip">' + contents + '</div>').css( {
 			position: 'absolute',
@@ -32,13 +32,12 @@ $(function() {
 	}
 	previousPoint = null;
 	$("#dcachart").bind("plothover", function (event, pos, item) {
-		var x, y;
+		var y;
 		if (item) {
 			if (previousPoint != item.dataIndex) {
 				previousPoint = item.dataIndex;
 
 				$("#tooltip").remove();
-				x = new Date(Math.round(item.datapoint[0] / (24 * 3600000)) * 24 * 3600000);
 				y = item.datapoint[1].toFixed(1);
 				if (item.seriesIndex == 1) {
 					y += " + " + (d5[item.dataIndex][1]).toFixed(1) + " vampire loss";
@@ -242,6 +241,26 @@ $(function() {
 	weschart = $("#wdcachart");
 	pw = $.plot(weschart, dataw, optionsw);
 
+	previousPointW = null;
+	$("#wdcachart").bind("plothover", function (event, pos, item) {
+		var y;
+		if (item) {
+			if (previousPointW != item.dataIndex) {
+				previousPointW = item.dataIndex;
+
+				$("#tooltip").remove();
+				y = item.datapoint[1].toFixed(1);
+				if (item.seriesIndex == 1) {
+					y += " + " + (dw5[item.dataIndex][1]).toFixed(1) + " vampire loss";
+				}
+				showTooltip(item.pageX, item.pageY,
+							item.series.label + " : " + y);
+			}
+		} else {
+			$("#tooltip").remove();
+			previousPointW = null;
+		}
+	});
 	// now write the values into the bars
 	var vOffset = [];
 	for (var i = 0; i < 4; i++) {
