@@ -668,7 +668,6 @@ app.get('/stats', function(req, res) {
 					day = new Date(doc.ts).getDay();
 					if (!doc || !doc.chargeState || !doc.chargeState.battery_level)
 						return;
-					lastDoc = doc;
 					if (day != lastDay) {
 						if (lastDate) {
 							if (vState1) {
@@ -680,7 +679,7 @@ app.get('/stats', function(req, res) {
 								cState1 = doc;
 							}
 							if (uState1) {
-								usedkWh += calculateDelta(uState1, doc);
+								usedkWh += calculateDelta(uState1, lastDoc);
 								uState1 = doc;
 							}
 							ts = new Date(lastDate);
@@ -706,6 +705,7 @@ app.get('/stats', function(req, res) {
 						chargekWh = 0;
 						usedkWh = 0;
 					}
+					lastDoc = doc;
 					if (uState1 === null && vState1 === null && cState1 === null)
 						uState1 = doc;
 					if (i < maxI && vState1 === null && doc.ts >= countVamp.vampInt[i][0]) {
