@@ -580,6 +580,19 @@ app.get('/stats', function(req, res) {
 				}
 				return;
 			}
+			function updateValues() {
+				stopCountingVamp(lastDate);
+				stopCountingCharge(lastDate);
+				charge += increment * capacity / 100;
+				dist = odo - startOdo;
+				kWh = kWs / 3600;
+				ts = new Date(lastDate);
+				midnight = new Date(ts.getFullYear(), ts.getMonth(), ts.getDate(), 0, 0, 0);
+				outputD += comma + "[" + (+midnight)  + "," + dist + "]";
+				outputC += comma + "[" + (+midnight)  + "," + charge + "]";
+				distHash[midnight.getTime()+""] = dist;
+				useHash[midnight.getTime()+""] = kWh;
+			}
 			docs.forEach(function(doc) {
 				var day = new Date(doc.ts).getDay();
 				vals = doc.record.toString().replace(",,",",0,").split(",");
@@ -595,18 +608,8 @@ app.get('/stats', function(req, res) {
 				}
 				if (doc.ts > lastDate) { // we don't want to go back in time
 					if (day != lastDay) {
+						updateValues();
 						lastDay = day;
-						stopCountingVamp(lastDate);
-						stopCountingCharge(lastDate);
-						charge += increment * capacity / 100;
-						dist = odo - startOdo;
-						kWh = kWs / 3600;
-						ts = new Date(lastDate);
-						midnight = new Date(ts.getFullYear(), ts.getMonth(), ts.getDate(), 0, 0, 0);
-						outputD += comma + "[" + (+midnight)  + "," + dist + "]";
-						outputC += comma + "[" + (+midnight)  + "," + charge + "]";
-						distHash[midnight.getTime()+""] = dist;
-						useHash[midnight.getTime()+""] = kWh;
 						startOdo = odo;
 						minSOC = 101; maxSOC = -1; kWs = 0; charge = 0; increment = 0; comma = ",";
 					}
@@ -640,18 +643,7 @@ app.get('/stats', function(req, res) {
 			});
 
 			// we still need to add the last day
-
-			stopCountingVamp(lastDate);
-			stopCountingCharge(lastDate);
-			charge += increment * capacity / 100;
-			dist = odo - startOdo;
-			kWh = kWs / 3600;
-			ts = new Date(lastDate);
-			midnight = new Date(ts.getFullYear(), ts.getMonth(), ts.getDate(), 0, 0, 0);
-			outputD += comma + "[" + (+midnight)  + "," + dist + "]";
-			outputC += comma + "[" + (+midnight)  + "," + charge + "]";
-			distHash[midnight.getTime()+""] = dist;
-			useHash[midnight.getTime()+""] = kWh;
+			updateValues();
 
 			// now analyze the charging data
 			collection = db.collection("tesla_aux");
@@ -664,41 +656,43 @@ app.get('/stats', function(req, res) {
 				var lastDoc;
 				var maxI = countVamp.vampInt.length;
 				var maxJ = countCharge.chargeInt.length;
+				function updateChargeValues(d) {
+					if (vState1) {
+						vampirekWh += calculateDelta(vState1, d);
+						vState1 = d;
+					}
+					if (cState1) {
+						chargekWh += calculateDelta(d, cState1);
+						cState1 = d;
+					}
+					if (uState1) {
+						usedkWh += calculateDelta(uState1, lastDoc);
+						uState1 = d;
+					}
+					ts = new Date(lastDate);
+					midnight = new Date(ts.getFullYear(), ts.getMonth(), ts.getDate(), 0, 0, 0).getTime()+"";
+					outputY += comma + "[" + midnight + "," + vampirekWh + "]";
+					outputCN += comma + "[" + midnight + "," + chargekWh + "]";
+					// depending on what failed, sometimes the discrete integral is better (missing charge data)
+					// but usually the charge data derived usage is more accurate. Picking the higher of the two
+					// seems to get us the best results.
+					used = Math.max(useHash[midnight+""], usedkWh);
+					outputUsed += comma + "[" + midnight + "," + used + "]";
+					dist = distHash[midnight+""];
+					if (dist > 0) {
+						outputA += comma + "[" + midnight  + "," + 1000 * used / dist + "]";
+					} else {
+						outputA += comma + "null";
+					}
+					comma = ",";
+				}
 				docs.forEach(function(doc) {
 					day = new Date(doc.ts).getDay();
 					if (!doc || !doc.chargeState || !doc.chargeState.battery_level)
 						return;
 					if (day != lastDay) {
-						if (lastDate) {
-							if (vState1) {
-								vampirekWh += calculateDelta(vState1, doc);
-								vState1 = doc;
-							}
-							if (cState1) {
-								chargekWh += calculateDelta(doc, cState1);
-								cState1 = doc;
-							}
-							if (uState1) {
-								usedkWh += calculateDelta(uState1, lastDoc);
-								uState1 = doc;
-							}
-							ts = new Date(lastDate);
-							midnight = new Date(ts.getFullYear(), ts.getMonth(), ts.getDate(), 0, 0, 0).getTime()+"";
-							outputY += comma + "[" + midnight + "," + vampirekWh + "]";
-							outputCN += comma + "[" + midnight + "," + chargekWh + "]";
-							// depending on what failed, sometimes the discrete integral is better (missing charge data)
-							// but usually the charge data derived usage is more accurate. Picking the higher of the two
-							// seems to get us the best results.
-							used = Math.max(useHash[midnight+""], usedkWh);
-							outputUsed += comma + "[" + midnight + "," + used + "]";
-							dist = distHash[midnight+""];
-							if (dist > 0) {
-								outputA += comma + "[" + midnight  + "," + 1000 * used / dist + "]";
-							} else {
-								outputA += comma + "null";
-							}
-							comma = ",";
-						}
+						if (lastDate)
+							updateChargeValues(doc);
 						lastDate = doc.ts;
 						lastDay = day;
 						vampirekWh = 0;
@@ -735,30 +729,7 @@ app.get('/stats', function(req, res) {
 						j++;
 					}
 				});
-				if (vState1) {
-					vampirekWh += calculateDelta(vState1, lastDoc);
-				}
-				if (cState1) {
-					chargekWh += calculateDelta(lastDoc, cState1);
-				}
-				if (uState1) {
-					usedkWh += calculateDelta(uState1, lastDoc);
-				}
-				ts = new Date(lastDate);
-				midnight = new Date(ts.getFullYear(), ts.getMonth(), ts.getDate(), 0, 0, 0).getTime()+"";
-				outputY += comma + "[" + midnight + "," + vampirekWh + "]";
-				outputCN += comma + "[" + midnight + "," + chargekWh + "]";
-				// depending on what failed, sometimes the discrete integral is better (missing charge data)
-				// but usually the charge data derived usage is more accurate. Picking the higher of the two
-				// seems to get us the best results.
-				used = Math.max(useHash[midnight+""], usedkWh);
-				outputUsed += comma + "[" + midnight + "," + used + "]";
-				dist = distHash[midnight+""];
-				if (dist > 0) {
-					outputA += comma + "[" + midnight  + "," + 1000 * used / dist + "]";
-				} else {
-					outputA += comma + "null";
-				}
+				updateChargeValues(lastDoc);
 				db.close();
 				fs.readFile(__dirname + "/stats.html", "utf-8", function(err, data) {
 					if (err) throw err;
