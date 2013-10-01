@@ -14,11 +14,143 @@
 <script language="javascript" type="text/javascript" src="url.min.js"></script>
 <script type="text/javascript">
 $(function() {
+	var lang, metric = false;
+	var strings = {
+		"label": {
+			"speed": {
+				"en": "Speed",
+				"de": "Geschwindigkeit"
+			},
+			"energy": {
+				"en": "Energy",
+				"de": "Energie"
+			},
+			"current": {
+				"en": "Current",
+				"de": "Strom"
+			},
+			"voltage": {
+				"en": "Voltage",
+				"de": "Spannung"
+			},
+			"power": {
+				"en": "Power",
+				"de": "Leistung"
+			},
+			"Tesla Energy Chart": {
+				"en": "Tesla Energy Chart",
+				"de": "Tesla Energie- und Fahrdaten"
+			},
+			"Energy and speed plot, starting": {
+				"en": "Energy and speed plot, starting",
+				"de": "Energie und Geschwindigkeit ab"
+			},
+			"Total energy expended": {
+				"en": "Total energy expended",
+				"de": "Gesamtenergieverbrauch"
+			},
+			"total energy regen": {
+				"en": "Total energy regen",
+				"de": "Gesamtenergierückgewinnung"
+			},
+			"Voltage and current while charging.": {
+				"en": "Voltage and current while charing.",
+				"de": "Spannung und Strom beim Laden."
+			},
+			"Maximum charge power:": {
+				"en": "Maximum charge power:",
+				"de": "Maximale Ladeleistung:"
+			},
+			"SOC and rated range": {
+				"en": "SOC and rated range",
+				"de": "Ladung und offizielle Reichweite"
+			},
+			"SOC": {
+				"en": "SOC",
+				"de": "Ladung"
+			},
+			"rated range": {
+				"en": "Rated range",
+				"de": "Offizielle Reichweite"
+			},
+			"at": {
+				"en": "at",
+				"de": "am"
+			}
+		},
+		"metric": {
+			"distance": {
+				"conversion": function(dist) { return dist * 1.609; },
+				"en": "km"
+			},
+			"energy": {
+				"conversion": function(e) { return e; },
+				"en": "kWh"
+			},
+			"energy_per_distance": {
+				"conversion": function(e) { return e / 1.609; },
+				"en": "Wh/km"
+			},
+			"speed_long": {
+				"conversion": function(speed) { return speed * 1.609; },
+				"en": "km/h"
+			},
+			"speed": {
+				"conversion": function(speed) { return speed * 1.609; },
+				"en": "km/h"
+			}
+		},
+		"imperial": {
+			"distance": {
+				"conversion": function(dist) { return dist; },
+				"en": "miles",
+				"de": "Meilen"
+			},
+			"energy_per_distance": {
+				"conversion": function(e) { return e; },
+				"en": "Wh/mile",
+				"de": "Wh/Meile"
+			},
+			"speed_long": {
+				"conversion": function(speed) { return speed; },
+				"en": "miles/hour",
+				"de": "Meilen/Stunde"
+			},
+			"speed": {
+				"conversion": function(speed) { return speed; },
+				"en": "mph"
+			}
+		}
+	};
+	function conv(k1, k2, k3) {
+		if (strings[k1][k2] === undefined)
+			k1 = "metric";
+		if (strings[k1][k2][k3] === undefined) {
+			if (strings[k1][k2]["en"] === undefined)
+				return "no conversion for " + k2;
+			return strings[k1][k2]["en"];
+		}
+		return strings[k1][k2][k3];
+	}
 	var myUrl = $.url('protocol') + "://" + $.url('auth') + (($.url('auth').length > 0) ? "@" : "") +
 		$.url('hostname') + ":" + $.url('port');
 	var d1, d2, d3, d4, d5, d6, d7, data, options, eschart, socData, socOptions, socchart, chargechart;
 	var previousPointVA, previousPointSOC;
 	parseDates($.url("?from"), $.url("?to"));
+	if ($.url("?metric"))
+		system = "metric";
+	else
+		system = "imperial";
+	if ($.url("?lang"))
+		lang = $.url("?lang").toLowerCase();
+	else
+		lang = "en";
+	$("title").html(conv("label", document.title, lang));
+	$("div#container h2").html(conv("label", $("div#container h2").text(), lang));
+	for (var i = 1; i <= 6; i++)
+		$("span#"+i).html(conv("label", $("span#"+i).text(), lang));
+	$("span#7").html(conv(system, "speed_long", lang));
+
 	$("#frompicker").val(datepickers.fromQ);
 	$("#topicker").val(datepickers.toQ);
 	datepickers(myUrl + '/energy');
@@ -27,24 +159,25 @@ $(function() {
 	$("#triplink").attr("href", myUrl + "/trip");
 	d1 = [MAGIC_ENERGY];
 	d2 = [MAGIC_SPEED];
+	for (var i = 0; i < d2.length; i++)
+		d2[i][1] *= 1.609;
 	data = [{
 		data: d1,
 		bars: { show: true,
 			barWidth: 250,
 			fill: 0.9 },
-		label: "Energy (kW)",
+		label: conv("label", "energy", lang) + " (kW)",
 		color: "#D07F27",
 		threshold: { below: 0, color: "#008000" }
 	},{
 		data: d2,
 		lines: { show: true },
-		label: "Speed (mph)",
+		label: conv("label", "speed", lang) + " (" + conv(system, "speed", lang) + ")",
 		color: "rgba(10,159,217,0.4)",
 		yaxis: 2
 	}];
 	options = {
 		yaxes: [{
-			axisLabel: "Energy",
 			min: MAGIC_MIN_ENG,
 			max: MAGIC_MAX_ENG,
 			font: {color: "#D07F27"},
@@ -58,7 +191,6 @@ $(function() {
 				return ticks;
 			}},
 			{
-			axisLabel: "Speed",
 			min: MAGIC_MIN_SPD,
 			max: MAGIC_MAX_SPD,
 			position: 'right',
@@ -111,10 +243,13 @@ $(function() {
 				x = item.datapoint[0];
 				x = new Date(x);
 				mins = '0' + x.getMinutes();
-				whenS = (x.getMonth() + 1) + '/' + x.getDate() + ' ' + x.getHours() + ':' + mins.substr(mins.length - 2);
+				if (lang === "de")
+					whenS = x.getDate() + "." + (x.getMonth()+1) + '. ' + x.getHours() + ':' + mins.substr(mins.length - 2);
+				else
+					whenS = (x.getMonth()+1) + '/' + x.getDate() + ' ' + x.getHours() + ':' + mins.substr(mins.length - 2);
 				v = d6[item.dataIndex][1], a = d5[item.dataIndex][1], kw = d7[item.dataIndex][1];
 				valueS = v + 'V / ' + a + 'A ~ ' + kw.toFixed(1) + 'kW';
-				showTooltip(item.pageX, item.pageY, valueS + " at " + whenS);
+				showTooltip(item.pageX, item.pageY, valueS + " " + conv("label", "at", lang) + " " + whenS);
 			}
 		} else {
 			$("#tooltip").remove();
@@ -123,17 +258,17 @@ $(function() {
 	});
 	data = [{
 		data: d5,
-		label: "current (A)",
+		label: conv("label", "current", lang) + " (A)",
 		color: "#808080",
 		yaxis: 1
 	},{
 		data: d6,
-		label: "voltage (V)",
+		label: conv("label", "voltage", lang) + " (V)",
 		color: "#D07F27",
 		yaxis: 2
 	},{
 		data: d7,
-		label: "power (kW)",
+		label: conv("label", "power", lang) + " (kW)",
 		color: "#F02F27",
 		yaxis: 3
 	}];
@@ -174,6 +309,9 @@ $(function() {
 	previousPointSOC = null;
 	d3 = [MAGIC_SOC];
 	d4 = [MAGIC_RANGE];
+	for (var i = 0; i < d4.length; i++)
+		d4[i][1] *= 1.609;
+
 	socchart.bind("plothover", function (event, pos, item) {
 		var x, whenS, whm, valueS, soc, range, mins;
 		if (item) {
@@ -184,10 +322,15 @@ $(function() {
 				soc = getSOC(item.datapoint[0]);
 				range = getRange(item.datapoint[0]);
 				mins = '0' + x.getMinutes();
-				whenS = (x.getMonth() + 1) + '/' + x.getDate() + ' ' + x.getHours() + ':' + mins.substr(mins.length - 2);
+				if (lang === "de")
+					whenS = x.getDate() + "." + (x.getMonth()+1) + '. ' + x.getHours() + ':' + mins.substr(mins.length - 2);
+				else
+					whenS = (x.getMonth()+1) + '/' + x.getDate() + ' ' + x.getHours() + ':' + mins.substr(mins.length - 2);
 				whm = soc * MAGIC_CAPACITY / range * 10;
-				valueS =  soc + '% / ' + range.toFixed(1) + 'miles (~' + whm.toFixed(1) + 'Wh/mile)';
-				showTooltip(item.pageX, item.pageY, valueS + " at " + whenS);
+				valueS =  soc + '% / ' + range.toFixed(1) + conv(system, "distance", lang) + " (~" + whm.toFixed(1) +
+					conv(system, "energy_per_distance", lang) + ")";
+				showTooltip(item.pageX, item.pageY, valueS + " " + conv("label", "at", lang) + " " + whenS);
+
 			}
 		} else {
 			$("#tooltip").remove();
@@ -198,14 +341,14 @@ $(function() {
 		data: d3,
 		lines: { show: true,
 			 fill: 0.9 },
-		label: "SOC (%)",
+		label: conv("label", "SOC", lang) + " (%)",
 		color: "#008000",
 		fillColor: { colors: [{ opacity: 0.8 }, { opacity: 0.1 }] },
 		threshold: [{below: 101, color: "#c02020"},{below: 91, color: "#008000"}, {below: 10, color: "#FF2020"}]
 	},{
 		data: d4,
 		lines: { show: true },
-		label: "rated range (miles)",
+		label: conv("label", "rated range", lang) + " (" + conv(system, "distance", lang)+ ")",
 		color: "#2020C0",
 		yaxis: 2
 	}];
@@ -235,7 +378,7 @@ $(function() {
 <body>
 MAGIC_NAV
 <div id="container">
-	<h2>Energy Chart</h2>
+  <h2>Tesla Energy Chart</h2>
 	<div id="dates">
 		<label>Start time</label><input id="frompicker" type="text">
 		<label>End time</label><input id="topicker" type="text">
@@ -243,13 +386,13 @@ MAGIC_NAV
 	<div id="content">
 		<center><div class="container">
 			<div id="eschart" style="height:450px; width:90%"></div>
-			<div id="explanation" style="width:70%">Energy and speed plot, starting MAGIC_START.
-				Total energy expended MAGIC_CUMUL_E, total energy regen MAGIC_CUMUL_R.</div>
+			<div id="explanation" style="width:70%"><span id="1">Energy and speed plot, starting</span> MAGIC_START.
+				<span id="2">Total energy expended</span> MAGIC_CUMUL_E, <span id="3">total energy regen</span> MAGIC_CUMUL_R.</div>
 			<div id="chargechart" style="height:450px; width:90%;"></div>
-			<div id="explanation2" style="width:70%">Voltage and current while charging.</div>
-			<div id="maxima" style="width:70%">Maximum charge power: MAGIC_MAX_KW kW (MAGIC_MAX_VOLT V / MAGIC_MAX_AMP A or ~ MAGIC_MAX_MPH miles/hour)</div>
+			<div id="explanation2" style="width:70%"><span id="6">Voltage and current while charging.</span></div>
+			<div id="maxima" style="width:70%"><span id="4">Maximum charge power:</span> MAGIC_MAX_KW kW (MAGIC_MAX_VOLT V / MAGIC_MAX_AMP A or ~ MAGIC_MAX_MPH <span id="7">miles/hour</span>)</div>
 			<div id="socchart" style="height:300px; width:90%"></div>
-			<div id="explanation2" style="width:70%">SOC and rated range</div>
+			<div id="explanation3" style="width:70%"><span id="5">SOC and rated range</span></div>
 		</div><center>
 	</div>
 </div>
