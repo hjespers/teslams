@@ -18,7 +18,7 @@
 $(function() {
 	var p, previousPoint, myUrl, d1, d2, d3, d4, d5, data, options, eschart;
 	var pw, previousPointW, myUrl, dw1, dw2, dw3, dw4, dw5, dataw, optionsw, weschart;
-	var metric = false;
+	var lang, metric = false;
 	var strings = {
 		"label": {
 			"distance": {
@@ -132,7 +132,7 @@ $(function() {
 	else
 		system = "imperial";
 	if ($.url("?lang"))
-		lang = $.url("?lang");
+		lang = $.url("?lang").toLowerCase();
 	else
 		lang = "en";
 	$("title").html(conv("label", document.title, lang));
