@@ -108,7 +108,9 @@ function tsla_poll( vid, long_vid, token ) {
 						util.log(body);
 					}
 				}
-				tsla_poll( vid, long_vid, token ); // poll again
+				setTimeout(function() {
+				    tsla_poll( vid, long_vid, token ); // poll again
+				}, 10000);
 			} else if ( response.statusCode == 401) { // HTTP AUTH Failed
 				if (!argv.silent) {
 					util.log('WARN: HTTP 401: Unauthorized - token has likely expired, getting a new one');
@@ -220,8 +222,12 @@ function initstream() {
 				util.log('Warn: no tokens returned, calling wake_up then trying again');
 			}
 			teslams.wake_up( vehicles.id, function( resp ) {
-				//ignore the wake_up() response and try again
-				initstream();
+                // ignore the wake_up() response and try again and hope for vehicle data and valid tokens
+                // added a 10sec delay to avoid a tight repeating loop 
+                // such as in the case wake_up returns unusually quickly or with an error 
+				setTimeout(function() {
+				    initstream();
+				}, 10000); 
 			});
 		} else {
 			// initialize DB or CSV stream only once

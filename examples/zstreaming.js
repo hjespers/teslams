@@ -94,7 +94,7 @@ function tsla_poll( vid, long_vid, token ) {
 					//console.log(body);
 					util.log(body); // this way we get a human readable timestamp from the server too
 				}
-				tsla_poll( vid, long_vid, token ); // poll again
+				setTimeout(function() { tsla_poll( vid, long_vid, token ); }, 10000);
 			} else if ( response.statusCode == 401) { // HTTP AUTH Failed
 				if (!argv.silent) {
 					util.log('WARN: HTTP 401: Unauthorized - token has likely expired, getting a new one');
@@ -201,10 +201,14 @@ function initstream() {
 			}
 			if (argv.zzz && vehicles.state == 'asleep') { //respect sleep mode
 				util.log('Info: car is sleeping, will check again later');	
-				setTimeout(function() { initstream() }, 60000);
-			} else {
+                // wait for 5 minutes and check again if car is asleep
+				setTimeout(function() { initstream() }, 300000);
+			} else { // car is awake already OR don't care to let it sleep
 				util.log('Info: calling wake_up');
-				teslams.wake_up( vehicles.id, function( resp ) { initstream() });
+				teslams.wake_up( vehicles.id, function( resp ) { 
+                    // 10 second delay to avoid calling wake_up to frequently
+				    setTimeout(function() { initstream() }, 10000);
+                });
 			}
 		} else {
 			// initialize DB or CSV stream only once
