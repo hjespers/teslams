@@ -1,6 +1,6 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
 <html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<title>Tesla Daily Summary Chart</title>
+<title>Tesla Daily and Weekly Summary Chart</title>
 <script language="javascript" type="text/javascript" src="jquery-1.9.1.js"></script>
 <script language="javascript" type="text/javascript" src="jquery.flot.js"></script>
 <script language="javascript" type="text/javascript" src="jquery.flot.time.min.js"></script>
@@ -17,6 +17,7 @@
 <script type="text/javascript">
 $(function() {
 	var p, previousPoint, myUrl, d1, d2, d3, d4, d5, data, options, eschart;
+	var pw, previousPointW, myUrl, dw1, dw2, dw3, dw4, dw5, dataw, optionsw, weschart;
 	function showTooltip(x, y, contents) {
 		$('<div id="tooltip">' + contents + '</div>').css( {
 			position: 'absolute',
@@ -31,13 +32,12 @@ $(function() {
 	}
 	previousPoint = null;
 	$("#dcachart").bind("plothover", function (event, pos, item) {
-		var x, y;
+		var y;
 		if (item) {
 			if (previousPoint != item.dataIndex) {
 				previousPoint = item.dataIndex;
 
 				$("#tooltip").remove();
-				x = new Date(Math.round(item.datapoint[0] / (24 * 3600000)) * 24 * 3600000);
 				y = item.datapoint[1].toFixed(1);
 				if (item.seriesIndex == 1) {
 					y += " + " + (d5[item.dataIndex][1]).toFixed(1) + " vampire loss";
@@ -163,13 +163,138 @@ $(function() {
 		});
 	};
 
+	dw1 = [MAGIC_WDISTANCE];
+	dw4 = [MAGIC_WKWH];
+	dw5 = [MAGIC_WVKWH];
+	dw2 = [MAGIC_WCHARGE];
+	dw3 = [MAGIC_WAVERAGE];
+	dataw = [{
+		data: dw1,
+		stack: "dist",
+		bars: { show: true,
+			order: 0,
+			barWidth: 42 * 3600 * 1000,
+			fill: 0.9 },
+		label: "Distance (miles)",
+		color: "#808080",
+		yaxis: 1
+	},{
+		data: dw4,
+		stack: "energy",
+		bars: { show: true,
+			order: 1,
+			barWidth: 42 * 3600 * 1000,
+			fill: 0.9 },
+		label: "Energy Used (kWh)",
+		color: "#D07F27",
+		yaxis: 2
+	},{
+		data: dw5,
+		stack: "energy",
+		bars: { show: true,
+			order: 1,
+			barWidth: 42 * 3600 * 1000,
+			fill: 0.9 },
+		label: "Energy Lost(kWh)",
+		color: "#B05F18",
+		yaxis: 2
+	},{
+		data: dw2,
+		stack: "charge",
+		bars: { show: true,
+			order: 2,
+			barWidth: 42 * 3600 * 1000,
+			fill: 0.2 },
+		label: "Charge (kWh)",
+		color: "#0a9fd9",
+		yaxis: 2
+	},{
+		data: dw3,
+		lines: { show: true },
+		points: { show: true },
+		label: "Average (Wh/mile)",
+		color: "#0a9f0a",
+		yaxis: 1
+	}];
+	optionsw = {
+		grid: { hoverable: true },
+		yaxes: [{
+			min: 0
+		},{
+			min: 0,
+			position: 'right'
+		}],
+		xaxes: [{
+			mode: "time",
+			show: true,
+			tickSize: [1, "day"],
+			timezone: "browser",
+			tickFormatter: function (v, axis) {
+				var s = new Date(v), t = new Date(v + 6 * 24 * 3600 * 1000);
+				if (s.getDay() == 0)
+					return (s.getMonth()+1) + '/' + s.getDate() + ' - ' + (t.getMonth()+1) + '/' + t.getDate();
+				else
+					return "";
+			}
+		}]
+	};
+	weschart = $("#wdcachart");
+	pw = $.plot(weschart, dataw, optionsw);
+
+	previousPointW = null;
+	$("#wdcachart").bind("plothover", function (event, pos, item) {
+		var y;
+		if (item) {
+			if (previousPointW != item.dataIndex) {
+				previousPointW = item.dataIndex;
+
+				$("#tooltip").remove();
+				y = item.datapoint[1].toFixed(1);
+				if (item.seriesIndex == 1) {
+					y += " + " + (dw5[item.dataIndex][1]).toFixed(1) + " vampire loss";
+				}
+				showTooltip(item.pageX, item.pageY,
+							item.series.label + " : " + y);
+			}
+		} else {
+			$("#tooltip").remove();
+			previousPointW = null;
+		}
+	});
+	// now write the values into the bars
+	var vOffset = [];
+	for (var i = 0; i < 4; i++) {
+		var series = pw.getData()[i];
+		var scale = series.xaxis.box.width / (series.xaxis.max - series.xaxis.min);
+		var barWidth = scale * series.bars.barWidth;
+		if (barWidth < 25)
+			continue;
+		var hOffset = ((i <= 1) ? i - 1.5 : i - 2.5) * barWidth;
+		var fontHeight = series.yaxis.labelHeight;
+		$.each(series.data, function(j, el){
+			var yAxis = (i == 0) ? 1 : 2;
+			var o = pw.pointOffset({x: el[0], y: el[1], yaxis: yAxis});
+			var left = o.left + hOffset;
+			var top = o.top;
+			if (i == 1) 
+				vOffset[j] = top;
+			if (i == 2)
+				top -= (series.yaxis.box.height - vOffset[j]) - fontHeight / 2;
+			$('<div class="data-point-label">' + el[1].toFixed(1) + '</div>').css( {
+				position: 'absolute',
+				left: left + 4,
+				top: top,
+				font: fontHeight/2 + 'px sans'
+			}).appendTo(pw.getPlaceholder());
+		});
+	};
 });
 </script>
 </head>
 <body>
 MAGIC_NAV
 <div id="container">
-	<h2>Daily Summary Chart</h2>
+	<h2>Daily and Weekly Summary Chart</h2>
 	<div id="dates">
 		<label>Start time</label><input id="frompicker" type="text">
 		<label>End time</label><input id="topicker" type="text">
@@ -178,6 +303,8 @@ MAGIC_NAV
 		<center><div class="container">
 			<div id="dcachart" style="height:450px; width:90%;"></div>
 			<div id="explanation" style="width:70%">Daily distance, charge and Wh/mile plot, starting MAGIC_START.</div>
+			<div id="wdcachart" style="height:450px; width:90%;"></div>
+			<div id="explanation" style="width:70%">Weekly distance, charge and Wh/mile plot.</div>
 		</div><center>
 	</div>
 </div>
