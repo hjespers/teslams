@@ -103,6 +103,13 @@ function parseDates(fromQ, toQ) {
 	else
 		this.fromQ = dashDate(fromQ,['23','59','59']);
 }
+function weekNr(d) {
+	d = new Date(d);
+	d.setHours(0,0,0);
+	d.setDate(d.getDate() + 4 - (d.getDay()));
+	var yearStart = new Date(d.getFullYear(),0,1);
+	return Math.ceil(( ( (d - yearStart) / 86400000) + 1)/7);
+}
 MongoClient.connect("mongodb://127.0.0.1:27017/" + argv.db, function(err, db) {
 	// this is the first time we connect - if we get an error, just throw it
 	if(err) throw(err);
@@ -542,6 +549,7 @@ app.get('/test', function(req, res) {
 	});
 });
 app.get('/stats', function(req, res) {
+	var debugStartTime = new Date().getTime();
 	var path = req.path;
 	var dates = new parseDates(req.query.from, req.query.to);
 	countVamp.vampInt = [];
@@ -555,6 +563,7 @@ app.get('/stats', function(req, res) {
 		return;
 	}
 	var outputD = "", outputC = "", outputA = "", comma, firstDate = 0, lastDay = 0, lastDate = 0, distHash = {}, useHash = {};
+	var outputWD = "", outputWC = "", outputWA = "", commaW, distWHash = {}, useWHash ={};
 	MongoClient.connect("mongodb://127.0.0.1:27017/" + argv.db, function(err, db) {
 		if(err) {
 			console.log('error connecting to database:', err);
@@ -562,16 +571,19 @@ app.get('/stats', function(req, res) {
 		}
 		res.setHeader("Content-Type", "text/html");
 		collection = db.collection("tesla_stream");
+		if (argv.verbose)
+			console.log("starting DB request after", new Date().getTime() - debugStartTime, "ms");
 		collection.find({"ts": {"$gte": from.getTime(), "$lte": to.getTime()}}).toArray(function(err,docs) {
-			// this is really annoying - if for any reason you had to hand edit the database
-			// e.g., when the service was down and you need to correct what's in the database,
-			// the values are no longer in order - and the algorithm below will fail as it assumes
-			// the entries to be in order. So we need to sort here - the mongoDB sort function
-			// fails if the amount of data becomes too large :-(
+			if (argv.verbose)
+				console.log("processing data after", new Date().getTime() - debugStartTime, "ms");
+			// this is really annoying; the values from the database frequently aren't sorted by
+			// timestamp, even if you didn't edit the data. So we need to sort here - the mongoDB
+			// sort function fails if the amount of data becomes too large :-(
 			docs.sort(function(a,b){return a.ts - b.ts;});
 			var vals = [];
 			var odo, energy, state, soc;
 			var dist, kWh, ts, midnight, used;
+			var week, distW = 0, kWhW = 0, usedW = 0, chargeW = 0;
 			var startOdo, charge, minSOC, maxSOC, increment, kWs;
 			if (docs === null) {
 				if (argv.verbose) {
@@ -580,8 +592,39 @@ app.get('/stats', function(req, res) {
 				}
 				return;
 			}
+			function updateWValues(f) {
+				var lw = weekNr(lastDate);
+				var ld = new Date(lastDate);
+				if (lw == week && f !== true)
+					return;
+				var wts = ld.getTime() - 24 * 3600 * 1000 * ld.getDay() - 3600 * 1000 * ld.getHours()
+							- 60 * 1000 * ld.getMinutes() - 1000 * ld.getSeconds() - ld.getMilliseconds();
+				outputWD += commaW + "[" + wts + "," + distW + "]";
+				outputWC += commaW + "[" + wts + "," + chargeW + "]";
+				commaW = ",";
+				distWHash[wts+""] = distW;
+				useWHash[wts+""] = kWhW;
+				distW = chargeW = distW = kWhW = 0;
+			}
+			function updateValues() {
+				stopCountingVamp(lastDate);
+				stopCountingCharge(lastDate);
+				charge += increment * capacity / 100;
+				chargeW += charge;
+				dist = odo - startOdo;
+				distW += dist;
+				kWh = kWs / 3600;
+				kWhW += kWh;
+				ts = new Date(lastDate);
+				midnight = new Date(ts.getFullYear(), ts.getMonth(), ts.getDate(), 0, 0, 0);
+				outputD += comma + "[" + (+midnight)  + "," + dist + "]";
+				outputC += comma + "[" + (+midnight)  + "," + charge + "]";
+				distHash[midnight.getTime()+""] = dist;
+				useHash[midnight.getTime()+""] = kWh;
+			}
 			docs.forEach(function(doc) {
 				var day = new Date(doc.ts).getDay();
+				week = weekNr(doc.ts);
 				vals = doc.record.toString().replace(",,",",0,").split(",");
 				odo = parseFloat(vals[2]);
 				soc = parseFloat(vals[3]); // sadly, this is an integer today :-(
@@ -591,114 +634,125 @@ app.get('/stats', function(req, res) {
 					firstDate = doc.ts - 1;
 					lastDay = day;
 					startOdo = odo;
-					minSOC = 101; maxSOC = -1; kWs = 0; charge = 0; increment = 0; comma = "";
+					minSOC = 101; maxSOC = -1; kWs = 0; charge = 0; increment = 0; comma = ""; commaW = "";
 				}
-				if (doc.ts > lastDate) { // we don't want to go back in time
-					if (day != lastDay) {
-						lastDay = day;
-						stopCountingVamp(lastDate);
-						stopCountingCharge(lastDate);
-						charge += increment * capacity / 100;
-						dist = odo - startOdo;
-						kWh = kWs / 3600;
-						ts = new Date(lastDate);
-						midnight = new Date(ts.getFullYear(), ts.getMonth(), ts.getDate(), 0, 0, 0);
-						outputD += comma + "[" + (+midnight)  + "," + dist + "]";
-						outputC += comma + "[" + (+midnight)  + "," + charge + "]";
-						distHash[midnight.getTime()+""] = dist;
-						useHash[midnight.getTime()+""] = kWh;
-						startOdo = odo;
-						minSOC = 101; maxSOC = -1; kWs = 0; charge = 0; increment = 0; comma = ",";
-					}
-					// this is crude - it would be much better to get this from
-					// the aux database and use the actual charge info
-					if (state != 'R' && state != 'D') { // we are not driving
-						if (energy < 0) { // parked & charging
-							stopCountingVamp(doc.ts);
-							countCharge(doc.ts);
-							if (soc < minSOC) minSOC = soc;
-							if (soc > maxSOC) maxSOC = soc;
-							increment = maxSOC - minSOC;
-						} else { // parked & consuming
-							countVamp(doc.ts);
-							stopCountingCharge(doc.ts);
-							// if we were charging before, add the estimate to the total
-							// this a quite coarse as SOC is in full percent - bad granularity
-							if (increment > 0) {
-								charge += increment * capacity / 100;
-								increment = 0; minSOC = 101; maxSOC = -1;
-							}
-						}
-					} else {
-						// we're driving - add up the energy used / regen
-						if (lastDate > 0)
-							kWs += (doc.ts - lastDate) / 1000 * (energy - 0.12); // this correction is needed to match in car data???
+				if (day != lastDay) {
+					updateValues();
+					updateWValues();
+					lastDay = day;
+					startOdo = odo;
+					minSOC = 101; maxSOC = -1; kWs = 0; charge = 0; increment = 0; comma = ",";
+				}
+				// this is crude - it would be much better to get this from
+				// the aux database and use the actual charge info
+				if (state != 'R' && state != 'D') { // we are not driving
+					if (energy < 0) { // parked & charging
 						stopCountingVamp(doc.ts);
+						countCharge(doc.ts);
+						if (soc < minSOC) minSOC = soc;
+						if (soc > maxSOC) maxSOC = soc;
+						increment = maxSOC - minSOC;
+					} else { // parked & consuming
+						countVamp(doc.ts);
+						stopCountingCharge(doc.ts);
+						// if we were charging before, add the estimate to the total
+						// this a quite coarse as SOC is in full percent - bad granularity
+						if (increment > 0) {
+							charge += increment * capacity / 100;
+							increment = 0; minSOC = 101; maxSOC = -1;
+						}
 					}
-					lastDate = doc.ts;
+				} else {
+					// we're driving - add up the energy used / regen
+					if (lastDate > 0)
+						kWs += (doc.ts - lastDate) / 1000 * (energy - 0.12); // this correction is needed to match in car data???
+					stopCountingVamp(doc.ts);
 				}
+				lastDate = doc.ts;
 			});
 
 			// we still need to add the last day
-
-			stopCountingVamp(lastDate);
-			stopCountingCharge(lastDate);
-			charge += increment * capacity / 100;
-			dist = odo - startOdo;
-			kWh = kWs / 3600;
-			ts = new Date(lastDate);
-			midnight = new Date(ts.getFullYear(), ts.getMonth(), ts.getDate(), 0, 0, 0);
-			outputD += comma + "[" + (+midnight)  + "," + dist + "]";
-			outputC += comma + "[" + (+midnight)  + "," + charge + "]";
-			distHash[midnight.getTime()+""] = dist;
-			useHash[midnight.getTime()+""] = kWh;
-
+			updateValues();
+			updateWValues(true);
 			// now analyze the charging data
 			collection = db.collection("tesla_aux");
 			collection.find({"chargeState": {$exists: true}, "ts": {$gte: +from, $lte: +to}}).toArray(function(err,docs) {
-				var i = 0, vampirekWh = 0, day, lastDay = -1, lastDate = null, comma = "", outputY = "";
-				var j = 0, chargekWh = 0, outputCN = "", usedkWh = 0, outputUsed = "";
+				var i = 0, vampirekWh = 0, day, lastDay = -1, lastDate = null, comma = "", outputY = "", outputWY = "", commaW = "";
+				var j = 0, chargekWh = 0, outputCN = "", usedkWh = 0, outputUsed = "", outputWCN = "", outputWUsed = "";
+				var chargekWhW = 0, vampirekWhW = 0, usedW = 0;
 				var vState1 = null;
 				var cState1 = null;
 				var uState1 = null;
 				var lastDoc;
 				var maxI = countVamp.vampInt.length;
 				var maxJ = countCharge.chargeInt.length;
+				function updateChargeWValues(f) {
+					var ld, lw = weekNr(lastDate);
+					if (lw == week && f !== true)
+						return;
+					// if we force the display we need to get the week from the last doc
+					// that we had, otherwise we are showing last weeks data, so get it from lastDate
+					if (f === true)
+						ld = new Date(lastDoc.ts);
+					else
+						ld = new Date(lastDate);
+					var wts = ld.getTime() - 24 * 3600 * 1000 * ld.getDay() - 3600 * 1000 * ld.getHours()
+								- 60 * 1000 * ld.getMinutes() - 1000 * ld.getSeconds() - ld.getMilliseconds();
+					outputWY += commaW + "[" + wts + "," + vampirekWhW + "]";
+					outputWCN += commaW + "[" + wts + "," + chargekWhW + "]";
+					outputWUsed += commaW + "[" + wts + "," + usedW + "]";
+					dist = distWHash[wts+""];
+					if (dist > 0) {
+						outputWA += commaW + "[" + wts + "," + 1000 * usedW / dist + "]";
+					} else {
+						outputWA += commaW + "null";
+					}
+					commaW = ",";
+					chargekWhW = 0, vampirekWhW = 0, usedW = 0;
+				}
+				function updateChargeValues(d) {
+					if (vState1) {
+						vampirekWh += calculateDelta(vState1, d);
+						vState1 = d;
+					}
+					if (cState1) {
+						chargekWh += calculateDelta(d, cState1);
+						cState1 = d;
+					}
+					if (uState1) {
+						usedkWh += calculateDelta(uState1, lastDoc);
+						uState1 = d;
+					}
+					vampirekWhW += vampirekWh;
+					chargekWhW += chargekWh;
+					ts = new Date(lastDate);
+					midnight = new Date(ts.getFullYear(), ts.getMonth(), ts.getDate(), 0, 0, 0).getTime()+"";
+					outputY += comma + "[" + midnight + "," + vampirekWh + "]";
+					outputCN += comma + "[" + midnight + "," + chargekWh + "]";
+					// depending on what failed, sometimes the discrete integral is better (missing charge data)
+					// but usually the charge data derived usage is more accurate. Picking the higher of the two
+					// seems to get us the best results.
+					used = Math.max(useHash[midnight+""], usedkWh);
+					// used = usedkWh;
+					usedW += usedkWh;
+					outputUsed += comma + "[" + midnight + "," + used + "]";
+					dist = distHash[midnight+""];
+					if (dist > 0) {
+						outputA += comma + "[" + midnight  + "," + 1000 * used / dist + "]";
+					} else {
+						outputA += comma + "null";
+					}
+					comma = ",";
+				}
 				docs.forEach(function(doc) {
 					day = new Date(doc.ts).getDay();
+					week = weekNr(doc.ts);
 					if (!doc || !doc.chargeState || !doc.chargeState.battery_level)
 						return;
-					lastDoc = doc;
 					if (day != lastDay) {
 						if (lastDate) {
-							if (vState1) {
-								vampirekWh += calculateDelta(vState1, doc);
-								vState1 = doc;
-							}
-							if (cState1) {
-								chargekWh += calculateDelta(doc, cState1);
-								cState1 = doc;
-							}
-							if (uState1) {
-								usedkWh += calculateDelta(uState1, doc);
-								uState1 = doc;
-							}
-							ts = new Date(lastDate);
-							midnight = new Date(ts.getFullYear(), ts.getMonth(), ts.getDate(), 0, 0, 0).getTime()+"";
-							outputY += comma + "[" + midnight + "," + vampirekWh + "]";
-							outputCN += comma + "[" + midnight + "," + chargekWh + "]";
-							// depending on what failed, sometimes the discrete integral is better (missing charge data)
-							// but usually the charge data derived usage is more accurate. Picking the higher of the two
-							// seems to get us the best results.
-							used = Math.max(useHash[midnight+""], usedkWh);
-							outputUsed += comma + "[" + midnight + "," + used + "]";
-							dist = distHash[midnight+""];
-							if (dist > 0) {
-								outputA += comma + "[" + midnight  + "," + 1000 * used / dist + "]";
-							} else {
-								outputA += comma + "null";
-							}
-							comma = ",";
+							updateChargeValues(doc);
+							updateChargeWValues();
 						}
 						lastDate = doc.ts;
 						lastDay = day;
@@ -706,6 +760,7 @@ app.get('/stats', function(req, res) {
 						chargekWh = 0;
 						usedkWh = 0;
 					}
+					lastDoc = doc;
 					if (uState1 === null && vState1 === null && cState1 === null)
 						uState1 = doc;
 					if (i < maxI && vState1 === null && doc.ts >= countVamp.vampInt[i][0]) {
@@ -735,30 +790,8 @@ app.get('/stats', function(req, res) {
 						j++;
 					}
 				});
-				if (vState1) {
-					vampirekWh += calculateDelta(vState1, lastDoc);
-				}
-				if (cState1) {
-					chargekWh += calculateDelta(lastDoc, cState1);
-				}
-				if (uState1) {
-					usedkWh += calculateDelta(uState1, lastDoc);
-				}
-				ts = new Date(lastDate);
-				midnight = new Date(ts.getFullYear(), ts.getMonth(), ts.getDate(), 0, 0, 0).getTime()+"";
-				outputY += comma + "[" + midnight + "," + vampirekWh + "]";
-				outputCN += comma + "[" + midnight + "," + chargekWh + "]";
-				// depending on what failed, sometimes the discrete integral is better (missing charge data)
-				// but usually the charge data derived usage is more accurate. Picking the higher of the two
-				// seems to get us the best results.
-				used = Math.max(useHash[midnight+""], usedkWh);
-				outputUsed += comma + "[" + midnight + "," + used + "]";
-				dist = distHash[midnight+""];
-				if (dist > 0) {
-					outputA += comma + "[" + midnight  + "," + 1000 * used / dist + "]";
-				} else {
-					outputA += comma + "null";
-				}
+				updateChargeValues(lastDoc);
+				updateChargeWValues(true);
 				db.close();
 				fs.readFile(__dirname + "/stats.html", "utf-8", function(err, data) {
 					if (err) throw err;
@@ -767,12 +800,19 @@ app.get('/stats', function(req, res) {
 					var response = data
 						.replace("MAGIC_NAV", nav)
 						.replace("MAGIC_DISTANCE", outputD)
+						.replace("MAGIC_WDISTANCE", outputWD)
 						.replace("MAGIC_CHARGE", outputCN)
+						.replace("MAGIC_WCHARGE", outputWCN)
 						.replace("MAGIC_AVERAGE", outputA)
-						.replace("MAGIC_KWH", outputUsed)   // this needs more testing
+						.replace("MAGIC_WAVERAGE", outputWA)
+						.replace("MAGIC_KWH", outputUsed)
+						.replace("MAGIC_WKWH", outputWUsed)
 						.replace("MAGIC_VKWH", outputY)
+						.replace("MAGIC_WVKWH", outputWY)
 						.replace("MAGIC_START", startDate);
 					res.end(response, "utf-8");
+					if (argv.verbose)
+						console.log("total processing time", new Date().getTime() - debugStartTime, "ms");
 				});
 
 			});
