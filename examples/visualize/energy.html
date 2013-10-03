@@ -145,6 +145,9 @@ $(function() {
 		lang = $.url("?lang").toLowerCase();
 	else
 		lang = "en";
+	var params = "&lang=" + lang;
+	if (system === "metric")
+		params += "&metric=true";
 	$("title").html(conv("label", document.title, lang));
 	$("div#container h2").html(conv("label", $("div#container h2").text(), lang));
 	for (var i = 1; i <= 6; i++)
@@ -154,8 +157,9 @@ $(function() {
 	$("#frompicker").val(datepickers.fromQ);
 	$("#topicker").val(datepickers.toQ);
 	datepickers(myUrl + '/energy');
-	$("#maplink").attr("href", myUrl + "/map?from=" + datepickers.fromQ + "&to=" + datepickers.toQ);
-	$("#statslink").attr("href", myUrl + "/stats?from=" + datepickers.fromQ + "&to=" + datepickers.toQ);
+	$("#maplink").attr("href", myUrl + "/map?from=" + datepickers.fromQ + "&to=" + datepickers.toQ + params);
+	$("#statslink").attr("href", myUrl + "/stats?from=" + datepickers.fromQ + "&to=" + datepickers.toQ + params);
+	$("#energylink").attr("href", myUrl + "/energy?from=" + datepickers.fromQ + "&to=" + datepickers.toQ + params);
 	$("#triplink").attr("href", myUrl + "/trip");
 	d1 = [MAGIC_ENERGY];
 	d2 = [MAGIC_SPEED];
