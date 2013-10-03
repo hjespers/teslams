@@ -692,10 +692,19 @@ app.get('/stats', function(req, res) {
 						return;
 					// if we force the display we need to get the week from the last doc
 					// that we had, otherwise we are showing last weeks data, so get it from lastDate
-					if (f === true)
-						ld = new Date(lastDoc.ts);
-					else
+					if (f === true) {
+						if (lastDoc !== null && lastDoc.ts !== undefined) {
+							ld = new Date(lastDoc.ts);
+						} else { // we have no data for this range
+							outputWY += commaW + "null";
+							outputWCN += commaW + "null";
+							outputWUsed += commaW + "null";
+							commaW = ',';
+							return;
+						}
+					} else {
 						ld = new Date(lastDate);
+					}
 					var wts = ld.getTime() - 24 * 3600 * 1000 * ld.getDay() - 3600 * 1000 * ld.getHours()
 								- 60 * 1000 * ld.getMinutes() - 1000 * ld.getSeconds() - ld.getMilliseconds();
 					outputWY += commaW + "[" + wts + "," + vampirekWhW + "]";
