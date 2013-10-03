@@ -310,12 +310,15 @@ app.get('/map', function(req, res) {
 
 app.get('/energy', function(req, res) {
 	var path = req.path;
+	var params = "&lang=" + req.query.lang;
+	if (req.query.metric === "true")
+		params += "&metric=true";
 	var dates = new parseDates(req.query.from, req.query.to);
 	from = makeDate(dates.fromQ);
 	to = makeDate(dates.toQ);
 	if (req.query.to === undefined || req.query.to.split('-').length < 6 ||
 	    req.query.from === undefined || req.query.from.split('-').length < 6) {
-		res.redirect('/energy?from=' + dates.fromQ + '&to=' + dates.toQ);
+		res.redirect('/energy?from=' + dates.fromQ + '&to=' + dates.toQ + params);
 		return;
 	}
 	// don't deliver more than 10000 data points (that's one BIG screen)
@@ -551,6 +554,9 @@ app.get('/test', function(req, res) {
 app.get('/stats', function(req, res) {
 	var debugStartTime = new Date().getTime();
 	var path = req.path;
+	var params = "&lang=" + req.query.lang;
+	if (req.query.metric === "true")
+		params += "&metric=true";
 	var dates = new parseDates(req.query.from, req.query.to);
 	countVamp.vampInt = [];
 	countCharge.chargeInt = [];
@@ -559,7 +565,7 @@ app.get('/stats', function(req, res) {
 	to = makeDate(dates.toQ);
 	if (req.query.to === undefined || req.query.to.split('-').length < 6 ||
 	    req.query.from === undefined || req.query.from.split('-').length < 6) {
-		res.redirect('/stats?from=' + dates.fromQ + '&to=' + dates.toQ);
+		res.redirect('/stats?from=' + dates.fromQ + '&to=' + dates.toQ + params);
 		return;
 	}
 	var outputD = "", outputC = "", outputA = "", comma, firstDate = 0, lastDay = 0, lastDate = 0, distHash = {}, useHash = {};
