@@ -1,6 +1,6 @@
 {
   "name": "teslams",
-  "version": "0.6.54",
+  "version": "0.6.55",
   "description": "Utilities for the Tesla Model S ",
   "dependencies": {
     "request": "~2.14.0",
