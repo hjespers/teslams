@@ -150,19 +150,6 @@ function tsla_poll( vid, long_vid, token ) {
 				collectionS.insert(doc, { 'safe': true }, function(err,docs) {
 					if(err) util.log(err);
 				});
-//					collectionS.find({ 'ts': +vals[i]}).toArray(function(err, exist){
-//						try {
-//							if (err || exist == null || exist.length == 0) { // only write entry if it doesn't already exist
-//								collectionS.insert(doc, { 'safe': true }, function(err,docs) {
-//									if(err) util.log(err);
-//								});
-//							} else {
-//								util.log("had data, not writing it");
-//							}
-//						} catch (innerError) {
-//							console.dir(innerError);
-//						}
-//					});
 			}
 		} else {
 			stream.write(data);
