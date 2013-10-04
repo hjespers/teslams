@@ -18,6 +18,79 @@
 $(function() {
 	var p, previousPoint, myUrl, d1, d2, d3, d4, d5, data, options, eschart;
 	var pw, previousPointW, myUrl, dw1, dw2, dw3, dw4, dw5, dataw, optionsw, weschart;
+	var lang, metric = false;
+	var strings = {
+		"label": {
+			"distance": {
+				"en": "Distance",
+				"de": "Distanz"
+			},
+			"energy used": {
+				"en": "Energy Used",
+				"de": "Energieverbrauch"
+			},
+			"energy lost": {
+				"en": "Energy Lost",
+				"de": "Energieverlust"
+			},
+			"charge": {
+				"en": "Charge",
+				"de": "Ladung"
+			},
+			"average": {
+				"en": "Average",
+				"de": "Durchschnitt"
+			},
+			"Tesla Daily and Weekly Summary Chart": {
+				"en": "Tesla Daily and Weekly Summary Chart",
+				"de": "Tesla Tages- und Wochenstatistik"
+			},
+			"Daily plot, starting": {
+				"en": "Daily plot, starting",
+				"de": "Tagesstatistik ab"
+			},
+			"Weekly plot": {
+				"en": "Weekly plot",
+				"de": "Wochenstatistik"
+			}
+		},
+		"metric": {
+			"distance": {
+				"conversion": function(dist) { return dist * 1.609; },
+				"en": "km"
+			},
+			"energy": {
+				"conversion": function(e) { return e; },
+				"en": "kWh"
+			},
+			"energy_per_distance": {
+				"conversion": function(e) { return e / 1.609; },
+				"en": "Wh/km"
+			}
+		},
+		"imperial": {
+			"distance": {
+				"conversion": function(dist) { return dist; },
+				"en": "miles",
+				"de": "Meilen"
+			},
+			"energy_per_distance": {
+				"conversion": function(e) { return e; },
+				"en": "Wh/mile",
+				"de": "Wh/Meile"
+			}
+		}
+	};
+	function conv(k1, k2, k3) {
+		if (strings[k1][k2] === undefined)
+			k1 = "metric";
+		if (strings[k1][k2][k3] === undefined) {
+			if (strings[k1][k2]["en"] === undefined)
+				return "no conversion for " + k2;
+			return strings[k1][k2]["en"];
+		}
+		return strings[k1][k2][k3];
+	}
 	function showTooltip(x, y, contents) {
 		$('<div id="tooltip">' + contents + '</div>').css( {
 			position: 'absolute',
@@ -54,17 +127,39 @@ $(function() {
 	myUrl = $.url('protocol') + "://" + $.url('auth') + (($.url('auth').length > 0) ? "@" : "") +
 		$.url('hostname') + ":" + $.url('port');
 	parseDates($.url("?from"), $.url("?to"));
+	if ($.url("?metric"))
+		system = "metric";
+	else
+		system = "imperial";
+	if ($.url("?lang"))
+		lang = $.url("?lang").toLowerCase();
+	else
+		lang = "en";
+	var params = "&lang=" + lang;
+	if (system === "metric")
+		params += "&metric=true";
+	$("title").html(conv("label", document.title, lang));
+	$("div#container h2").html(conv("label", $("div#container h2").text(), lang));
+	$("div#explanation span").html(conv("label", $("div#explanation span").text(), lang));
+	$("div#explanation2").html(conv("label", $("div#explanation2").text(), lang));
 	$("#frompicker").val(datepickers.fromQ);
 	$("#topicker").val(datepickers.toQ);
 	datepickers(myUrl + '/stats');
-	$("#maplink").attr("href", myUrl + "/map?from=" + datepickers.fromQ + "&to=" + datepickers.toQ);
-	$("#energylink").attr("href", myUrl + "/energy?from=" + datepickers.fromQ + "&to=" + datepickers.toQ);
+	$("#maplink").attr("href", myUrl + "/map?from=" + datepickers.fromQ + "&to=" + datepickers.toQ + params);
+	$("#statslink").attr("href", myUrl + "/stats?from=" + datepickers.fromQ + "&to=" + datepickers.toQ + params);
+	$("#energylink").attr("href", myUrl + "/energy?from=" + datepickers.fromQ + "&to=" + datepickers.toQ + params);
 	$("#triplink").attr("href", myUrl + "/trip");
 	d1 = [MAGIC_DISTANCE];
 	d4 = [MAGIC_KWH];
 	d5 = [MAGIC_VKWH];
 	d2 = [MAGIC_CHARGE];
 	d3 = [MAGIC_AVERAGE];
+	if (system === "metric") {
+		for (var i = 0; i < d1.length; i++) {
+			d1[i][1] *= 1.609;
+			d3[i][1] /= 1.609;
+		}
+	}
 	data = [{
 		data: d1,
 		stack: "dist",
@@ -72,7 +167,7 @@ $(function() {
 			order: 0,
 			barWidth: 6 * 3600 * 1000,
 			fill: 0.9 },
-		label: "Distance (miles)",
+		label: conv("label", "distance", lang) + " (" + conv(system, "distance", lang) + ")",
 		color: "#808080",
 		yaxis: 1
 	},{
@@ -82,7 +177,7 @@ $(function() {
 			order: 1,
 			barWidth: 6 * 3600 * 1000,
 			fill: 0.9 },
-		label: "Energy Used (kWh)",
+		label: conv("label", "energy used", lang) + " (" + conv(system, "energy", lang) + ")",
 		color: "#D07F27",
 		yaxis: 2
 	},{
@@ -92,7 +187,7 @@ $(function() {
 			order: 1,
 			barWidth: 6 * 3600 * 1000,
 			fill: 0.9 },
-		label: "Energy Lost(kWh)",
+		label: conv("label", "energy lost", lang) + " (" + conv(system, "energy", lang) + ")",
 		color: "#B05F18",
 		yaxis: 2
 	},{
@@ -102,14 +197,14 @@ $(function() {
 			order: 2,
 			barWidth: 6 * 3600 * 1000,
 			fill: 0.2 },
-		label: "Charge (kWh)",
+		label: conv("label", "charge", lang) + " (" + conv(system, "energy", lang) + ")",
 		color: "#0a9fd9",
 		yaxis: 2
 	},{
 		data: d3,
 		lines: { show: true },
 		points: { show: true },
-		label: "Average (Wh/mile)",
+		label: conv("label", "average", lang) + " (" + conv(system, "energy_per_distance", lang) + ")",
 		color: "#0a9f0a",
 		yaxis: 1
 	}];
@@ -153,12 +248,12 @@ $(function() {
 			if (i == 1) 
 				vOffset[j] = top;
 			if (i == 2)
-				top -= (series.yaxis.box.height - vOffset[j]) - fontHeight / 2;
+				top -= (series.yaxis.box.height - vOffset[j]) - fontHeight *3/4;
 			$('<div class="data-point-label">' + el[1].toFixed(1) + '</div>').css( {
 				position: 'absolute',
 				left: left + 4,
 				top: top,
-				font: fontHeight/2 + 'px sans'
+				font: fontHeight*3/4 + 'px sans'
 			}).appendTo(p.getPlaceholder());
 		});
 	};
@@ -168,6 +263,12 @@ $(function() {
 	dw5 = [MAGIC_WVKWH];
 	dw2 = [MAGIC_WCHARGE];
 	dw3 = [MAGIC_WAVERAGE];
+	if (system === "metric") {
+		for (i = 0; i < dw1.length; i++) {
+			dw1[i][1] *= 1.609;
+			dw3[i][1] /= 1.609;
+		}
+	}
 	dataw = [{
 		data: dw1,
 		stack: "dist",
@@ -175,7 +276,7 @@ $(function() {
 			order: 0,
 			barWidth: 42 * 3600 * 1000,
 			fill: 0.9 },
-		label: "Distance (miles)",
+		label: conv("label", "distance", lang) + " (" + conv(system, "distance", lang) + ")",
 		color: "#808080",
 		yaxis: 1
 	},{
@@ -185,7 +286,7 @@ $(function() {
 			order: 1,
 			barWidth: 42 * 3600 * 1000,
 			fill: 0.9 },
-		label: "Energy Used (kWh)",
+		label: conv("label", "energy used", lang) + " (" + conv(system, "energy", lang) + ")",
 		color: "#D07F27",
 		yaxis: 2
 	},{
@@ -195,7 +296,7 @@ $(function() {
 			order: 1,
 			barWidth: 42 * 3600 * 1000,
 			fill: 0.9 },
-		label: "Energy Lost(kWh)",
+		label: conv("label", "energy lost", lang) + " (" + conv(system, "energy", lang) + ")",
 		color: "#B05F18",
 		yaxis: 2
 	},{
@@ -205,14 +306,14 @@ $(function() {
 			order: 2,
 			barWidth: 42 * 3600 * 1000,
 			fill: 0.2 },
-		label: "Charge (kWh)",
+		label: conv("label", "charge", lang) + " (" + conv(system, "energy", lang) + ")",
 		color: "#0a9fd9",
 		yaxis: 2
 	},{
 		data: dw3,
 		lines: { show: true },
 		points: { show: true },
-		label: "Average (Wh/mile)",
+		label: conv("label", "average", lang) + " (" + conv(system, "energy_per_distance", lang) + ")",
 		color: "#0a9f0a",
 		yaxis: 1
 	}];
@@ -279,12 +380,12 @@ $(function() {
 			if (i == 1) 
 				vOffset[j] = top;
 			if (i == 2)
-				top -= (series.yaxis.box.height - vOffset[j]) - fontHeight / 2;
+				top -= (series.yaxis.box.height - vOffset[j]) - fontHeight*3/4;
 			$('<div class="data-point-label">' + el[1].toFixed(1) + '</div>').css( {
 				position: 'absolute',
-				left: left + 4,
+				left: left + 12,
 				top: top,
-				font: fontHeight/2 + 'px sans'
+				font: fontHeight*3/4 + 'px sans'
 			}).appendTo(pw.getPlaceholder());
 		});
 	};
@@ -294,7 +395,7 @@ $(function() {
 <body>
 MAGIC_NAV
 <div id="container">
-	<h2>Daily and Weekly Summary Chart</h2>
+	<h2>Tesla Daily and Weekly Summary Chart</h2>
 	<div id="dates">
 		<label>Start time</label><input id="frompicker" type="text">
 		<label>End time</label><input id="topicker" type="text">
@@ -302,9 +403,9 @@ MAGIC_NAV
 	<div id="content">
 		<center><div class="container">
 			<div id="dcachart" style="height:450px; width:90%;"></div>
-			<div id="explanation" style="width:70%">Daily distance, charge and Wh/mile plot, starting MAGIC_START.</div>
+			<div id="explanation" style="width:70%"><span>Daily plot, starting</span> MAGIC_START.</div>
 			<div id="wdcachart" style="height:450px; width:90%;"></div>
-			<div id="explanation" style="width:70%">Weekly distance, charge and Wh/mile plot.</div>
+			<div id="explanation2" style="width:70%">Weekly plot</div>
 		</div><center>
 	</div>
 </div>
