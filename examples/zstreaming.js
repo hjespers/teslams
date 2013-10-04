@@ -94,7 +94,7 @@ function tsla_poll( vid, long_vid, token ) {
 					//console.log(body);
 					util.log(body); // this way we get a human readable timestamp from the server too
 				}
-				setTimeout(function() { tsla_poll( vid, long_vid, token ); }, 10000);
+				tsla_poll( vid, long_vid, token );
 			} else if ( response.statusCode == 401) { // HTTP AUTH Failed
 				if (!argv.silent) {
 					util.log('WARN: HTTP 401: Unauthorized - token has likely expired, getting a new one');

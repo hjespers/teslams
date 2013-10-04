@@ -108,9 +108,7 @@ function tsla_poll( vid, long_vid, token ) {
 						util.log(body);
 					}
 				}
-				setTimeout(function() {
-				    tsla_poll( vid, long_vid, token ); // poll again
-				}, 10000);
+				tsla_poll( vid, long_vid, token ); // poll again
 			} else if ( response.statusCode == 401) { // HTTP AUTH Failed
 				if (!argv.silent) {
 					util.log('WARN: HTTP 401: Unauthorized - token has likely expired, getting a new one');
