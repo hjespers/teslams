@@ -52,10 +52,12 @@ function showMarker() {
 			return;
 		var latlng = new google.maps.LatLng(segment[0][6],segment[0][7]);
 		var cStr = '<div id="content">';
-		marker.setMap(null);
-		map.setCenter(latlng);
-		marker.setPosition(latlng);
-		marker.setMap(map);
+		if (!latlng.equals(marker.getPosition())) {
+			marker.setMap(null);
+			marker.setPosition(latlng);
+			map.setCenter(latlng);
+			marker.setMap(map);
+		}
 		if (segment[0][9] == 'D' || segment[0][9] == 'R'){cStr+='going '+segment[0][1]+' mph';}
 		else if (segment[0][8] < 0){cStr+='parked and charging ~ '+(-segment[0][8])+'kW';}
 		else {cStr+='parked';}
