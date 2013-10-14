@@ -52,10 +52,15 @@ function showMarker() {
 			return;
 		var latlng = new google.maps.LatLng(segment[0][6],segment[0][7]);
 		var cStr = '<div id="content">';
-		marker.setMap(null);
-		map.setCenter(latlng);
-		marker.setPosition(latlng);
-		marker.setMap(map);
+		if (!latlng.equals(marker.getPosition())) {
+			if (showMarker.center)
+				marker.setMap(null);
+			marker.setPosition(latlng);
+			if (showMarker.center) {
+				map.setCenter(latlng);
+				marker.setMap(map);
+			}
+		}
 		if (segment[0][9] == 'D' || segment[0][9] == 'R'){cStr+='going '+segment[0][1]+' mph';}
 		else if (segment[0][8] < 0){cStr+='parked and charging ~ '+(-segment[0][8])+'kW';}
 		else {cStr+='parked';}
@@ -67,6 +72,22 @@ function showMarker() {
 		replayControl.slider("value", segment[0][0]);
 	}
 }
+
+function toggleCentering() {
+	if (showMarker.center) {
+		$('#toggleCenterButton').html("Center map on marker");
+		showMarker.center = false;
+	} else {
+		$('#toggleCenterButton').html("Stop centering map");
+		showMarker.center = true;
+	}
+}
+
+function turnOffCentering() {
+	if (showMarker.center)
+		toggleCentering();
+}
+
 function drawCachedUntil(endTime) {
 	var segment;
 	//debug output console.log("drawCachedUntil", new Date(+endTime), "with", +lastDrawn + 1, "elements drawn and", getMore.lines.length, "cached");
@@ -230,6 +251,8 @@ function initialize() {
 	myLatlng = new google.maps.LatLng(MAGIC_FIRST_LOC);
 	var mapOptions = { center: myLatlng, zoom: 16, mapTypeId: google.maps.MapTypeId.ROADMAP };
 	map = new google.maps.Map(document.getElementById('map-canvas'), mapOptions);
+	showMarker.center = true;
+	google.maps.event.addListener(map, "dragstart", turnOffCentering);
 	marker = new google.maps.Marker({ position: myLatlng, map: map, title: 'Tesla Model S'});
 	infoWindow = new google.maps.InfoWindow({content: ""});
 	infoWindow.open(map, marker);
@@ -251,6 +274,7 @@ MAGIC_NAV
 			<label>Start time</label><input id="frompicker" type="text">
 			<label>End time</label><input id="topicker" type="text">
 			<button id="startStopButton" onclick="startStopUpdates()">Stop updates</button>
+			<button id="toggleCenterButton" onclick="toggleCentering()">Stop centering marker</button>
 		</div>
 		<div id="sliders">
 			<section id="sliderS">
