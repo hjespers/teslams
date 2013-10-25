@@ -705,7 +705,7 @@ app.get('/stats', function(req, res) {
 				var vState1 = null;
 				var cState1 = null;
 				var uState1 = null;
-				var lastDoc;
+				var lastDoc = null;
 				var maxI = countVamp.vampInt.length;
 				var maxJ = countCharge.chargeInt.length;
 				function updateChargeWValues(f) {
