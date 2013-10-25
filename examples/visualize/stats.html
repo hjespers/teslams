@@ -127,9 +127,10 @@ $(function() {
 	myUrl = $.url('protocol') + "://" + $.url('auth') + (($.url('auth').length > 0) ? "@" : "") +
 		$.url('hostname') + ":" + $.url('port');
 	parseDates($.url("?from"), $.url("?to"));
-	if ($.url("?metric"))
+	system = MAGIC_DISPLAY_SYSTEM;
+	if ($.url("?metric") === "true")
 		system = "metric";
-	else
+	else if ($.url("?metric") === "false")
 		system = "imperial";
 	if ($.url("?lang"))
 		lang = $.url("?lang").toLowerCase();
@@ -156,8 +157,10 @@ $(function() {
 	d3 = [MAGIC_AVERAGE];
 	if (system === "metric") {
 		for (var i = 0; i < d1.length; i++) {
-			d1[i][1] *= 1.609;
-			d3[i][1] /= 1.609;
+			if (d1[i] !== null)
+				d1[i][1] *= 1.609;
+			if (d3[i] !== null)
+				d3[i][1] /= 1.609;
 		}
 	}
 	data = [{

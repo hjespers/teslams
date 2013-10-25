@@ -137,9 +137,10 @@ $(function() {
 	var d1, d2, d3, d4, d5, d6, d7, data, options, eschart, socData, socOptions, socchart, chargechart;
 	var previousPointVA, previousPointSOC;
 	parseDates($.url("?from"), $.url("?to"));
-	if ($.url("?metric"))
+	system = MAGIC_DISPLAY_SYSTEM;
+	if ($.url("?metric") === "true")
 		system = "metric";
-	else
+	else if ($.url("?metric") === "false")
 		system = "imperial";
 	if ($.url("?lang"))
 		lang = $.url("?lang").toLowerCase();
@@ -163,8 +164,14 @@ $(function() {
 	$("#triplink").attr("href", myUrl + "/trip");
 	d1 = [MAGIC_ENERGY];
 	d2 = [MAGIC_SPEED];
-	for (var i = 0; i < d2.length; i++)
-		d2[i][1] *= 1.609;
+	var min_spd = MAGIC_MIN_SPD;
+	var max_spd = MAGIC_MAX_SPD;
+	if (system === "metric") {
+		min_spd *= 1.609;
+		max_spd *= 1.609;
+		for (var i = 0; i < d2.length; i++)
+			d2[i][1] *= 1.609;
+	}
 	data = [{
 		data: d1,
 		bars: { show: true,
@@ -195,8 +202,8 @@ $(function() {
 				return ticks;
 			}},
 			{
-			min: MAGIC_MIN_SPD,
-			max: MAGIC_MAX_SPD,
+			min: min_spd,
+			max: max_spd,
 			position: 'right',
 			alignTicksWithAxis: 1,
 			font: { color: "#0A9FD9"},

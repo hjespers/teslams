@@ -199,10 +199,17 @@ function storeVehicles(vehicles) {
 	collectionA.insert(doc, { 'safe': true }, function (err, docs) {
 		if (err) console.dir(err);
 	});
-	rpm++; // increment REST request counter 
+	rpm += 2; // increment REST request counter 
 	teslams.get_vehicle_state(vehicles.id, function(data) {
 		ulog( util.inspect(data));
 		doc = { 'ts': new Date().getTime(), 'vehicleState': data };
+		collectionA.insert(doc, { 'safe': true }, function (err, docs) {
+			if (err) console.dir(err);
+		});
+	});
+	teslams.get_gui_settings(vehicles.id, function(data) {
+		ulog(util.inspect(data));
+		doc = { 'ts': new Date().getTime(), 'guiSettings': data };
 		collectionA.insert(doc, { 'safe': true }, function (err, docs) {
 			if (err) console.dir(err);
 		});
