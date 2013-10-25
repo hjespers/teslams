@@ -49,6 +49,7 @@ var app = express();
 var passport = require('passport'), LocalStrategy = require('passport-local').Strategy;
 var speedup = 60000;
 var nav = "";
+var system = "";
 
 passport.use(new LocalStrategy(
 	function(username, password, done) {
@@ -138,6 +139,20 @@ MongoClient.connect("mongodb://127.0.0.1:27017/" + argv.db, function(err, db) {
 			}
 		}
 		if (argv.verbose) console.log("battery capacity", capacity);
+	});
+	var query = {'guiSettings': { '$exists': true } };
+	var options = { 'sort': [['ts', 'desc']], 'limit': 1};
+	collectionA.find(query,options).toArray(function(err, docs) {
+		if (docs.length == 0) {
+			console.log("missing GUI settings in db, assuming imperial");
+			system = "imperial";
+		} else {
+			if (docs[0].guiSettings.gui_distance_units == "mi/hr") { // hey Tesla - that's a speed, not a distance
+				system = "imperial";
+			} else {
+				system = "metric";
+			}
+		}
 	});
 });
 
@@ -484,7 +499,8 @@ app.get('/energy', function(req, res) {
 						.replace("MAGIC_MAX_AMP", maxAmp)
 						.replace("MAGIC_MAX_KW", maxPower.toFixed(1))
 						.replace("MAGIC_MAX_MPH", maxMph)
-						.replace("MAGIC_CAPACITY", capacity);
+						.replace("MAGIC_CAPACITY", capacity)
+						.replace("MAGIC_DISPLAY_SYSTEM", '"' + system + '"');
 					res.end(response, "utf-8");
 					if (argv.verbose) console.log("delivered", outputSOC.length,"records and", response.length, "bytes");
 				});
@@ -824,7 +840,8 @@ app.get('/stats', function(req, res) {
 						.replace("MAGIC_WKWH", outputWUsed)
 						.replace("MAGIC_VKWH", outputY)
 						.replace("MAGIC_WVKWH", outputWY)
-						.replace("MAGIC_START", startDate);
+						.replace("MAGIC_START", startDate)
+						.replace("MAGIC_DISPLAY_SYSTEM", '"' + system + '"');
 					res.end(response, "utf-8");
 					if (argv.verbose)
 						console.log("total processing time", new Date().getTime() - debugStartTime, "ms");

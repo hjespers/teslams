@@ -137,9 +137,10 @@ $(function() {
 	var d1, d2, d3, d4, d5, d6, d7, data, options, eschart, socData, socOptions, socchart, chargechart;
 	var previousPointVA, previousPointSOC;
 	parseDates($.url("?from"), $.url("?to"));
-	if ($.url("?metric"))
+	system = MAGIC_DISPLAY_SYSTEM;
+	if ($.url("?metric") === "true")
 		system = "metric";
-	else
+	else if ($.url("?metric") === "false")
 		system = "imperial";
 	if ($.url("?lang"))
 		lang = $.url("?lang").toLowerCase();

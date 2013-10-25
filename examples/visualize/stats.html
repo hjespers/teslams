@@ -127,9 +127,10 @@ $(function() {
 	myUrl = $.url('protocol') + "://" + $.url('auth') + (($.url('auth').length > 0) ? "@" : "") +
 		$.url('hostname') + ":" + $.url('port');
 	parseDates($.url("?from"), $.url("?to"));
-	if ($.url("?metric"))
+	system = MAGIC_DISPLAY_SYSTEM;
+	if ($.url("?metric") === "true")
 		system = "metric";
-	else
+	else if ($.url("?metric") === "false")
 		system = "imperial";
 	if ($.url("?lang"))
 		lang = $.url("?lang").toLowerCase();
