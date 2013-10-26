@@ -199,7 +199,7 @@ function storeVehicles(vehicles) {
 	collectionA.insert(doc, { 'safe': true }, function (err, docs) {
 		if (err) console.dir(err);
 	});
-	rpm += 2; // increment REST request counter 
+	rpm = rpm + 2; // increment REST request counter for following 2 requests
 	teslams.get_vehicle_state(vehicles.id, function(data) {
 		ulog( util.inspect(data));
 		doc = { 'ts': new Date().getTime(), 'vehicleState': data };
@@ -242,7 +242,7 @@ function initstream() {
 			rpm = 0;
 			last = now;
 		} else if (rpm > argv.maxrpm) { // throttle check
-        	util.log('Warn: throttling due to too many REST API');
+        	util.log('Warn: throttling due to too many REST API requests');
         	setTimeout(function() { 
         		initstream(); 
         	}, 60000); 
