@@ -45,7 +45,7 @@ function parseDates(fromQ, toQ) {
 	else
 		datepickers.fromQ = normalizeDate(fromQ);
 }
-function datepickers(url) {
+function datepickers(url, params) {
 	$("#frompicker").datetimepicker({
 		dateFormat: "yy-mm-dd",
 		timeFormat: "HH-mm-ss",
@@ -55,7 +55,7 @@ function datepickers(url) {
 			var dt = dateText.replace(' ','-');
 			if (dt.length > 10 && compareTime(dt, datepickers.fromQ) != 0) {
 				if (compareTime(dt, datepickers.toQ.replace(' ','-')) < 0) {
-					self.location = url + "?from=" + dt + "&to=" + datepickers.toQ.replace(' ','-');
+					self.location = url + "?from=" + dt + "&to=" + datepickers.toQ.replace(' ','-') + params;
 				} else {
 					datepickers.fromQ = dt;
 				}
@@ -71,7 +71,7 @@ function datepickers(url) {
 			var dt = dateText.replace(' ','-');
 			if (dt.length > 10 && compareTime(dt, datepickers.toQ) != 0) {
 				if (compareTime(datepickers.fromQ.replace(' ','-'), dt) < 0) {
-					self.location = url + "?from=" + datepickers.fromQ.replace(' ','-') + "&to=" + dt
+					self.location = url + "?from=" + datepickers.fromQ.replace(' ','-') + "&to=" + dt + params;
 				} else {
 					datepickers.toQ = dt;
 				}

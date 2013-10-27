@@ -283,6 +283,11 @@ app.get('/update', function (req, res) {
 });
 
 app.get('/map', function(req, res) {
+	var params = "";
+	if (req.query.lang !== undefined)
+		params = "&lang=" + req.query.lang;
+	if (req.query.metric === "true")
+		params += "&metric=true";
 	var dates = new parseDates(req.query.from, req.query.to);
 	from = makeDate(dates.fromQ);
 	to = makeDate(dates.toQ);
@@ -291,7 +296,7 @@ app.get('/map', function(req, res) {
 	if (req.query.to === undefined || req.query.to.split('-').length < 6 ||
 	    req.query.from === undefined || req.query.from.split('-').length < 6) {
 		var speedQ = speedup / 2000;
-		res.redirect('/map?from=' + dates.fromQ + '&to=' + dates.toQ + '&speed=' + speedQ.toFixed(0));
+		res.redirect('/map?from=' + dates.fromQ + '&to=' + dates.toQ + '&speed=' + speedQ.toFixed(0) + params);
 		return;
 	}
 	MongoClient.connect("mongodb://127.0.0.1:27017/" + argv.db, function(err, db) {
@@ -326,7 +331,9 @@ app.get('/map', function(req, res) {
 
 app.get('/energy', function(req, res) {
 	var path = req.path;
-	var params = "&lang=" + req.query.lang;
+	var params = "";
+	if (req.query.lang !== undefined)
+		params = "&lang=" + req.query.lang;
 	if (req.query.metric === "true")
 		params += "&metric=true";
 	var dates = new parseDates(req.query.from, req.query.to);
@@ -571,7 +578,9 @@ app.get('/test', function(req, res) {
 app.get('/stats', function(req, res) {
 	var debugStartTime = new Date().getTime();
 	var path = req.path;
-	var params = "&lang=" + req.query.lang;
+	var params = "";
+	if (req.query.lang !== undefined)
+		params = "&lang=" + req.query.lang;
 	if (req.query.metric === "true")
 		params += "&metric=true";
 	var dates = new parseDates(req.query.from, req.query.to);

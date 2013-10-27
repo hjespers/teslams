@@ -313,7 +313,6 @@ function initialize() {
 	parseDates($.url("?from"), $.url("?to"));
 	$("#frompicker").val(datepickers.fromQ);
 	$("#topicker").val(datepickers.toQ);
-	datepickers(myUrl + '/map');
 	system = MAGIC_DISPLAY_SYSTEM;
 	if ($.url("?metric") === "true")
 		system = "metric";
@@ -323,15 +322,16 @@ function initialize() {
 		lang = $.url("?lang").toLowerCase();
 	else
 		lang = "en";
+	var params = "&lang=" + lang;
+	if (system === "metric")
+		params += "&metric=true";
+	datepickers(myUrl + '/map', params);
 	$('#startStopButton').html(conv("label", "Stop Updates", lang));
 	$('#toggleCenterButton').html(conv("label", "Stop centering map",lang));
 	$('#startTimeLabel').html(conv("label", "Start time", lang));
 	$('#endTimeLabel').html(conv("label", "End time", lang));
 	$('#replaySpeedLabel').html(conv("label", "Replay Speed (real time = 1x)",lang));
 	$('#replayControlLabel').html(conv("label", "Replay Control",lang));
-	var params = "&lang=" + lang;
-	if (system === "metric")
-		params += "&metric=true";
 	$("#energylink").attr("href", myUrl + "/energy?from=" + datepickers.fromQ + "&to=" + datepickers.toQ + params);
 	$("#statslink").attr("href", myUrl + "/stats?from=" + datepickers.fromQ + "&to=" + datepickers.toQ + params);
 	$("#triplink").attr("href", myUrl + "/trip");
