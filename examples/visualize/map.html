@@ -15,6 +15,117 @@ var myUrl = "";
 var speedup, replayControl;
 var msecPerUpdate = 2000; // get AJAX data every 2 seconds
 var drawTimeIncr = 100; // 10 FPS for drawing
+var system = "", lang="";
+
+var strings = {
+	"label": {
+		"Start Updates": {
+			"en": "Start Updates",
+			"de": "Aktualisieren"
+		},
+		"Stop Updates": {
+			"en": "Stop Updates",
+			"de": "Nicht mehr aktualisieren"
+		},
+		"range": {
+			"en": "range",
+			"de": "Reichweite"
+		},
+		"odometer": {
+			"en": "odometer",
+			"de": "km-Stand"
+		},
+		"going": {
+			"en": "going",
+			"de": "Tacho"
+		},
+		"parked": {
+			"en": "parked",
+			"de": "geparkt"
+		},
+		"parked & charging": {
+			"en": "parked",
+			"de": "geparkt und aufladend"
+		},
+		"Center map on marker": {
+			"en": "Center map on marker",
+			"de": "Karte zentrieren"
+		},
+		"Stop centering map": {
+			"en": "Stop centering map",
+			"de": "Karte nicht zentrieren"
+		},
+		"Start time": {
+			"en": "Start time",
+			"de": "Von"
+		},
+		"End time": {
+			"en": "End time",
+			"de": "Bis"
+		},
+		"Replay Speed (real time = 1x)": {
+			"en": "Replay Speed (real time = 1x)",
+			"de": "Zeitraffer (Echtzeit = 1x)"
+		},
+		"Replay Control": {
+			"en": "Replay Control",
+			"de": "Zeitpunkt"
+		}
+	},
+	"metric": {
+		"distance": {
+			"conversion": function(dist) { return dist * 1.609; },
+			"en": "km"
+		},
+		"energy": {
+			"conversion": function(e) { return e; },
+			"en": "kWh"
+		},
+		"energy_per_distance": {
+			"conversion": function(e) { return e / 1.609; },
+			"en": "Wh/km"
+		},
+		"speed_long": {
+			"conversion": function(speed) { return speed * 1.609; },
+			"en": "km/h"
+		},
+		"speed": {
+			"conversion": function(speed) { return speed * 1.609; },
+			"en": "km/h"
+		}
+	},
+	"imperial": {
+		"distance": {
+			"conversion": function(dist) { return dist; },
+			"en": "miles",
+			"de": "Meilen"
+		},
+		"energy_per_distance": {
+			"conversion": function(e) { return e; },
+			"en": "Wh/mile",
+			"de": "Wh/Meile"
+		},
+		"speed_long": {
+			"conversion": function(speed) { return speed; },
+			"en": "miles/hour",
+			"de": "Meilen/Stunde"
+		},
+		"speed": {
+			"conversion": function(speed) { return speed; },
+			"en": "mph"
+		}
+	}
+};
+function conv(k1, k2, k3) {
+	if (strings[k1][k2] === undefined)
+		k1 = "metric";
+	if (strings[k1][k2][k3] === undefined) {
+		if (strings[k1][k2]["en"] === undefined)
+			return "no conversion for " + k2;
+		return strings[k1][k2]["en"];
+	}
+	return strings[k1][k2][k3];
+}
 function hex(num) { var s = '#0' + num.toString(16) + ''; return s.substring(s.length - 2); }
 function getColor(speed) {
 	var wl = speed*2+440; if(wl>640){wl=640;}
@@ -36,11 +147,11 @@ function cancelUpdates() {
 function startStopUpdates() {
 	if (getMore.ID) { // let's stop
 		cancelUpdates();
-		$('#startStopButton').html("Start Updates");
+		$('#startStopButton').html(conv("label", "Start Updates", lang));
 	} else {
 		startUpdates();
 		startDrawing();
-		$('#startStopButton').html("Stop Updates");
+		$('#startStopButton').html(conv("label", "Stop Updates", lang));
 	}
 }
 
@@ -61,10 +172,15 @@ function showMarker() {
 				marker.setMap(map);
 			}
 		}
-		if (segment[0][9] == 'D' || segment[0][9] == 'R'){cStr+='going '+segment[0][1]+' mph';}
-		else if (segment[0][8] < 0){cStr+='parked and charging ~ '+(-segment[0][8])+'kW';}
-		else {cStr+='parked';}
-		cStr+='<br>odometer '+segment[0][2]+'<br>range '+segment[0][10]+'</div>';
+		if (segment[0][9] == 'D' || segment[0][9] == 'R') {
+			cStr += conv("label", "going", lang) + " " + Math.floor(conv(system, "speed", "conversion")(segment[0][1])) + " " + conv(system, "speed", lang); 
+		} else if (segment[0][8] < 0) {
+			cStr += conv("label", "parked and charging", lang) + ' ~ ' + (-segment[0][8]) + 'kW';
+		} else {
+			cStr += conv("label", "parked", lang);
+		}
+		cStr += "<br/>" + conv("label", "odometer", lang) + " " + Math.floor(conv(system, "distance", "conversion")(segment[0][2])) + conv(system, "distance", lang);
+		cStr += "<br/>" + conv("label", "range", lang) + " " + Math.floor(conv(system, "distance", "conversion")(segment[0][10])) + conv(system, "distance", lang) + "</div>";
 		if (!showMarker.cStr || showMarker.cStr != cStr) {
 			infoWindow.setContent(cStr);
 			showMarker.cStr = cStr;
@@ -75,10 +191,10 @@ function showMarker() {
 
 function toggleCentering() {
 	if (showMarker.center) {
-		$('#toggleCenterButton').html("Center map on marker");
+		$('#toggleCenterButton').html(conv("label", "Center map on marker", lang));
 		showMarker.center = false;
 	} else {
-		$('#toggleCenterButton').html("Stop centering map");
+		$('#toggleCenterButton').html(conv("label", "Stop centering map", lang));
 		showMarker.center = true;
 	}
 }
@@ -198,8 +314,26 @@ function initialize() {
 	$("#frompicker").val(datepickers.fromQ);
 	$("#topicker").val(datepickers.toQ);
 	datepickers(myUrl + '/map');
-	$("#energylink").attr("href", myUrl + "/energy?from=" + datepickers.fromQ + "&to=" + datepickers.toQ);
-	$("#statslink").attr("href", myUrl + "/stats?from=" + datepickers.fromQ + "&to=" + datepickers.toQ);
+	system = MAGIC_DISPLAY_SYSTEM;
+	if ($.url("?metric") === "true")
+		system = "metric";
+	else if ($.url("?metric") === "false")
+		system = "imperial";
+	if ($.url("?lang"))
+		lang = $.url("?lang").toLowerCase();
+	else
+		lang = "en";
+	$('#startStopButton').html(conv("label", "Stop Updates", lang));
+	$('#toggleCenterButton').html(conv("label", "Stop centering map",lang));
+	$('#startTimeLabel').html(conv("label", "Start time",lang));
+	$('#endTimeLabel').html(conv("label", "End time",lang));
+	$('#replaySpeedLabel').html(conv("label", "Replay Speed (real time = 1x)",lang));
+	$('#replayControlLabel').html(conv("label", "Replay Control",lang));
+	var params = "&lang=" + lang;
+	if (system === "metric")
+		params += "&metric=true";
+	$("#energylink").attr("href", myUrl + "/energy?from=" + datepickers.fromQ + "&to=" + datepickers.toQ + params);
+	$("#statslink").attr("href", myUrl + "/stats?from=" + datepickers.fromQ + "&to=" + datepickers.toQ + params);
 	$("#triplink").attr("href", myUrl + "/trip");
 	speedup = $.url("?speed");
 	if (speedup === null || speedup === "")
@@ -271,21 +405,21 @@ MAGIC_NAV
 	<h2>Tesla Tracker</h2>
 	<div id="top">
 		<div id="dates">
-			<label>Start time</label><input id="frompicker" type="text">
-			<label>End time</label><input id="topicker" type="text">
+			<label id="startTimeLabel">Start time</label><input id="frompicker" type="text">
+			<label id="endTimeLabel">End time</label><input id="topicker" type="text">
 			<button id="startStopButton" onclick="startStopUpdates()">Stop updates</button>
-			<button id="toggleCenterButton" onclick="toggleCentering()">Stop centering marker</button>
+			<button id="toggleCenterButton" onclick="toggleCentering()">Stop centering map</button>
 		</div>
 		<div id="sliders">
 			<section id="sliderS">
 				<span id="speedTT" class="tooltip"></span> <!-- Tooltip -->
 				<div id="speedSlider"></div> <!-- the Slider -->
-				<div class="label"><label>Replay Speed (real time = 1x)</label></div>
+				<div class="label"><label id="replaySpeedLabel">Replay Speed (real time = 1x)</label></div>
 			</section>
 			<section id="sliderR">
 				<span id="replayTT" class="tooltip"></span> <!-- Tooltip -->
 				<div id="replayControl"></div> <!-- the Slider -->
-				<div class="label"><label>Replay Control</label></div>
+				<div class="label"><label id="replayControlLabel">Replay Control</label></div>
 			</section>
 		</div>
 	</div>

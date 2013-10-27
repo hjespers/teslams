@@ -312,7 +312,8 @@ app.get('/map', function(req, res) {
 					if (err) throw err;
 					var response = data.replace("MAGIC_APIKEY", apiKey)
 						.replace("MAGIC_FIRST_LOC", vals[6] + "," + vals[7])
-						.replace("MAGIC_NAV", nav);
+						.replace("MAGIC_NAV", nav)
+						.replace("MAGIC_DISPLAY_SYSTEM", '"' + system + '"');
 					res.end(response, "utf-8");
 				});
 			});
