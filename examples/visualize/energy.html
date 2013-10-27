@@ -17,6 +17,14 @@ $(function() {
 	var lang, metric = false;
 	var strings = {
 		"label": {
+			"Start time": {
+				"en": "Start time",
+				"de": "Von"
+			},
+			"End time": {
+				"en": "End time",
+				"de": "Bis"
+			},
 			"speed": {
 				"en": "Speed",
 				"de": "Geschwindigkeit"
@@ -150,6 +158,8 @@ $(function() {
 	if (system === "metric")
 		params += "&metric=true";
 	$("title").html(conv("label", document.title, lang));
+	$('#startTimeLabel').html(conv("label", "Start time", lang));
+	$('#endTimeLabel').html(conv("label", "End time", lang));
 	$("div#container h2").html(conv("label", $("div#container h2").text(), lang));
 	for (var i = 1; i <= 6; i++)
 		$("span#"+i).html(conv("label", $("span#"+i).text(), lang));
@@ -391,8 +401,8 @@ MAGIC_NAV
 <div id="container">
   <h2>Tesla Energy Chart</h2>
 	<div id="dates">
-		<label>Start time</label><input id="frompicker" type="text">
-		<label>End time</label><input id="topicker" type="text">
+		<label id="startTimeLabel">Start time</label><input id="frompicker" type="text">
+		<label id="endTimeLabel">End time</label><input id="topicker" type="text">
 	</div>
 	<div id="content">
 		<center><div class="container">

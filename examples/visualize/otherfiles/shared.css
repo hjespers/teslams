@@ -20,6 +20,8 @@ div.info { position: relative; width: 600px; float: left; }
 			       float: left; }
 label#milesLabel { display: inline-block; width: 200px; height: 80px; margin-top: 40px; }
 label#tripNameLabel { display: inline-block; width: 200px; height: 80px; margin-top: 0px; }
+label#endTimeLabel { padding: 0 1em 0 1em; }
+label#startTimeLabel { padding: 0 1em 0 0; }
 section {
 	width: 30%;
 	height: auto;
