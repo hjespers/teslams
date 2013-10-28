@@ -138,7 +138,6 @@ function startUpdates() {
 	getMore.ID = setInterval(getMore, msecPerUpdate);
 }
 function cancelUpdates() {
-	stopDrawing();
 	if (getMore.ID) {
 		clearInterval(getMore.ID);
 		getMore.ID = null;
@@ -147,6 +146,7 @@ function cancelUpdates() {
 function startStopUpdates() {
 	if (getMore.ID) { // let's stop
 		cancelUpdates();
+		stopDrawing();
 		$('#startStopButton').html(conv("label", "Start Updates", lang));
 	} else {
 		startUpdates();
@@ -207,8 +207,9 @@ function turnOffCentering() {
 function drawCachedUntil(endTime) {
 	var segment;
 	//debug output console.log("drawCachedUntil", new Date(+endTime), "with", +lastDrawn + 1, "elements drawn and", getMore.lines.length, "cached");
+	replayControl.slider("value", +endTime);
 	if (getMore.lines.length === 0)
-		return;
+		return 0;
 	while (lastDrawn + 1 < getMore.lines.length) {
 		lastDrawn++;
 		segment = getMore.lines[lastDrawn];
@@ -223,34 +224,44 @@ function drawCachedUntil(endTime) {
 		return getMore.lines[lastDrawn][0][0];
 	}
 	return endTime;
-
 }
+
 function getMore(ts, cb) {
 	var until;
-	if (myUrl.length === 0)
+	if (myUrl.length === 0 || getMore.running === true)
 		return;
+	getMore.running = true;
 	// this gets us an array of arrays - there is always at least one dummy
 	// entry that gives us the last timestamp that was considered in this batch
-	// debug output console.log("get AJAX data until", new Date(+getMore.lastTimestamp + (speedup + 10) * msecPerUpdate));
+	// debug output console.log("ts", ts, "last", new Date(+getMore.lastTimestamp), speedup, msecPerUpdate);
 	if (ts !== undefined)
 		until = +ts + 2 * speedup * msecPerUpdate;
 	else
-		until =  +getMore.lastTimestamp + 5 * (speedup + 10) * msecPerUpdate;
+		until =  +getMore.lastTimestamp + (5 * speedup + 10) * msecPerUpdate;
+	// debug output console.log("get AJAX data until", new Date(+until), "which is", (+until - +getMore.lastTimestamp)/1000,"seconds");
 	$.getJSON(myUrl + "/update", { 'until': +until})
 	.done(function (d, textStatus, jqXHR) {
-		//console.log("length", d.length, "end", +getMore.endTimestamp, "last", +getMore.lastTimestamp);
-		if (d.length === 1 && d[0][2] === 0) { // that's just the fake entry
+		// verbose debug console.log("length", d.length, "end", getMore.endTimestamp, "last", new Date(+getMore.lastTimestamp));
+		if (d.length == 1 && d[0][2] == 0) { // that's just the fake entry
 			getMore.lastTimestamp = +d[0][0];
 			//debug output console.log("do we need to stop?", "end", +getMore.endTimestamp, "last", +getMore.lastTimestamp);
-			if (+getMore.endTimestamp - +getMore.lastTimestamp < 120000)
+			if (+getMore.endTimestamp - +getMore.lastTimestamp < 120000) {
+				// console.log("done updating");
 				cancelUpdates();
+			}
+			getMore.running = false;
 			return;
 		}
 		for (var i = 0; i < d.length; i++) {
+			// super verbose debug console.log("pos", d[i][6],d[i][7], "timedelta", Math.abs(d[i][0] - getMore.lastTimestamp));
 			if (d[i][6] === "0" && d[i][7] === "0")
 				continue; // no line to GPS (0,0)
 			if (Math.abs(d[i][0] - getMore.lastTimestamp) > 5000) {
 				myLatlng = new google.maps.LatLng(d[i][6],d[i][7]);
+				var points = [myLatlng, myLatlng];
+				var color = getColor(d[i][1]);
+				var path = new google.maps.Polyline({path:points,strokeColor:color,strokeWeight:4});
+				getMore.lines.push([d[i], path]);
 				getMore.lastTimestamp = +d[i][0];
 				continue; // no lines if there is a jump in the time series
 			}
@@ -267,11 +278,22 @@ function getMore(ts, cb) {
 		}
 		if (cb !== undefined)
 			cb();
+		getMore.running = false;
 	})
 	.fail(function(jqXHR, textStatus, errorThrown) { console.log(myUrl + "/update : ajax fail", textStatus, errorThrown); });
 }
 function drawNext() { // this is the timer driven drawing
-	drawNext.last = drawCachedUntil(+drawNext.last + drawTimeIncr * speedup);
+	var newLast = drawCachedUntil(+drawNext.last + drawTimeIncr * speedup);
+	// verbose debug output console.log("in drawNext: last", +drawNext.last, "drawTimeIncr * speedup", drawTimeIncr * speedup, "newLast", +newLast);
+	if (drawNext.last == newLast) { // are we done?
+		if (+getMore.endTimestamp - +getMore.lastTimestamp < 120000 && newLast == getMore.lastTimestamp) {
+			// console.log("done drawing");
+			stopDrawing();
+			replayControl.slider("value", +getMore.endTimestamp);
+		}
+	}
+	if (newLast > 0)
+		drawNext.last = newLast;
 }
 function startDrawing() {
 	drawNext.ID = setInterval(drawNext, drawTimeIncr);
@@ -378,7 +400,7 @@ function initialize() {
 			   'change': rSliderUpdate
 			  };
 	var ts = new Date(minV);
-	drawNext.last = +ts;
+	drawNext.last = ts.getTime();
 	var text = (ts.getMonth()+1) + '/' + ts.getDate() + ' ' + ts.getHours() + ':' + ts.getMinutes();
 	tooltipR.css('left', 0).text(text);  //Adjust the tooltip according to start value
 	replayControl.slider(rSliderOpts);
