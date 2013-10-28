@@ -35,8 +35,8 @@ $(function() {
 	$("#dcachart").bind("plothover", function (event, pos, item) {
 		var y;
 		if (item) {
-			if (previousPoint != item.dataIndex) {
-				previousPoint = item.dataIndex;
+			if (previousPoint != item.dataIndex + item.seriesIndex / 10) {
+				previousPoint = item.dataIndex + item.seriesIndex / 10;
 
 				$("#tooltip").remove();
 				y = item.datapoint[1].toFixed(1);
@@ -51,7 +51,6 @@ $(function() {
 			previousPoint = null;
 		}
 	});
-
 	myUrl = $.url('protocol') + "://" + $.url('auth') + (($.url('auth').length > 0) ? "@" : "") +
 		$.url('hostname') + ":" + $.url('port');
 	parseDates($.url("?from"), $.url("?to"));
@@ -279,8 +278,8 @@ $(function() {
 	$("#wdcachart").bind("plothover", function (event, pos, item) {
 		var y;
 		if (item) {
-			if (previousPointW != item.dataIndex) {
-				previousPointW = item.dataIndex;
+			if (previousPointW != item.dataIndex + item.seriesIndex / 10) {
+				previousPointW = item.dataIndex + item.seriesIndex / 10;
 
 				$("#tooltip").remove();
 				y = item.datapoint[1].toFixed(1);
