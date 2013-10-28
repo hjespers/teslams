@@ -15,6 +15,7 @@ var myUrl = "";
 var speedup, replayControl;
 var msecPerUpdate = 2000; // get AJAX data every 2 seconds
 var drawTimeIncr = 100; // 10 FPS for drawing
+var system = "", lang="";
 function hex(num) { var s = '#0' + num.toString(16) + ''; return s.substring(s.length - 2); }
 function getColor(speed) {
 	var wl = speed*2+440; if(wl>640){wl=640;}
@@ -27,7 +28,6 @@ function startUpdates() {
 	getMore.ID = setInterval(getMore, msecPerUpdate);
 }
 function cancelUpdates() {
-	stopDrawing();
 	if (getMore.ID) {
 		clearInterval(getMore.ID);
 		getMore.ID = null;
@@ -36,11 +36,12 @@ function cancelUpdates() {
 function startStopUpdates() {
 	if (getMore.ID) { // let's stop
 		cancelUpdates();
-		$('#startStopButton').html("Start Updates");
+		stopDrawing();
+		$('#startStopButton').html(conv("label", "Start Updates", lang));
 	} else {
 		startUpdates();
 		startDrawing();
-		$('#startStopButton').html("Stop Updates");
+		$('#startStopButton').html(conv("label", "Stop Updates", lang));
 	}
 }
 
@@ -61,10 +62,15 @@ function showMarker() {
 				marker.setMap(map);
 			}
 		}
-		if (segment[0][9] == 'D' || segment[0][9] == 'R'){cStr+='going '+segment[0][1]+' mph';}
-		else if (segment[0][8] < 0){cStr+='parked and charging ~ '+(-segment[0][8])+'kW';}
-		else {cStr+='parked';}
-		cStr+='<br>odometer '+segment[0][2]+'<br>range '+segment[0][10]+'</div>';
+		if (segment[0][9] == 'D' || segment[0][9] == 'R') {
+			cStr += conv("label", "going", lang) + " " + Math.floor(conv(system, "speed", "conversion")(segment[0][1])) + " " + conv(system, "speed", lang); 
+		} else if (segment[0][8] < 0) {
+			cStr += conv("label", "parked and charging", lang) + ' ~ ' + (-segment[0][8]) + 'kW';
+		} else {
+			cStr += conv("label", "parked", lang);
+		}
+		cStr += "<br/>" + conv("label", "odometer", lang) + " " + Math.floor(conv(system, "distance", "conversion")(segment[0][2])) + conv(system, "distance", lang);
+		cStr += "<br/>" + conv("label", "range", lang) + " " + Math.floor(conv(system, "distance", "conversion")(segment[0][10])) + conv(system, "distance", lang) + "</div>";
 		if (!showMarker.cStr || showMarker.cStr != cStr) {
 			infoWindow.setContent(cStr);
 			showMarker.cStr = cStr;
@@ -75,10 +81,10 @@ function showMarker() {
 
 function toggleCentering() {
 	if (showMarker.center) {
-		$('#toggleCenterButton').html("Center map on marker");
+		$('#toggleCenterButton').html(conv("label", "Center map on marker", lang));
 		showMarker.center = false;
 	} else {
-		$('#toggleCenterButton').html("Stop centering map");
+		$('#toggleCenterButton').html(conv("label", "Stop centering map", lang));
 		showMarker.center = true;
 	}
 }
@@ -91,8 +97,9 @@ function turnOffCentering() {
 function drawCachedUntil(endTime) {
 	var segment;
 	//debug output console.log("drawCachedUntil", new Date(+endTime), "with", +lastDrawn + 1, "elements drawn and", getMore.lines.length, "cached");
+	replayControl.slider("value", +endTime);
 	if (getMore.lines.length === 0)
-		return;
+		return 0;
 	while (lastDrawn + 1 < getMore.lines.length) {
 		lastDrawn++;
 		segment = getMore.lines[lastDrawn];
@@ -107,34 +114,44 @@ function drawCachedUntil(endTime) {
 		return getMore.lines[lastDrawn][0][0];
 	}
 	return endTime;
-
 }
+
 function getMore(ts, cb) {
 	var until;
-	if (myUrl.length === 0)
+	if (myUrl.length === 0 || getMore.running === true)
 		return;
+	getMore.running = true;
 	// this gets us an array of arrays - there is always at least one dummy
 	// entry that gives us the last timestamp that was considered in this batch
-	// debug output console.log("get AJAX data until", new Date(+getMore.lastTimestamp + (speedup + 10) * msecPerUpdate));
+	// debug output console.log("ts", ts, "last", new Date(+getMore.lastTimestamp), speedup, msecPerUpdate);
 	if (ts !== undefined)
 		until = +ts + 2 * speedup * msecPerUpdate;
 	else
-		until =  +getMore.lastTimestamp + 5 * (speedup + 10) * msecPerUpdate;
+		until =  +getMore.lastTimestamp + (5 * speedup + 10) * msecPerUpdate;
+	// debug output console.log("get AJAX data until", new Date(+until), "which is", (+until - +getMore.lastTimestamp)/1000,"seconds");
 	$.getJSON(myUrl + "/update", { 'until': +until})
 	.done(function (d, textStatus, jqXHR) {
-		//console.log("length", d.length, "end", +getMore.endTimestamp, "last", +getMore.lastTimestamp);
-		if (d.length === 1 && d[0][2] === 0) { // that's just the fake entry
+		// verbose debug console.log("length", d.length, "end", getMore.endTimestamp, "last", new Date(+getMore.lastTimestamp));
+		if (d.length == 1 && d[0][2] == 0) { // that's just the fake entry
 			getMore.lastTimestamp = +d[0][0];
 			//debug output console.log("do we need to stop?", "end", +getMore.endTimestamp, "last", +getMore.lastTimestamp);
-			if (+getMore.endTimestamp - +getMore.lastTimestamp < 120000)
+			if (+getMore.endTimestamp - +getMore.lastTimestamp < 120000) {
+				// console.log("done updating");
 				cancelUpdates();
+			}
+			getMore.running = false;
 			return;
 		}
 		for (var i = 0; i < d.length; i++) {
+			// super verbose debug console.log("pos", d[i][6],d[i][7], "timedelta", Math.abs(d[i][0] - getMore.lastTimestamp));
 			if (d[i][6] === "0" && d[i][7] === "0")
 				continue; // no line to GPS (0,0)
 			if (Math.abs(d[i][0] - getMore.lastTimestamp) > 5000) {
 				myLatlng = new google.maps.LatLng(d[i][6],d[i][7]);
+				var points = [myLatlng, myLatlng];
+				var color = getColor(d[i][1]);
+				var path = new google.maps.Polyline({path:points,strokeColor:color,strokeWeight:4});
+				getMore.lines.push([d[i], path]);
 				getMore.lastTimestamp = +d[i][0];
 				continue; // no lines if there is a jump in the time series
 			}
@@ -151,11 +168,22 @@ function getMore(ts, cb) {
 		}
 		if (cb !== undefined)
 			cb();
+		getMore.running = false;
 	})
 	.fail(function(jqXHR, textStatus, errorThrown) { console.log(myUrl + "/update : ajax fail", textStatus, errorThrown); });
 }
 function drawNext() { // this is the timer driven drawing
-	drawNext.last = drawCachedUntil(+drawNext.last + drawTimeIncr * speedup);
+	var newLast = drawCachedUntil(+drawNext.last + drawTimeIncr * speedup);
+	// verbose debug output console.log("in drawNext: last", +drawNext.last, "drawTimeIncr * speedup", drawTimeIncr * speedup, "newLast", +newLast);
+	if (drawNext.last == newLast) { // are we done?
+		if (+getMore.endTimestamp - +getMore.lastTimestamp < 120000 && newLast == getMore.lastTimestamp) {
+			// console.log("done drawing");
+			stopDrawing();
+			replayControl.slider("value", +getMore.endTimestamp);
+		}
+	}
+	if (newLast > 0)
+		drawNext.last = newLast;
 }
 function startDrawing() {
 	drawNext.ID = setInterval(drawNext, drawTimeIncr);
@@ -197,9 +225,27 @@ function initialize() {
 	parseDates($.url("?from"), $.url("?to"));
 	$("#frompicker").val(datepickers.fromQ);
 	$("#topicker").val(datepickers.toQ);
-	datepickers(myUrl + '/map');
-	$("#energylink").attr("href", myUrl + "/energy?from=" + datepickers.fromQ + "&to=" + datepickers.toQ);
-	$("#statslink").attr("href", myUrl + "/stats?from=" + datepickers.fromQ + "&to=" + datepickers.toQ);
+	system = MAGIC_DISPLAY_SYSTEM;
+	if ($.url("?metric") === "true")
+		system = "metric";
+	else if ($.url("?metric") === "false")
+		system = "imperial";
+	if ($.url("?lang"))
+		lang = $.url("?lang").toLowerCase();
+	else
+		lang = "en";
+	var params = "&lang=" + lang;
+	if (system === "metric")
+		params += "&metric=true";
+	datepickers(myUrl + '/map', params);
+	$('#startStopButton').html(conv("label", "Stop Updates", lang));
+	$('#toggleCenterButton').html(conv("label", "Stop centering map",lang));
+	$('#startTimeLabel').html(conv("label", "Start time", lang));
+	$('#endTimeLabel').html(conv("label", "End time", lang));
+	$('#replaySpeedLabel').html(conv("label", "Replay Speed (real time = 1x)",lang));
+	$('#replayControlLabel').html(conv("label", "Replay Control",lang));
+	$("#energylink").attr("href", myUrl + "/energy?from=" + datepickers.fromQ + "&to=" + datepickers.toQ + params);
+	$("#statslink").attr("href", myUrl + "/stats?from=" + datepickers.fromQ + "&to=" + datepickers.toQ + params);
 	$("#triplink").attr("href", myUrl + "/trip");
 	speedup = $.url("?speed");
 	if (speedup === null || speedup === "")
@@ -244,7 +290,7 @@ function initialize() {
 			   'change': rSliderUpdate
 			  };
 	var ts = new Date(minV);
-	drawNext.last = +ts;
+	drawNext.last = ts.getTime();
 	var text = (ts.getMonth()+1) + '/' + ts.getDate() + ' ' + ts.getHours() + ':' + ts.getMinutes();
 	tooltipR.css('left', 0).text(text);  //Adjust the tooltip according to start value
 	replayControl.slider(rSliderOpts);
@@ -271,21 +317,21 @@ MAGIC_NAV
 	<h2>Tesla Tracker</h2>
 	<div id="top">
 		<div id="dates">
-			<label>Start time</label><input id="frompicker" type="text">
-			<label>End time</label><input id="topicker" type="text">
+			<label id="startTimeLabel">Start time</label><input id="frompicker" type="text">
+			<label id="endTimeLabel">End time</label><input id="topicker" type="text">
 			<button id="startStopButton" onclick="startStopUpdates()">Stop updates</button>
-			<button id="toggleCenterButton" onclick="toggleCentering()">Stop centering marker</button>
+			<button id="toggleCenterButton" onclick="toggleCentering()">Stop centering map</button>
 		</div>
 		<div id="sliders">
 			<section id="sliderS">
 				<span id="speedTT" class="tooltip"></span> <!-- Tooltip -->
 				<div id="speedSlider"></div> <!-- the Slider -->
-				<div class="label"><label>Replay Speed (real time = 1x)</label></div>
+				<div class="label"><label id="replaySpeedLabel">Replay Speed (real time = 1x)</label></div>
 			</section>
 			<section id="sliderR">
 				<span id="replayTT" class="tooltip"></span> <!-- Tooltip -->
 				<div id="replayControl"></div> <!-- the Slider -->
-				<div class="label"><label>Replay Control</label></div>
+				<div class="label"><label id="replayControlLabel">Replay Control</label></div>
 			</section>
 		</div>
 	</div>

@@ -18,79 +18,7 @@
 $(function() {
 	var p, previousPoint, myUrl, d1, d2, d3, d4, d5, data, options, eschart;
 	var pw, previousPointW, myUrl, dw1, dw2, dw3, dw4, dw5, dataw, optionsw, weschart;
-	var lang, metric = false;
-	var strings = {
-		"label": {
-			"distance": {
-				"en": "Distance",
-				"de": "Distanz"
-			},
-			"energy used": {
-				"en": "Energy Used",
-				"de": "Energieverbrauch"
-			},
-			"energy lost": {
-				"en": "Energy Lost",
-				"de": "Energieverlust"
-			},
-			"charge": {
-				"en": "Charge",
-				"de": "Ladung"
-			},
-			"average": {
-				"en": "Average",
-				"de": "Durchschnitt"
-			},
-			"Tesla Daily and Weekly Summary Chart": {
-				"en": "Tesla Daily and Weekly Summary Chart",
-				"de": "Tesla Tages- und Wochenstatistik"
-			},
-			"Daily plot, starting": {
-				"en": "Daily plot, starting",
-				"de": "Tagesstatistik ab"
-			},
-			"Weekly plot": {
-				"en": "Weekly plot",
-				"de": "Wochenstatistik"
-			}
-		},
-		"metric": {
-			"distance": {
-				"conversion": function(dist) { return dist * 1.609; },
-				"en": "km"
-			},
-			"energy": {
-				"conversion": function(e) { return e; },
-				"en": "kWh"
-			},
-			"energy_per_distance": {
-				"conversion": function(e) { return e / 1.609; },
-				"en": "Wh/km"
-			}
-		},
-		"imperial": {
-			"distance": {
-				"conversion": function(dist) { return dist; },
-				"en": "miles",
-				"de": "Meilen"
-			},
-			"energy_per_distance": {
-				"conversion": function(e) { return e; },
-				"en": "Wh/mile",
-				"de": "Wh/Meile"
-			}
-		}
-	};
-	function conv(k1, k2, k3) {
-		if (strings[k1][k2] === undefined)
-			k1 = "metric";
-		if (strings[k1][k2][k3] === undefined) {
-			if (strings[k1][k2]["en"] === undefined)
-				return "no conversion for " + k2;
-			return strings[k1][k2]["en"];
-		}
-		return strings[k1][k2][k3];
-	}
+	var lang;
 	function showTooltip(x, y, contents) {
 		$('<div id="tooltip">' + contents + '</div>').css( {
 			position: 'absolute',
@@ -107,8 +35,8 @@ $(function() {
 	$("#dcachart").bind("plothover", function (event, pos, item) {
 		var y;
 		if (item) {
-			if (previousPoint != item.dataIndex) {
-				previousPoint = item.dataIndex;
+			if (previousPoint != item.dataIndex + item.seriesIndex / 10) {
+				previousPoint = item.dataIndex + item.seriesIndex / 10;
 
 				$("#tooltip").remove();
 				y = item.datapoint[1].toFixed(1);
@@ -123,7 +51,6 @@ $(function() {
 			previousPoint = null;
 		}
 	});
-
 	myUrl = $.url('protocol') + "://" + $.url('auth') + (($.url('auth').length > 0) ? "@" : "") +
 		$.url('hostname') + ":" + $.url('port');
 	parseDates($.url("?from"), $.url("?to"));
@@ -140,12 +67,14 @@ $(function() {
 	if (system === "metric")
 		params += "&metric=true";
 	$("title").html(conv("label", document.title, lang));
+	$('#startTimeLabel').html(conv("label", "Start time", lang));
+	$('#endTimeLabel').html(conv("label", "End time", lang));
 	$("div#container h2").html(conv("label", $("div#container h2").text(), lang));
 	$("div#explanation span").html(conv("label", $("div#explanation span").text(), lang));
 	$("div#explanation2").html(conv("label", $("div#explanation2").text(), lang));
 	$("#frompicker").val(datepickers.fromQ);
 	$("#topicker").val(datepickers.toQ);
-	datepickers(myUrl + '/stats');
+	datepickers(myUrl + '/stats', params);
 	$("#maplink").attr("href", myUrl + "/map?from=" + datepickers.fromQ + "&to=" + datepickers.toQ + params);
 	$("#statslink").attr("href", myUrl + "/stats?from=" + datepickers.fromQ + "&to=" + datepickers.toQ + params);
 	$("#energylink").attr("href", myUrl + "/energy?from=" + datepickers.fromQ + "&to=" + datepickers.toQ + params);
@@ -349,8 +278,8 @@ $(function() {
 	$("#wdcachart").bind("plothover", function (event, pos, item) {
 		var y;
 		if (item) {
-			if (previousPointW != item.dataIndex) {
-				previousPointW = item.dataIndex;
+			if (previousPointW != item.dataIndex + item.seriesIndex / 10) {
+				previousPointW = item.dataIndex + item.seriesIndex / 10;
 
 				$("#tooltip").remove();
 				y = item.datapoint[1].toFixed(1);
@@ -400,8 +329,8 @@ MAGIC_NAV
 <div id="container">
 	<h2>Tesla Daily and Weekly Summary Chart</h2>
 	<div id="dates">
-		<label>Start time</label><input id="frompicker" type="text">
-		<label>End time</label><input id="topicker" type="text">
+		<label id="startTimeLabel">Start time</label><input id="frompicker" type="text">
+		<label id="endTimeLabel">End time</label><input id="topicker" type="text">
 	</div>
 	<div id="content">
 		<center><div class="container">

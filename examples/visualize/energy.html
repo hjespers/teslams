@@ -14,124 +14,7 @@
 <script language="javascript" type="text/javascript" src="url.min.js"></script>
 <script type="text/javascript">
 $(function() {
-	var lang, metric = false;
-	var strings = {
-		"label": {
-			"speed": {
-				"en": "Speed",
-				"de": "Geschwindigkeit"
-			},
-			"energy": {
-				"en": "Energy",
-				"de": "Energie"
-			},
-			"current": {
-				"en": "Current",
-				"de": "Strom"
-			},
-			"voltage": {
-				"en": "Voltage",
-				"de": "Spannung"
-			},
-			"power": {
-				"en": "Power",
-				"de": "Leistung"
-			},
-			"Tesla Energy Chart": {
-				"en": "Tesla Energy Chart",
-				"de": "Tesla Energie- und Fahrdaten"
-			},
-			"Energy and speed plot, starting": {
-				"en": "Energy and speed plot, starting",
-				"de": "Energie und Geschwindigkeit ab"
-			},
-			"Total energy expended": {
-				"en": "Total energy expended",
-				"de": "Gesamtenergieverbrauch"
-			},
-			"total energy regen": {
-				"en": "Total energy regen",
-				"de": "Gesamtenergierückgewinnung"
-			},
-			"Voltage and current while charging.": {
-				"en": "Voltage and current while charing.",
-				"de": "Spannung und Strom beim Laden."
-			},
-			"Maximum charge power:": {
-				"en": "Maximum charge power:",
-				"de": "Maximale Ladeleistung:"
-			},
-			"SOC and rated range": {
-				"en": "SOC and rated range",
-				"de": "Ladung und offizielle Reichweite"
-			},
-			"SOC": {
-				"en": "SOC",
-				"de": "Ladung"
-			},
-			"rated range": {
-				"en": "Rated range",
-				"de": "Offizielle Reichweite"
-			},
-			"at": {
-				"en": "at",
-				"de": "am"
-			}
-		},
-		"metric": {
-			"distance": {
-				"conversion": function(dist) { return dist * 1.609; },
-				"en": "km"
-			},
-			"energy": {
-				"conversion": function(e) { return e; },
-				"en": "kWh"
-			},
-			"energy_per_distance": {
-				"conversion": function(e) { return e / 1.609; },
-				"en": "Wh/km"
-			},
-			"speed_long": {
-				"conversion": function(speed) { return speed * 1.609; },
-				"en": "km/h"
-			},
-			"speed": {
-				"conversion": function(speed) { return speed * 1.609; },
-				"en": "km/h"
-			}
-		},
-		"imperial": {
-			"distance": {
-				"conversion": function(dist) { return dist; },
-				"en": "miles",
-				"de": "Meilen"
-			},
-			"energy_per_distance": {
-				"conversion": function(e) { return e; },
-				"en": "Wh/mile",
-				"de": "Wh/Meile"
-			},
-			"speed_long": {
-				"conversion": function(speed) { return speed; },
-				"en": "miles/hour",
-				"de": "Meilen/Stunde"
-			},
-			"speed": {
-				"conversion": function(speed) { return speed; },
-				"en": "mph"
-			}
-		}
-	};
-	function conv(k1, k2, k3) {
-		if (strings[k1][k2] === undefined)
-			k1 = "metric";
-		if (strings[k1][k2][k3] === undefined) {
-			if (strings[k1][k2]["en"] === undefined)
-				return "no conversion for " + k2;
-			return strings[k1][k2]["en"];
-		}
-		return strings[k1][k2][k3];
-	}
+	var lang, system;
 	var myUrl = $.url('protocol') + "://" + $.url('auth') + (($.url('auth').length > 0) ? "@" : "") +
 		$.url('hostname') + ":" + $.url('port');
 	var d1, d2, d3, d4, d5, d6, d7, data, options, eschart, socData, socOptions, socchart, chargechart;
@@ -150,6 +33,8 @@ $(function() {
 	if (system === "metric")
 		params += "&metric=true";
 	$("title").html(conv("label", document.title, lang));
+	$('#startTimeLabel').html(conv("label", "Start time", lang));
+	$('#endTimeLabel').html(conv("label", "End time", lang));
 	$("div#container h2").html(conv("label", $("div#container h2").text(), lang));
 	for (var i = 1; i <= 6; i++)
 		$("span#"+i).html(conv("label", $("span#"+i).text(), lang));
@@ -157,18 +42,16 @@ $(function() {
 
 	$("#frompicker").val(datepickers.fromQ);
 	$("#topicker").val(datepickers.toQ);
-	datepickers(myUrl + '/energy');
+	datepickers(myUrl + '/energy', params);
 	$("#maplink").attr("href", myUrl + "/map?from=" + datepickers.fromQ + "&to=" + datepickers.toQ + params);
 	$("#statslink").attr("href", myUrl + "/stats?from=" + datepickers.fromQ + "&to=" + datepickers.toQ + params);
 	$("#energylink").attr("href", myUrl + "/energy?from=" + datepickers.fromQ + "&to=" + datepickers.toQ + params);
 	$("#triplink").attr("href", myUrl + "/trip");
 	d1 = [MAGIC_ENERGY];
 	d2 = [MAGIC_SPEED];
-	var min_spd = MAGIC_MIN_SPD;
-	var max_spd = MAGIC_MAX_SPD;
+	var min_spd = conv(system, "speed", "conversion")(MAGIC_MIN_SPD);
+	var max_spd = conv(system, "speed", "conversion")(MAGIC_MAX_SPD);
 	if (system === "metric") {
-		min_spd *= 1.609;
-		max_spd *= 1.609;
 		for (var i = 0; i < d2.length; i++)
 			d2[i][1] *= 1.609;
 	}
@@ -391,8 +274,8 @@ MAGIC_NAV
 <div id="container">
   <h2>Tesla Energy Chart</h2>
 	<div id="dates">
-		<label>Start time</label><input id="frompicker" type="text">
-		<label>End time</label><input id="topicker" type="text">
+		<label id="startTimeLabel">Start time</label><input id="frompicker" type="text">
+		<label id="endTimeLabel">End time</label><input id="topicker" type="text">
 	</div>
 	<div id="content">
 		<center><div class="container">
