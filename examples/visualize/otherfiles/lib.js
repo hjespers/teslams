@@ -1,3 +1,205 @@
+
+var strings = {
+	"label": {
+		"distance": {
+			"en": "Distance",
+			"de": "Distanz"
+		},
+		"energy used": {
+			"en": "Energy Used",
+			"de": "Energieverbrauch"
+		},
+		"energy lost": {
+			"en": "Energy Lost",
+			"de": "Energieverlust"
+		},
+		"charge": {
+			"en": "Charge",
+			"de": "Ladung"
+		},
+		"average": {
+			"en": "Average",
+			"de": "Durchschnitt"
+		},
+		"Tesla Daily and Weekly Summary Chart": {
+			"en": "Tesla Daily and Weekly Summary Chart",
+			"de": "Tesla Tages- und Wochenstatistik"
+		},
+		"Daily plot, starting": {
+			"en": "Daily plot, starting",
+			"de": "Tagesstatistik ab"
+		},
+		"Weekly plot": {
+			"en": "Weekly plot",
+			"de": "Wochenstatistik"
+		},
+		"Start time": {
+			"en": "Start time",
+			"de": "Von"
+		},
+		"End time": {
+			"en": "End time",
+			"de": "Bis"
+		},
+		"speed": {
+			"en": "Speed",
+			"de": "Geschwindigkeit"
+		},
+		"energy": {
+			"en": "Energy",
+			"de": "Energie"
+		},
+		"current": {
+			"en": "Current",
+			"de": "Strom"
+		},
+		"voltage": {
+			"en": "Voltage",
+			"de": "Spannung"
+		},
+		"power": {
+			"en": "Power",
+			"de": "Leistung"
+		},
+		"Tesla Energy Chart": {
+			"en": "Tesla Energy Chart",
+			"de": "Tesla Energie- und Fahrdaten"
+		},
+		"Energy and speed plot, starting": {
+			"en": "Energy and speed plot, starting",
+			"de": "Energie und Geschwindigkeit ab"
+		},
+		"Total energy expended": {
+			"en": "Total energy expended",
+			"de": "Gesamtenergieverbrauch"
+		},
+		"total energy regen": {
+			"en": "Total energy regen",
+			"de": "Gesamtenergierückgewinnung"
+		},
+		"Voltage and current while charging.": {
+			"en": "Voltage and current while charing.",
+			"de": "Spannung und Strom beim Laden."
+		},
+		"Maximum charge power:": {
+			"en": "Maximum charge power:",
+			"de": "Maximale Ladeleistung:"
+		},
+		"SOC and rated range": {
+			"en": "SOC and rated range",
+			"de": "Ladung und offizielle Reichweite"
+		},
+		"SOC": {
+			"en": "SOC",
+			"de": "Ladung"
+		},
+		"rated range": {
+			"en": "Rated range",
+			"de": "Offizielle Reichweite"
+		},
+		"at": {
+			"en": "at",
+			"de": "am"
+		},
+		"Start Updates": {
+			"en": "Start Updates",
+			"de": "Aktualisieren"
+		},
+		"Stop Updates": {
+			"en": "Stop Updates",
+			"de": "Nicht mehr aktualisieren"
+		},
+		"range": {
+			"en": "range",
+			"de": "Reichweite"
+		},
+		"odometer": {
+			"en": "odometer",
+			"de": "km-Stand"
+		},
+		"going": {
+			"en": "going",
+			"de": "Tacho"
+		},
+		"parked": {
+			"en": "parked",
+			"de": "geparkt"
+		},
+		"parked and charging": {
+			"en": "parked and charging",
+			"de": "geparkt und aufladend"
+		},
+		"Center map on marker": {
+			"en": "Center map on marker",
+			"de": "Karte zentrieren"
+		},
+		"Stop centering map": {
+			"en": "Stop centering map",
+			"de": "Karte nicht zentrieren"
+		},
+		"Replay Speed (real time = 1x)": {
+			"en": "Replay Speed (real time = 1x)",
+			"de": "Zeitraffer (Echtzeit = 1x)"
+		},
+		"Replay Control": {
+			"en": "Replay Control",
+			"de": "Zeitpunkt"
+		}
+	},
+	"metric": {
+		"distance": {
+			"conversion": function(dist) { return dist * 1.609; },
+			"en": "km"
+		},
+		"energy": {
+			"conversion": function(e) { return e; },
+			"en": "kWh"
+		},
+		"energy_per_distance": {
+			"conversion": function(e) { return e / 1.609; },
+			"en": "Wh/km"
+		},
+		"speed_long": {
+			"conversion": function(speed) { return speed * 1.609; },
+			"en": "km/h"
+		},
+		"speed": {
+			"conversion": function(speed) { return speed * 1.609; },
+			"en": "km/h"
+		}
+	},
+	"imperial": {
+		"distance": {
+			"conversion": function(dist) { return dist; },
+			"en": "miles",
+			"de": "Meilen"
+		},
+		"energy_per_distance": {
+			"conversion": function(e) { return e; },
+			"en": "Wh/mile",
+			"de": "Wh/Meile"
+		},
+		"speed_long": {
+			"conversion": function(speed) { return speed; },
+			"en": "miles/hour",
+			"de": "Meilen/Stunde"
+		},
+		"speed": {
+			"conversion": function(speed) { return speed; },
+			"en": "mph"
+		}
+	}
+};
+function conv(k1, k2, k3) {
+	if (strings[k1][k2] === undefined)
+		k1 = "metric";
+	if (strings[k1][k2][k3] === undefined) {
+		if (strings[k1][k2]["en"] === undefined)
+			return "no conversion for " + k2;
+		return strings[k1][k2]["en"];
+	}
+	return strings[k1][k2][k3];
+}
 function compareTime(a,b){
 	var as = (a.replace(" ","-")+"-0").split("-");
 	var bs = (b.replace(" ","-")+"-0").split("-");
