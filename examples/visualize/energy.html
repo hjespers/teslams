@@ -49,11 +49,9 @@ $(function() {
 	$("#triplink").attr("href", myUrl + "/trip");
 	d1 = [MAGIC_ENERGY];
 	d2 = [MAGIC_SPEED];
-	var min_spd = MAGIC_MIN_SPD;
-	var max_spd = MAGIC_MAX_SPD;
+	var min_spd = conv(system, "speed", "conversion")(MAGIC_MIN_SPD);
+	var max_spd = conv(system, "speed", "conversion")(MAGIC_MAX_SPD);
 	if (system === "metric") {
-		min_spd *= 1.609;
-		max_spd *= 1.609;
 		for (var i = 0; i < d2.length; i++)
 			d2[i][1] *= 1.609;
 	}
