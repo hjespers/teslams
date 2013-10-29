@@ -51,21 +51,86 @@ var speedup = 60000;
 var nav = "";
 var system = "";
 
+// this is super simplistic for now. Clear text passwords, nothing fancy, trivial to
+// intercept - but it's a start
+var users = [
+	{ id: 1, username: 'dirk', password: 'secret'},
+	{ id: 2, username: 'bob', password: 'different'}
+];
+// please change this to have at least some trivial session hijacking protection
+var localSecret = "please change this secret string";
+
+// these two functions implement our simplistic user lookup
+function findById(id, fn) {
+	var idx = id - 1;
+	if (users[idx]) {
+		fn(null, users[idx]);
+	} else {
+		fn(new Error('User ' + id + ' does not exist'));
+	}
+}
+function findByUsername(username, fn) {
+	console.log("find user", username);
+	for (var i = 0, len = users.length; i < len; i++) {
+		var user = users[i];
+		if (user.username === username) {
+			return fn(null, user);
+		}
+	}
+	return fn(null, null);
+}
+// Passport session setup.
+//   To support persistent login sessions, Passport needs to be able to
+//   serialize users into and deserialize users out of the session.  Typically,
+//   this will be as simple as storing the user ID when serializing, and finding
+//   the user by ID when deserializing.
+passport.serializeUser(function(user, store) {
+	store(null, user.id);
+});
+passport.deserializeUser(findById);
+//
+// now setup passport and route it into our express setup
+//
 passport.use(new LocalStrategy(
 	function(username, password, done) {
-		User.findOne({ username: username }, function (err, user) {
-			if (err) { return done(err); }
-			if (!user) {
-				return done(null, false, { message: 'Incorrect username.' });
+		findByUsername(username, function(err, user) {
+			if (err) {
+				return done(err);
 			}
-			if (!user.validPassword(password)) {
-				return done(null, false, { message: 'Incorrect password.' });
+			if (!user || user.password != password) {
+				return done(null, false, { message: 'Invalid user or password' });
 			}
 			return done(null, user);
 		});
 	}
 ));
+app.configure(function() {
+	app.use(express.cookieParser());
+	app.use(express.bodyParser());
+	app.use(express.session({ secret: localSecret }));
+	app.use(passport.initialize());
+	app.use(passport.session());
+	app.use(app.router);
+});
+// simple login screen with correspoding POST setup
+app.get('/login', function(req,res) {
+	fs.readFile(__dirname + "/login.html", "utf-8", function(err, data) {
+		if (err) throw err;
+		res.send(data);
+	});
+});
+app.post('/login', passport.authenticate('local', { successRedirect: '/',
+                                                    failureRedirect: '/login' }));
 
+// call this in every app.get() that should only be accessible when logged in
+function ensureAuthenticated(req, res, next) {
+	if (req.isAuthenticated()) {
+		return next();
+	}
+	res.redirect('/login')
+}
+
+// read in the shared navigation bar so we can insert this into every page
 fs.readFile(__dirname + "/otherfiles/nav.html", "utf-8", function(err, data) {
 	if (err) throw err;
 	nav = data;
@@ -158,7 +223,7 @@ MongoClient.connect("mongodb://127.0.0.1:27017/" + argv.db, function(err, db) {
 
 if (argv.verbose) app.use(express.logger('dev'));
 
-app.get('/', function(req, res) {
+app.get('/', ensureAuthenticated, function(req, res) {
 	// friendly welcome screen
 	fs.readFile(__dirname + "/welcome.html", "utf-8", function(err, data) {
 		if (err) throw err;
@@ -166,7 +231,7 @@ app.get('/', function(req, res) {
 	});
 });
 
-app.get('/getdata', function (req, res) {
+app.get('/getdata', ensureAuthenticated, function (req, res) {
 	var ts, options, vals;
 	if (argv.verbose) console.log('/getdata with',req.query.at);
 	MongoClient.connect("mongodb://127.0.0.1:27017/" + argv.db, function(err, db) {
@@ -198,7 +263,7 @@ app.get('/getdata', function (req, res) {
 	});
 });
 
-app.get('/storetrip', function(req, res) {
+app.get('/storetrip', ensureAuthenticated, function(req, res) {
 	MongoClient.connect("mongodb://127.0.0.01:27017/" + argv.db, function(err, db) {
 		if (err) {
 			console.log('error connecting to database:', err);
@@ -217,7 +282,7 @@ app.get('/storetrip', function(req, res) {
 	});
 });
 
-app.get('/getlasttrip', function(req, res) {
+app.get('/getlasttrip', ensureAuthenticated, function(req, res) {
 	MongoClient.connect("mongodb://127.0.0.01:27017/" + argv.db, function(err, db) {
 		if (err) {
 			console.log('error connecting to database:', err);
@@ -233,7 +298,7 @@ app.get('/getlasttrip', function(req, res) {
 	});
 });
 
-app.get('/update', function (req, res) {
+app.get('/update', ensureAuthenticated, function (req, res) {
 	// we don't keep the database connection as that has caused occasional random issues while testing
 	if (!started)
 		return;
@@ -282,7 +347,7 @@ app.get('/update', function (req, res) {
 	});
 });
 
-app.get('/map', function(req, res) {
+app.get('/map', ensureAuthenticated, function(req, res) {
 	var params = "";
 	if (req.query.lang !== undefined)
 		params = "&lang=" + req.query.lang;
@@ -329,7 +394,7 @@ app.get('/map', function(req, res) {
 	if (!argv.silent) console.log('done sending the initial page');
 });
 
-app.get('/energy', function(req, res) {
+app.get('/energy', ensureAuthenticated, function(req, res) {
 	var path = req.path;
 	var params = "";
 	if (req.query.lang !== undefined)
@@ -550,7 +615,7 @@ function calculateDelta(d1, d2) {
 //	}
 	return delta / 1000;
 }
-app.get('/test', function(req, res) {
+app.get('/test', ensureAuthenticated, function(req, res) {
 	MongoClient.connect("mongodb://127.0.0.1:27017/" + argv.db, function(err, db) {
 		if(err) {
 			console.log('error connecting to database:', err);
@@ -575,7 +640,7 @@ app.get('/test', function(req, res) {
 		});
 	});
 });
-app.get('/stats', function(req, res) {
+app.get('/stats', ensureAuthenticated, function(req, res) {
 	var debugStartTime = new Date().getTime();
 	var path = req.path;
 	var params = "";
@@ -862,7 +927,7 @@ app.get('/stats', function(req, res) {
 	});
 });
 
-app.get('/trip', function(req, res) {
+app.get('/trip', ensureAuthenticated, function(req, res) {
 	res.setHeader("Content-Type", "text/html");
 	fs.readFile(__dirname + "/trip.html", "utf-8", function(err, data) {
 		if (err) throw err;
@@ -870,7 +935,7 @@ app.get('/trip', function(req, res) {
 	});
 });
 
-app.get('/fahrtenbuch', function(req, res) {
+app.get('/fahrtenbuch', ensureAuthenticated, function(req, res) {
 	var path = req.path;
 	var dates = new parseDates(req.query.from, req.query.to);
 	var from = makeDate(dates.fromQ);
