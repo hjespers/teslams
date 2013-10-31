@@ -50,6 +50,7 @@ var passport = require('passport'), LocalStrategy = require('passport-local').St
 var speedup = 60000;
 var nav = "";
 var system = "";
+var fw_version = "";
 
 passport.use(new LocalStrategy(
 	function(username, password, done) {
@@ -140,8 +141,8 @@ MongoClient.connect("mongodb://127.0.0.1:27017/" + argv.db, function(err, db) {
 		}
 		if (argv.verbose) console.log("battery capacity", capacity);
 	});
-	var query = {'guiSettings': { '$exists': true } };
-	var options = { 'sort': [['ts', 'desc']], 'limit': 1};
+	query = {'guiSettings': { '$exists': true } };
+	options = { 'sort': [['ts', 'desc']], 'limit': 1};
 	collectionA.find(query,options).toArray(function(err, docs) {
 		if (docs.length == 0) {
 			console.log("missing GUI settings in db, assuming imperial");
@@ -154,6 +155,16 @@ MongoClient.connect("mongodb://127.0.0.1:27017/" + argv.db, function(err, db) {
 			}
 		}
 	});
+	query = {'vehicleState': { '$exists': true } };
+	options = { 'sort': [['ts', 'desc']], 'limit': 1};
+	collectionA.find(query, options).toArray(function(err, docs) {
+		if (docs.length == 0) {
+			console.log("missing vehicleState settings in db");
+		} else {
+			fw_version = docs[0].vehicleState.car_version;
+		}
+	});
+
 });
 
 if (argv.verbose) app.use(express.logger('dev'));
@@ -162,7 +173,9 @@ app.get('/', function(req, res) {
 	// friendly welcome screen
 	fs.readFile(__dirname + "/welcome.html", "utf-8", function(err, data) {
 		if (err) throw err;
-		res.send(data.replace("MAGIC_NAV",nav));
+		res.send(data.replace("MAGIC_NAV",nav)
+			 .replace("MAGIC_FIRMWARE_VERSION", fw_version)
+			 .replace("MAGIC_DISPLAY_SYSTEM", system));
 	});
 });
 
