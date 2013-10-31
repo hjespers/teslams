@@ -50,6 +50,46 @@ var passport = require('passport'), LocalStrategy = require('passport-local').St
 var speedup = 60000;
 var nav = "";
 var system = "";
+var fwVersion = "";
+var vin = "";
+var optionString = "";
+
+var optionText = {
+	RENA: "North American",
+	REEU: "European",
+	TM02: " Signature",
+	PF01: " P",
+	PF00: " S",
+	BT85: "85PLUS",
+	BT60: "60",
+	BT40: "40",
+	PBSB: "<li> black</li>",
+	PBCW: "<li> solid white</li>",
+	PMSS: "<li> silver</li>",
+	PMTG: "<li> dolphin gray metallic</li>",
+	PMAB: "<li> metallic brown</li>",
+	PMMB: "<li> metallic blue</li>",
+	PMSG: "<li> metallic green</li>",
+	PPSW: "<li> pearl white</li>",
+	PPMR: "<li> multi-coat red</li>",
+	PPSR: "<li> signature red</li>",
+	RFPO: "<li> panorama roof</li>",
+	WT19: "<li> silver 19\" wheels</li>",
+	WT21: "<li> silver 21\" wheels</li>",
+	WTSP: "<li> gray 21\" wheels</li>",
+	WTSG: "<li> gray performance 21\" wheels</li>",
+	TR01: "<li> third row seats</li>",
+	SU01: "<li> air suspension</li>",
+	SC01: "<li> super charger enabled</li>",
+	TP01: "<li> tech package</li>",
+	AU01: "<li> audio upgrade</li>",
+	CH01: "<li> dual charger</li>",
+	PK01: "<li> parking sensors</li>",
+	CW01: "<li> cold weather package</li>",
+	LP01: "<li> premium lighting package</li>",
+	SP01: "<li> security package</li>"
+};
+	
 
 passport.use(new LocalStrategy(
 	function(username, password, done) {
@@ -126,22 +166,33 @@ MongoClient.connect("mongodb://127.0.0.1:27017/" + argv.db, function(err, db) {
 		} else {
 			if (docs.length > 1)
 				console.log("congratulations, you have more than one Tesla Model S - this only supports your first car");
+			vin = docs[0].vehicles.vin;
 			var options = docs[0].vehicles.option_codes.split(',');
 			for (var i = 0; i < options.length; i++) {
-				if (options[i] == "BT85") {
-					capacity = 85;
-					break;
+				if (optionText[options[i]] !== undefined)
+					optionString += optionText[options[i]];
+				if (options[i] == "PX01") {
+					optionsString = optionsString.replace("PLUS", "+");
 				}
-				if (options[i] == "BT60") {
-					capacity = 60;
-					break;
+				if (options[i].substring(0,2) == "BT") {
+					if (options[i] == "BT85") {
+						capacity = 85;
+					} else if (options[i] == "BT60") {
+						capacity = 60;
+					} else if (options[i] == "BT40") {
+						capacity = 60;
+					}
+					optionString += "<ul>";
 				}
 			}
+			optionString = optionString.replace("PLUS", "");
+			optionString += "</ul>";
+			console.log(optionString);
 		}
 		if (argv.verbose) console.log("battery capacity", capacity);
 	});
-	var query = {'guiSettings': { '$exists': true } };
-	var options = { 'sort': [['ts', 'desc']], 'limit': 1};
+	query = {'guiSettings': { '$exists': true } };
+	options = { 'sort': [['ts', 'desc']], 'limit': 1};
 	collectionA.find(query,options).toArray(function(err, docs) {
 		if (docs.length == 0) {
 			console.log("missing GUI settings in db, assuming imperial");
@@ -154,6 +205,27 @@ MongoClient.connect("mongodb://127.0.0.1:27017/" + argv.db, function(err, db) {
 			}
 		}
 	});
+	query = {'vehicleState': { '$exists': true } };
+	options = { 'sort': [['ts', 'desc']], 'limit': 1};
+	collectionA.find(query, options).toArray(function(err, docs) {
+		if (docs.length == 0) {
+			console.log("missing vehicleState settings in db");
+		} else {
+			var fwBuild = docs[0].vehicleState.car_version;
+			if (fwBuild.substr(0,4) == "1.25")
+				fwVersion = "4.3 ";
+			else if (fwBuild.substr(0,4) == "1.31")
+				fwVersion = "4.4 ";
+			else if (fwBuild.substr(0,4) == "1.33")
+				fwVersion = "4.5 ";
+			else if (fwBuild.substr(0,4) == "1.35")
+				fwVersion = "5.0 ";
+			else if (fwBuild.substr(0,4) == "1.45")
+				fwVersion = "5.6 ";
+			fwVersion += "(" + fwBuild + ")";
+		}
+	});
+
 });
 
 if (argv.verbose) app.use(express.logger('dev'));
@@ -162,7 +234,11 @@ app.get('/', function(req, res) {
 	// friendly welcome screen
 	fs.readFile(__dirname + "/welcome.html", "utf-8", function(err, data) {
 		if (err) throw err;
-		res.send(data.replace("MAGIC_NAV",nav));
+		res.send(data.replace("MAGIC_NAV",nav)
+			 .replace("MAGIC_OPTIONS", optionString)
+			 .replace("MAGIC_VIN", vin)
+			 .replace("MAGIC_FIRMWARE_VERSION", fwVersion)
+			 .replace("MAGIC_DISPLAY_SYSTEM", system));
 	});
 });
 
