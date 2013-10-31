@@ -211,7 +211,18 @@ MongoClient.connect("mongodb://127.0.0.1:27017/" + argv.db, function(err, db) {
 		if (docs.length == 0) {
 			console.log("missing vehicleState settings in db");
 		} else {
-			fwVersion = docs[0].vehicleState.car_version;
+			var fwBuild = docs[0].vehicleState.car_version;
+			if (fwBuild.substr(0,4) == "1.25")
+				fwVersion = "4.3 ";
+			else if (fwBuild.substr(0,4) == "1.31")
+				fwVersion = "4.4 ";
+			else if (fwBuild.substr(0,4) == "1.33")
+				fwVersion = "4.5 ";
+			else if (fwBuild.substr(0,4) == "1.35")
+				fwVersion = "5.0 ";
+			else if (fwBuild.substr(0,4) == "1.45")
+				fwVersion = "5.6 ";
+			fwVersion += "(" + fwBuild + ")";
 		}
 	});
 
