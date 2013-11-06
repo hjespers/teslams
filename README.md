@@ -326,6 +326,14 @@ To execute change into the examples directory to run:
 	cd ~/node_modules/teslams/examples
 	node example
 
+#restla.js - a simple REST proxy server
+
+The restla.js proxy server exposes REST API calls in a way that does not expose your Tesla Motors login and password. This proxy is useful as a simple HTML Web interface. Just run 'restla' and then point your browser to http://localhost:8888/help for a full list of the commands supported.
+
+You can also call the restla proxy using curl or any REST client.
+
+I wrote this proxy so I could run it on the internet (behind a firewall for security) and integrate my car with my Pebble Smart Watch and Android Phone. Using Locale (or Tasker) on the Android phone allows me to define rules such as: when I leave my office, start the air conditioning on the car.  
+
 
 #Feedback and Support
 
