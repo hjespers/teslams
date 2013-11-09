@@ -89,8 +89,14 @@ function parseUrl( vehicle, req, res) {
 			teslams.get_drive_state( vid, pr );
 		  	break;
 		case "/lock":		  	
+			teslams.get_vehicle_state( vid, pr );
+		  	break;
+		case "/lock/on":		  	
 		  	teslams.door_lock( {id: vid, lock: 'lock' }, pr );
 		  	break;
+		case "/lock/off":		  	
+		  	teslams.door_lock( {id: vid, lock: 'unlock' }, pr );
+  			 break;
 		case "/unlock":		  	
 		  	teslams.door_lock( {id: vid, lock: 'unlock' }, pr );
   			 break;
@@ -156,18 +162,23 @@ function parseUrl( vehicle, req, res) {
 			res.write( '<tr><td><a href="../gui">/gui</a><td>Display the GUI settings</tr>');
 			res.write( '<tr><td><a href="../honk">/honk</a><td>Honk the car horn</tr>');		
 			res.write( '<tr><td><a href="../mobile">/mobile</a><td>Display the mobile state</tr>');
-			res.write( '<tr><td><a href="../lock">/lock</a><td>Lock the car doors</tr>');
-			res.write( '<tr><td><a href="../unlock">/unlock</a><td>Unlock the car doors</tr>');
+			res.write( '<tr><td><a href="../lock">/lock</a><td>Display the current state of the car door locks</tr>');
+			res.write( '<tr><td><a href="../lock/on">/lock/on</a><td>Lock the car doors</tr>');
+			res.write( '<tr><td><a href="../lock/off">/lock/off</a><td>Unlock the car doors</tr>');
 			res.write( '<tr><td><a href="../port">/port</a><td>Open charge port door</tr>');
 			res.write( '<tr><td><a href="../climate">/climate</a><td>Display the climate/temp state</tr>');
 			res.write( '<tr><td><a href="../climate/on">/climate/on<td>Turn the air conditioning and heating ON</tr>');
 			res.write( '<tr><td><a href="../climate/off">/climate/off<td>Turn the air conditioning and heating OFF</tr>');
+			res.write( '<tr><td><a href="../roof">/roof</a><td>Display the cuurent state of the car sunroof</tr>');			
 			res.write( '<tr><td><a href="../roof/open">/roof/open</a><td>Open the car sunroof</tr>');			
 			res.write( '<tr><td><a href="../roof/vent">/roof/vent</a><td>Move the car sunroof to the vent position</tr>');			
 			res.write( '<tr><td><a href="../roof/comfort">/roof/comfort</a><td>Move the car sunroof to the comfort position</tr>');			
 			res.write( '<tr><td><a href="../roof/close">/roof/close</a><td>Close the car sunroof</tr>');			
+			res.write( '<tr><td><a href="../range">/range</a><td>Display the current range settings</tr>');
+			res.write( '<tr><td><a href="../range/70">/range/70</a><td>Set charging to 70% SOC</tr>');
+			res.write( '<tr><td><a href="../range/80">/range/80</a><td>Set charging to 80% SOC</tr>');
 			res.write( '<tr><td><a href="../range/std">/range/std</a><td>Set charging to daily/standard range mode</tr>');
-			res.write( '<tr><td><a href="../range/max">/range/std</a><td>Set charging to trip/maximum range mode</tr>');
+			res.write( '<tr><td><a href="../range/max">/range/max</a><td>Set charging to trip/maximum range mode</tr>');
 			res.write( '<tr><td><a href="../wake">/wake</a><td>Wake up the car telemetry</tr>');
 			//TODO
 			//res.write( '<tr><td>*/temp/{temp}<td>Set the car climate control temperature (in Celcius)</tr>');
