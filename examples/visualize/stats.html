@@ -197,8 +197,10 @@ $(function() {
 	dw3 = [MAGIC_WAVERAGE];
 	if (system === "metric") {
 		for (i = 0; i < dw1.length; i++) {
-			dw1[i][1] *= 1.609;
-			dw3[i][1] /= 1.609;
+			if (dw1[i] !== null)
+				dw1[i][1] *= 1.609;
+			if (dw3[i] !== null)
+				dw3[i][1] /= 1.609;
 		}
 	}
 	dataw = [{
