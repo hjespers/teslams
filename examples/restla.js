@@ -48,7 +48,7 @@ function parseUrl( vehicle, req, res) {
 	function pr( stuff) {
 		//console.log( util.inspect(stuff) );
 		res.writeHead(200, {'Content-Type': 'application/json'});
-		res.end( util.inspect(stuff) );
+		res.end( JSON.stringify(stuff) );
 	}
 
 	var vid = vehicle.id;	
@@ -59,7 +59,7 @@ function parseUrl( vehicle, req, res) {
 	{
 		case "/vehicle":
 		  res.writeHead(200, {'Content-Type': 'application/json'});
-		  res.end(util.inspect(vehicle)); 
+		  res.end( JSON.stringify(vehicle) ); 
 		  break;
 		case "/mobile":
 		  teslams.mobile_enabled( vid, pr );
@@ -76,6 +76,24 @@ function parseUrl( vehicle, req, res) {
 		case "/charge/stop":
 			teslams.charge_state( { id: vid, charge: 'stop' }, pr ); 
 		  	break;
+		case "/charge/charging_state":		  	
+			teslams.get_charge_state( vid, function( resp ) {
+				res.writeHead(200, {'Content-Type': 'text/plain'});
+				res.end( JSON.stringify(resp.charging_state) );
+			});
+		  	break;
+		case "/charge/battery_range":		  	
+			teslams.get_charge_state( vid, function( resp ) {
+				res.writeHead(200, {'Content-Type': 'text/plain'});
+				res.end( JSON.stringify(resp.battery_range) );
+			});
+		  	break;
+		case "/charge/battery_level":		  	
+			teslams.get_charge_state( vid, function( resp ) {
+				res.writeHead(200, {'Content-Type': 'text/plain'});
+				res.end( JSON.stringify(resp.battery_level) );
+			});
+		  	break;
 		case "/climate":
 			teslams.get_climate_state( vid, pr );
 		  	break;
@@ -89,7 +107,7 @@ function parseUrl( vehicle, req, res) {
 			teslams.get_drive_state( vid, pr );
 		  	break;
 		case "/lock":		  	
-			teslams.get_vehicle_state( vid, pr );
+			teslams.get_vehicle_state( vid, pr ) 
 		  	break;
 		case "/lock/on":		  	
 		  	teslams.door_lock( {id: vid, lock: 'lock' }, pr );
@@ -103,6 +121,12 @@ function parseUrl( vehicle, req, res) {
 		case "/vehicle_state":
 			teslams.get_vehicle_state( vid, pr );
 			break;
+		case "/vehicle_state/locked":		  	
+			teslams.get_vehicle_state( vid, function( resp ) {
+				res.writeHead(200, {'Content-Type': 'application/json'});
+				res.end( JSON.stringify(resp.locked) );
+			});
+		  	break;
 		case "/flash": 
 			teslams.flash( vid, pr ); 
 			break;
