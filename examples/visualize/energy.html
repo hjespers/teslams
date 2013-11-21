@@ -203,8 +203,10 @@ $(function() {
 	previousPointSOC = null;
 	d3 = [MAGIC_SOC];
 	d4 = [MAGIC_RANGE];
-	for (var i = 0; i < d4.length; i++)
-		d4[i][1] *= 1.609;
+	if (system === "metric") {
+		for (var i = 0; i < d4.length; i++)
+			d4[i][1] *= 1.609;
+	}
 
 	socchart.bind("plothover", function (event, pos, item) {
 		var x, whenS, whm, valueS, soc, range, mins;
