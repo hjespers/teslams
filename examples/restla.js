@@ -212,7 +212,8 @@ function parseUrl( vehicle, req, res) {
 			res.end( '</table></body></html>');
 			break;
 		default:
-		  res.end( "Invalid URL\n");
+			res.writeHead(501, {'Content-Type': 'text/plain'});
+		  	res.end( "Invalid URL\n");
 	}		
 }
 

@@ -471,6 +471,8 @@ exports.stream_columns = [ 'speed'
                           , 'power'
                           , 'shift_state'
                           , 'range'
+                          , 'est_range'
+                          , 'heading'
                           ];
 
 exports.stream = function(options, cb) {
