@@ -47,6 +47,9 @@ function parseUrl( vehicle, req, res) {
 
 	function pr( stuff) {
 		//console.log( util.inspect(stuff) );
+		res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+		res.setHeader("Pragma", "no-cache");
+		res.setHeader("Expires", 0 );
 		res.writeHead(200, {'Content-Type': 'application/json'});
 		res.end( JSON.stringify(stuff) );
 	}
@@ -58,9 +61,14 @@ function parseUrl( vehicle, req, res) {
 	switch(url)
 	{
 		case "/vehicle":
-		  res.writeHead(200, {'Content-Type': 'application/json'});
-		  res.end( JSON.stringify(vehicle) ); 
-		  break;
+			teslams.vehicles( vid, function( resp ) {
+				res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+				res.setHeader("Pragma", "no-cache");
+				res.setHeader("Expires", 0 );
+				res.writeHead(200, {'Content-Type': 'application/json'});
+				res.end( JSON.stringify(resp) ); 
+			});
+			break;
 		case "/mobile":
 		  teslams.mobile_enabled( vid, pr );
 		  break;	  
@@ -78,18 +86,27 @@ function parseUrl( vehicle, req, res) {
 		  	break;
 		case "/charge/charging_state":		  	
 			teslams.get_charge_state( vid, function( resp ) {
+				res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+				res.setHeader("Pragma", "no-cache");
+				res.setHeader("Expires", 0 );
 				res.writeHead(200, {'Content-Type': 'text/plain'});
 				res.end( JSON.stringify(resp.charging_state) );
 			});
 		  	break;
 		case "/charge/battery_range":		  	
 			teslams.get_charge_state( vid, function( resp ) {
+				res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+				res.setHeader("Pragma", "no-cache");
+				res.setHeader("Expires", 0 );
 				res.writeHead(200, {'Content-Type': 'text/plain'});
 				res.end( JSON.stringify(resp.battery_range) );
 			});
 		  	break;
 		case "/charge/battery_level":		  	
 			teslams.get_charge_state( vid, function( resp ) {
+				res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+				res.setHeader("Pragma", "no-cache");
+				res.setHeader("Expires", 0 );
 				res.writeHead(200, {'Content-Type': 'text/plain'});
 				res.end( JSON.stringify(resp.battery_level) );
 			});
@@ -123,7 +140,10 @@ function parseUrl( vehicle, req, res) {
 			break;
 		case "/vehicle_state/locked":		  	
 			teslams.get_vehicle_state( vid, function( resp ) {
-				res.writeHead(200, {'Content-Type': 'application/json'});
+				res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+				res.setHeader("Pragma", "no-cache");
+				res.setHeader("Expires", 0 );
+				res.writeHead(200, {'Content-Type': 'text/plain'});
 				res.end( JSON.stringify(resp.locked) );
 			});
 		  	break;
@@ -172,10 +192,12 @@ function parseUrl( vehicle, req, res) {
 		case "/range/max":	
 			teslams.charge_range( { id: vid, range: 'max' }, pr ); 
 			break;
-		case "/help":
-			res.writeHead(200, {'Content-Type': 'text/html'});
+		case "/help":    			
+			res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+			res.setHeader("Pragma", "no-cache");
+			res.setHeader("Expires", 0 );
+			res.writeHead(200, {'Content-Type': 'text/html'});    			
 			res.write( '<html><body><table>');
-
 			res.write( '<tr><td><a href="../vehicle">/vehicle</a><td>Print vehicle info</tr>');	
 			res.write( '<tr><td><a href="../vehicle_state">/vehicle_state</a><td>Display the vehicle state</tr>');
 			res.write( '<tr><td><a href="../charge">/charge</a><td>Display the charge state</tr>');
@@ -212,7 +234,10 @@ function parseUrl( vehicle, req, res) {
 			res.end( '</table></body></html>');
 			break;
 		default:
-			res.writeHead(501, {'Content-Type': 'text/plain'});
+			res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+			res.setHeader("Pragma", "no-cache");
+			res.setHeader("Expires", 0 );
+			res.writeHead(501, {'Content-Type': 'text/plain'});		
 		  	res.end( "Invalid URL\n");
 	}		
 }
@@ -233,7 +258,7 @@ teslams.all( { email: creds.username, password: creds.password }, function ( err
 		pr(new Error('expecting an array from Tesla Motors cloud service'));
 		process.exit(1);
 	}
-    	vehicle = data[0];
+	vehicle = data[0];
 	//check the vehicle has a valid id
 	if (vehicle.id == undefined) {
 		pr( new Error('expecting vehicle ID from Tesla Motors cloud service'));
@@ -241,14 +266,14 @@ teslams.all( { email: creds.username, password: creds.password }, function ( err
 	}
 	if (argv.all) { pr(body); }
 	// first some checks to see if we should even continue
-	if (argv.isawake && vehicle.status == 'asleep') {
-		pr(new Error('exiting because car is asleep'));
+	if (argv.isawake == true && vehicle.state == 'asleep') {
+		console.log(new Error('exiting because car is asleep'));
 		process.exit(1);
 	} else if (argv.isplugged) { 
 		// safe to call get_charge_state because not asleep or don't care
 		teslams.get_charge_state( vehicle.id, function ( cs ) { 
 			if (cs.charging_state == 'Disconnected') {
-				pr( new Error('exiting because car is not plugged in'));
+				console.log( new Error('exiting because car is not plugged in'));
 				process.exit(1);
 			} else { 
 				// passed through all exit condition checks 
