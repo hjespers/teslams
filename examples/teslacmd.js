@@ -197,7 +197,7 @@ teslams.all( { email: creds.username, password: creds.password }, function ( err
 	}
 	if (argv.all) { pr(body); }
 	// first some checks to see if we should even continue
-	if (argv.isawake && vehicle.status == 'asleep') {
+	if (argv.isawake && vehicle.state == 'asleep') {
 		pr(new Error('exiting because car is asleep'));
 		process.exit(1);
 	} else if (argv.isplugged) { 
