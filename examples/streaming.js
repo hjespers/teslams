@@ -50,8 +50,7 @@ var argv = require('optimist')
 	.default('r', 6)
 	.alias('v', 'values')
 	.describe('v', 'List of values to collect')
-	.default('v', 'speed,odometer,soc,elevation,est_heading,est_lat,est_lng,power,shift_state,range,est_range')
-	//.default('v', 'speed,odometer,soc,elevation,est_heading,est_lat,est_lng,power,shift_state,range,est_range,heading')
+	.default('v', 'speed,odometer,soc,elevation,est_heading,est_lat,est_lng,power,shift_state,range,est_range,heading')
 	.alias('?', 'help')
 	.describe('?', 'Print usage information');
 
@@ -141,6 +140,7 @@ function tsla_poll( vid, long_vid, token ) {
 		}
 	}).on('data', function(data) {
 		var d, vals, i, record, doc;
+		// TODO: parse out shift_state field and assign to a global for better sleep checking
 		if (argv.db) {
 			d = data.toString().trim();
 			vals = d.split(/[,\n\r]/);
@@ -158,6 +158,20 @@ function tsla_poll( vid, long_vid, token ) {
 }
 
 function getAux() {
+	// check if the car is sleeping
+	if (argv.zzz) {
+		rpm++; // increment REST request counter for following request
+		teslams.vehicles( { email: creds.username, password: creds.password }, function ( vehicles ) {	
+			if ( typeof vehicles == "undefined" ) {
+				ulog('Error: undefined response to vehicles request' );
+				return;
+			} else if (vehicles.state != 'online') { 
+				//respect sleep mode
+				ulog('Info: car is not online (' + vehicles.state + ') skipping auxiliary REST data sample');	
+				return;
+			}
+		});
+	} 		
     // make absolutely sure we don't overwhelm the API
     now = new Date().getTime();
     if ( now - last < 60000) { // last request was within the past minute
