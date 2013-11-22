@@ -215,7 +215,7 @@ function parseUrl( vehicle, req, res) {
 			res.write( '<tr><td><a href="../climate">/climate</a><td>Display the climate/temp state</tr>');
 			res.write( '<tr><td><a href="../climate/on">/climate/on<td>Turn the air conditioning and heating ON</tr>');
 			res.write( '<tr><td><a href="../climate/off">/climate/off<td>Turn the air conditioning and heating OFF</tr>');
-			res.write( '<tr><td><a href="../roof">/roof</a><td>Display the cuurent state of the car sunroof</tr>');			
+			res.write( '<tr><td><a href="../roof">/roof</a><td>Display the current state of the car sunroof</tr>');			
 			res.write( '<tr><td><a href="../roof/open">/roof/open</a><td>Open the car sunroof</tr>');			
 			res.write( '<tr><td><a href="../roof/vent">/roof/vent</a><td>Move the car sunroof to the vent position</tr>');			
 			res.write( '<tr><td><a href="../roof/comfort">/roof/comfort</a><td>Move the car sunroof to the comfort position</tr>');			
