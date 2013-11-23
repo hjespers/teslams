@@ -30,8 +30,10 @@ var argv = require('optimist')
 	.describe('v', 'Verbose mode: more output to console')
 	.boolean(['v'])
 	.alias('?', 'help')
-	.describe('?', 'Print usage information')
-	.argv;
+	.describe('?', 'Print usage information');
+
+var creds = require('../config.js').config(argv);
+argv = argv.argv;
 if ( argv.help === true ) {
 	console.log( 'Usage: visualize.js --db <MongoDB database> [--silent] [--verbose]');
 	process.exit(1);
@@ -93,10 +95,10 @@ var optionText = {
 
 // this is super simplistic for now. Clear text passwords, nothing fancy, trivial to
 // intercept - but it's a start
-var users = [
-	{ id: 1, username: 'dirk', password: 'secret'},
-	{ id: 2, username: 'bob', password: 'different'}
-];
+var users;
+if (creds.hasOwnProperty('visualize')) {
+	users = creds.visualize;
+}
 // please change this to have at least some trivial session hijacking protection
 var localSecret = "please change this secret string";
 
@@ -119,6 +121,7 @@ function findByUsername(username, fn) {
 	}
 	return fn(null, null);
 }
+
 // Passport session setup.
 //   To support persistent login sessions, Passport needs to be able to
 //   serialize users into and deserialize users out of the session.  Typically,
@@ -164,7 +167,7 @@ app.post('/login', passport.authenticate('local', { successRedirect: '/',
 
 // call this in every app.get() that should only be accessible when logged in
 function ensureAuthenticated(req, res, next) {
-	if (req.isAuthenticated()) {
+	if (users === undefined || req.isAuthenticated()) {
 		return next();
 	}
 	res.redirect('/login')
