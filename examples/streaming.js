@@ -53,6 +53,12 @@ var argv = require('optimist')
 	.alias('r', 'maxrpm')
 	.describe('r', 'Maximum number of requests per minute')
 	.default('r', 6)
+	.alias('N', 'napcheck')
+	.describe('N', 'Number of milliseconds between nap checks')
+	.default('N', 300000)
+	.alias('S', 'sleepcheck')
+	.describe('S', 'Number of milliseconds between sleep checks')
+	.default('S', 180000)
 	.alias('v', 'values')
 	.describe('v', 'List of values to collect')
 	.default('v', 'speed,odometer,soc,elevation,est_heading,est_lat,est_lng,power,shift_state,range,est_range,heading')
@@ -133,8 +139,8 @@ function tsla_poll( vid, long_vid, token ) {
 					lastss = 'nap';
 					initstream();
 					return; // needed???
-				}, 1800000);	// 30 minutes rest
-				// check ever 3 minutes if sleep has set in 
+				}, 1800000);	// 30 minute of nap time
+				// check if sleep has set in every 3 minutes (default) 
 				sleepIntervalId = setInterval(function(){
 					if (napmode == true) {
 						rpm++;
@@ -156,7 +162,7 @@ function tsla_poll( vid, long_vid, token ) {
 							}
 						});
 					}					
-				}, 180000); // every 3 minutes			
+				}, argv.sleepcheck); // every 3 minutes	(default)		
 				return;
 			}
 		});
@@ -347,13 +353,13 @@ function initstream() {
 		}
 		ulog( util.inspect( vehicles) ); // could return and error
 		if (argv.zzz && vehicles.state != 'online') { //respect sleep mode
-			ulog('Info: car is sleeping or unreachable, will check again in 5 mins');	
+			ulog('Info: car is sleeping or unreachable, will check again in ' + argv.napcheck + ' milliseconds');	
 			napmode = true;
-			// wait for 5 minutes and check again if car is asleep
+			// wait for 5 minutes (default) and check again if car is asleep
 			setTimeout(function() { 
 				napmode = false;
 				initstream();
-			}, 300000); // 5 minutes
+			}, argv.napheck); // 5 minutes (default)
 			return;		
 		} else if ( typeof vehicles.tokens == "undefined" || vehicles.tokens[0] == undefined ) {
 			ulog('Info: calling /charge_state to reveal the tokens');
