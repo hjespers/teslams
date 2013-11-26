@@ -27,6 +27,11 @@ var last = 0; // datetime for checking request rates
 var rpm = 0; // REST API Request Per Minute counter
 var slast = 0; // datetime for checking streaming request rates
 var srpm = 0; // Streaming URL Request Per Minute counter
+var lastss = "init"; // last shift state
+var ss = "init"; // shift state
+var napmode = false; // flag for enabling pause to allow sleep to set in 
+var napTimeoutId;
+var sleepIntervalId;
 
 var argv = require('optimist')
 	.usage(usage)
@@ -79,6 +84,10 @@ if (argv.db) {
 }
 
 function tsla_poll( vid, long_vid, token ) {
+	if (napmode) {
+		ulog('Info: car is napping, skipping tsla_poll()');
+		return;
+	} 
 	if (long_vid == undefined || token == undefined) {
 		console.log('Error: undefined vehicle_id (' + long_vid +') or token (' + token +')' );
 		console.log('Exiting...');
@@ -95,12 +104,62 @@ function tsla_poll( vid, long_vid, token ) {
 			ulog('Warn: throttling due to too many streaming requests per minute');
 			setTimeout(function() { 
 				tsla_poll( vid, long_vid, token );
-			}, 60000);	
+			}, 60000);	// 5 minutes
 			return;
 		}	
 	} else { // longer than a minute since last request
 		srpm = 0;
 		slast = now;
+	}
+	//napmode checking
+	console.log('ss = "' + ss + '"');
+	console.log('lastss= "' + lastss + '"');
+	console.log('napmode= ' + napmode);
+	console.log('zzz= ' + argv.zzz);
+	if ( argv.zzz == true && lastss == "" && ss == "") {
+		//if not charging stop polling for 20 minutes
+		rpm++;
+		teslams.get_charge_state( vid, function (cs) { 
+			if (cs.charging_state == 'Charging') {
+				ulog('Info: car is charging, continuing to poll for data');
+			} else {
+				ulog('Info: 30 minute nap starts now');
+				napmode = true;
+				// 30 minutes of nap mode to let the car fall asleep		
+				napTimeoutId = setTimeout(function() { 
+					clearInterval(sleepIntervalId);
+					napmode = false;
+					ss = 'nap';
+					lastss = 'nap';
+					initstream();
+					return; // needed???
+				}, 1800000);	// 30 minutes rest
+				// check ever 3 minutes if sleep has set in 
+				sleepIntervalId = setInterval(function(){
+					if (napmode == true) {
+						rpm++;
+						teslams.vehicles( { email: creds.username, password: creds.password }, function ( vehicles ) {	
+							if ( typeof vehicles.state != undefined ) {
+								ulog( 'Vehicle state is: ' + vehicles.state );
+								if (vehicles.state == 'asleep' || vehicles.state == 'unknown') {
+									ulog( 'Stopping nap mode since car is now asleep' );
+									clearTimeout(napTimeoutId);
+									clearInterval(sleepIntervalId);
+									napmode = false;
+									ss = 'sleep';
+									lastss = 'sleep';
+									initstream();
+									return; //needed???
+								}
+							} else {
+								ulog( 'Nap checker: undefined vehicle state' );
+							}
+						});
+					}					
+				}, 180000); // every 3 minutes			
+				return;
+			}
+		});
 	}
 	srpm++; //increment the number of streaming requests per minute
 	request({'uri': s_url + long_vid +'/?values=' + argv.values,
@@ -109,34 +168,45 @@ function tsla_poll( vid, long_vid, token ) {
 			'timeout' : 125000 // a bit more than the expected 2 minute max long poll
 			}, function( error, response, body) {
 		if ( error ) { // HTTP Error
-			ulog( error );
+			ulog( 'Polling again because poll returned HTTP error:' + error );
 			// put short delay to avoid infinite recursive loop and stack overflow
 			setTimeout(function() {
 				tsla_poll( vid, long_vid, token ); // poll again
-			}, 1000);
+			}, 10000);
+			return;
 		} else if (response.statusCode == 200) { // HTTP OK
 			if (body===undefined) {
 				ulog('WARN: HTTP returned OK but body is undefined');
+				setTimeout(function() {
+					tsla_poll( vid, long_vid, token ); // poll again
+				}, 10000); //10 seconds
+				return;
 			} else if (body===null) {
 				ulog('WARN: HTTP returned OK but body is null');
+				setTimeout(function() {
+					tsla_poll( vid, long_vid, token ); // poll again
+				}, 10000); // 10 seconds
+				return;
 			} else {
-				ulog(body);
+				ulog('Poll return HTTP OK and body is this:\n' + body);
+				// put short delay to avoid infinite recursive loop and stack overflow
+				setTimeout(function() {
+					tsla_poll( vid, long_vid, token ); // poll again
+				}, 1000); // 1 second
+				return;
 			}
-			// put short delay to avoid infinite recursive loop and stack overflow
-			setTimeout(function() {
-				tsla_poll( vid, long_vid, token ); // poll again
-			}, 1000);
 		} else if ( response.statusCode == 401) { // HTTP AUTH Failed
 			ulog('WARN: HTTP 401: Unauthorized - token has likely expired, reinitializing');
 			setTimeout(function() {
 				initstream();
-			}, 1000);
+			}, 1000); //1 seconds
+			return;
 		} else { // all other unexpected responses
 			ulog('Unexpected problem with request:\n	Response status code = ' + response.statusCode + '	Error code = ' + error + '\n Polling again in 10 seconds...');
 			// put short delay to avoid infinite recursive loop and stack overflow
 			setTimeout(function() {
 				tsla_poll( vid, long_vid, token ); // poll again
-			}, 10000);
+			}, 10000); // 10 seconds
 		}
 	}).on('data', function(data) {
 		var d, vals, i, record, doc;
@@ -151,27 +221,15 @@ function tsla_poll( vid, long_vid, token ) {
 					if(err) util.log(err);
 				});
 			}
+			lastss = ss;
+			ss = vals[9]; // hardcoded position - fix later
 		} else {
 			stream.write(data);
 		}
 	});		
-}
+};
 
 function getAux() {
-	// check if the car is sleeping
-	if (argv.zzz) {
-		rpm++; // increment REST request counter for following request
-		teslams.vehicles( { email: creds.username, password: creds.password }, function ( vehicles ) {	
-			if ( typeof vehicles == "undefined" ) {
-				ulog('Error: undefined response to vehicles request' );
-				return;
-			} else if (vehicles.state != 'online') { 
-				//respect sleep mode
-				ulog('Info: car is not online (' + vehicles.state + ') skipping auxiliary REST data sample');	
-				return;
-			}
-		});
-	} 		
     // make absolutely sure we don't overwhelm the API
     now = new Date().getTime();
     if ( now - last < 60000) { // last request was within the past minute
@@ -188,25 +246,35 @@ function getAux() {
 		rpm = 0;
 		last = now;
 	}
-	rpm = rpm + 2; // increase REST request counter by 2 for following requests
-	teslams.get_charge_state( getAux.vid, function(data) {
-		var doc = { 'ts': new Date().getTime(), 'chargeState': data };
-		collectionA.insert(doc, { 'safe': true }, function(err,docs) {
-			if(err) throw err;
-		});
-	});
-	teslams.get_climate_state( getAux.vid, function(data) {
-		var ds = JSON.stringify(data), doc;
-
-		if (ds.length > 2 && ds != JSON.stringify(getAux.climate)) {
-			getAux.climate = data;
-			doc = { 'ts': new Date().getTime(), 'climateState': data };
+	// check if the car is napping
+	if (napmode) {
+		ulog('Info: car is napping or sleeping, skipping auxiliary REST data sample');
+		//TODO add periodic /vehicles state check to see if nap mode should be cancelled because car is back online again
+		return;
+	} else {
+		rpm = rpm + 2; // increase REST request counter by 2 for following requests
+		ulog( 'getting charge state Aux data');
+		teslams.get_charge_state( getAux.vid, function(data) {
+			var doc = { 'ts': new Date().getTime(), 'chargeState': data };
 			collectionA.insert(doc, { 'safe': true }, function(err,docs) {
 				if(err) throw err;
 			});
-		}
-	});
-}
+		});
+		ulog( 'getting climate state Aux data');
+		teslams.get_climate_state( getAux.vid, function(data) {
+			var ds = JSON.stringify(data), doc;
+
+			if (ds.length > 2 && ds != JSON.stringify(getAux.climate)) {
+				getAux.climate = data;
+				doc = { 'ts': new Date().getTime(), 'climateState': data };
+				collectionA.insert(doc, { 'safe': true }, function(err,docs) {
+					if(err) throw err;
+				});
+			}
+		});
+	}
+};
+
 
 function storeVehicles(vehicles) {
 	var doc = { 'ts': new Date().getTime(), 'vehicles': vehicles };
@@ -228,7 +296,7 @@ function storeVehicles(vehicles) {
 			if (err) console.dir(err);
 		});
 	});
-}
+};
 
 // if we are storing into a database we also want to
 // - store the vehicle data (once, after the first connection)
@@ -247,6 +315,10 @@ function ulog( string ) {
 }
 
 function initstream() {
+	if (napmode) {
+		ulog('Info: car is napping, skipping initstream()');
+		return;
+	} 
     // make absolutely sure we don't overwhelm the API
     now = new Date().getTime();
     if ( now - last < 60000) { // last request was within the past minute
@@ -259,7 +331,7 @@ function initstream() {
         	util.log('Warn: throttling due to too many REST API requests');
         	setTimeout(function() { 
         		initstream(); 
-        	}, 60000); 
+        	}, 60000); // 1 minute
         	return;
         }       
     } else { // longer than a minute since last request
@@ -273,36 +345,37 @@ function initstream() {
 			console.log('Exiting...');
 			process.exit(1);
 		}
-		ulog( util.inspect( vehicles) ); 
-		if ( typeof vehicles.tokens == "undefined" || vehicles.tokens[0] == undefined ) {
-			ulog('Warn: no tokens returned');
-			if (argv.zzz && vehicles.state == 'asleep') { //respect sleep mode
-				ulog('Info: car is sleeping, will check again later');	
-                // wait for 5 minutes and check again if car is asleep
-				setTimeout(function() { 
-					initstream();
-				}, 300000);
-			} else { // car is either awake already OR don't care to let it sleep
-				ulog('Info: calling wake_up');
-				rpm++;	// increment the REST API request counter			
-				teslams.wake_up( vehicles.id, function( resp ) {
-					// check the wake_up() response and reinitialize to get vehicle data and valid tokens
-					// added a 30sec delay to avoid a tight repeating loop
-					// such as in the case wake_up returns unusually quickly or with an error 
-					if ( resp.result ) {
-						// wake_up returned true so re-initialize right away
-						setTimeout(function() { 
-							initstream(); 
-						}, 1000);
-					} else {
-						ulog('Warn: wake_up request failed.\n  Waiting 30 secs and then reinitializing...');
-						// wake_up failed. wait 30 seconds before trying again to reinitialize 
-						setTimeout(function() { 
-							initstream(); 
-						}, 30000);              
-					} 
-				});
-			}
+		ulog( util.inspect( vehicles) ); // could return and error
+		if (argv.zzz && vehicles.state != 'online') { //respect sleep mode
+			ulog('Info: car is sleeping or unreachable, will check again in 5 mins');	
+			napmode = true;
+			// wait for 5 minutes and check again if car is asleep
+			setTimeout(function() { 
+				napmode = false;
+				initstream();
+			}, 300000); // 5 minutes
+			return;		
+		} else if ( typeof vehicles.tokens == "undefined" || vehicles.tokens[0] == undefined ) {
+			ulog('Info: calling /charge_state to reveil the tokens');
+			rpm++;	// increment the REST API request counter			
+			teslams.get_charge_state( vehicles.id, function( resp ) {
+				if ( resp.charging_state != undefined ) {
+					// returned valid response so re-initialize right away
+					ulog('Debug: charge_state request succeeded (' + resp.charging_state + '). \n  Reinitializing...');
+					setTimeout(function() { 
+						initstream(); 
+					}, 1000); // 1 second
+					return;
+				} else {
+					ulog('Warn: wake_up request failed.\n  Waiting 30 secs and then reinitializing...');
+					// wake_up failed. wait 30 seconds before trying again to reinitialize 
+					// no need to set napmode = true because we are trying to wake up anyway
+					setTimeout(function() { 
+						initstream(); 
+					}, 30000);   // 30 seconds    
+					return;       
+				} 
+			});	
 		} else { // this is the valid condition so we have the required tokens and ids
 			if (firstTime) {	// initialize only once
 				firstTime = false;
@@ -313,6 +386,7 @@ function initstream() {
 				}
 			}
 			tsla_poll( vehicles.id, vehicles.vehicle_id, vehicles.tokens[0] );
+			return;
 		}
 	}); // end of teslams.vehicles() request
 }
