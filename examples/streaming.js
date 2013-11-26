@@ -373,8 +373,8 @@ function initstream() {
 					}, 1000); // 1 second
 					return;
 				} else {
-					ulog('Warn: wake_up request failed.\n  Waiting 30 secs and then reinitializing...');
-					// wake_up failed. wait 30 seconds before trying again to reinitialize 
+					ulog('Warn: waking up with charge_state request failed.\n  Waiting 30 secs and then reinitializing...');
+					// charge_state failed. wait 30 seconds before trying again to reinitialize
 					// no need to set napmode = true because we are trying to wake up anyway
 					setTimeout(function() { 
 						initstream(); 
