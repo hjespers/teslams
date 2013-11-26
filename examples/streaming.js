@@ -359,7 +359,7 @@ function initstream() {
 			setTimeout(function() { 
 				napmode = false;
 				initstream();
-			}, argv.napheck); // 5 minutes (default)
+			}, argv.napcheck); // 5 minutes (default)
 			return;		
 		} else if ( typeof vehicles.tokens == "undefined" || vehicles.tokens[0] == undefined ) {
 			ulog('Info: calling /charge_state to reveal the tokens');
