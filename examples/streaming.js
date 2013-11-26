@@ -54,11 +54,11 @@ var argv = require('optimist')
 	.describe('r', 'Maximum number of requests per minute')
 	.default('r', 6)
 	.alias('N', 'napcheck')
-	.describe('N', 'Number of milliseconds between nap checks')
-	.default('N', 300000)
+	.describe('N', 'Number of minutes between nap checks')
+	.default('N', 5)
 	.alias('S', 'sleepcheck')
-	.describe('S', 'Number of milliseconds between sleep checks')
-	.default('S', 180000)
+	.describe('S', 'Number of minutes between sleep checks')
+	.default('S', 3)
 	.alias('v', 'values')
 	.describe('v', 'List of values to collect')
 	.default('v', 'speed,odometer,soc,elevation,est_heading,est_lat,est_lng,power,shift_state,range,est_range,heading')
@@ -69,6 +69,8 @@ var argv = require('optimist')
 var creds = require('./config.js').config(argv);
 
 argv = argv.argv;
+argv.napcheck *= 60000;
+argv.sleepcheck *= 60000;
 
 if ( argv.help == true ) {
 	console.log(usage);
@@ -353,7 +355,11 @@ function initstream() {
 		}
 		ulog( util.inspect( vehicles) ); // could return and error
 		if (argv.zzz && vehicles.state != 'online') { //respect sleep mode
-			ulog('Info: car is sleeping or unreachable, will check again in ' + argv.napcheck + ' milliseconds');	
+			var timeDelta = Math.floor(argv.napcheck / 60000) + ' minutes';
+			if (argv.napcheck % 60000 != 0) {
+				timeDelta += ' ' + Math.floor((argv.napcheck % 60000) / 1000) + ' seconds';
+			}
+			ulog('Info: car is sleeping or unreachable, will check again in ' + timeDelta);
 			napmode = true;
 			// wait for 5 minutes (default) and check again if car is asleep
 			setTimeout(function() { 
