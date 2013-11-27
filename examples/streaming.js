@@ -120,10 +120,6 @@ function tsla_poll( vid, long_vid, token ) {
 		slast = now;
 	}
 	//napmode checking
-	console.log('ss = "' + ss + '"');
-	console.log('lastss= "' + lastss + '"');
-	console.log('napmode= ' + napmode);
-	console.log('zzz= ' + argv.zzz);
 	if ( argv.zzz == true && lastss == "" && ss == "") {
 		//if not charging stop polling for 20 minutes
 		rpm++;
@@ -150,7 +146,7 @@ function tsla_poll( vid, long_vid, token ) {
 							if ( typeof vehicles.state != undefined ) {
 								ulog( 'Vehicle state is: ' + vehicles.state );
 								if (vehicles.state == 'asleep' || vehicles.state == 'unknown') {
-									ulog( 'Stopping nap mode since car is now asleep' );
+									ulog( 'Stopping nap mode since car is now in (' + vehicles.state + ') state' );
 									clearTimeout(napTimeoutId);
 									clearInterval(sleepIntervalId);
 									napmode = false;
@@ -353,13 +349,15 @@ function initstream() {
 			console.log('Exiting...');
 			process.exit(1);
 		}
-		ulog( util.inspect( vehicles) ); // could return and error
+		if (vehicles.state == undefined) {
+			ulog( util.inspect( vehicles) ); // teslams.vehicles call could return and error string
+		}
 		if (argv.zzz && vehicles.state != 'online') { //respect sleep mode
 			var timeDelta = Math.floor(argv.napcheck / 60000) + ' minutes';
 			if (argv.napcheck % 60000 != 0) {
 				timeDelta += ' ' + Math.floor((argv.napcheck % 60000) / 1000) + ' seconds';
 			}
-			ulog('Info: car is sleeping or unreachable, will check again in ' + timeDelta);
+			ulog('Info: car is in (' + vehicles.state + ') state, will check again in ' + timeDelta);
 			napmode = true;
 			// wait for 5 minutes (default) and check again if car is asleep
 			setTimeout(function() { 
