@@ -96,7 +96,7 @@ var optionText = {
 // this is super simplistic for now. Clear text passwords, nothing fancy, trivial to
 // intercept - but it's a start
 var users;
-if (creds.hasOwnProperty('visualize')) {
+if (creds !== undefined && creds.hasOwnProperty('visualize')) {
 	users = creds.visualize;
 }
 // please change this to have at least some trivial session hijacking protection
