@@ -366,7 +366,7 @@ function initstream() {
 			}, argv.napcheck); // 5 minutes (default)
 			return;		
 		} else if ( typeof vehicles.tokens == "undefined" || vehicles.tokens[0] == undefined ) {
-			ulog('Info: calling /charge_state to reveal the tokens');
+			ulog('Info: car is in (' + vehicles.state + ') state, calling /charge_state to reveal the tokens');
 			rpm++;	// increment the REST API request counter			
 			teslams.get_charge_state( vehicles.id, function( resp ) {
 				if ( resp.charging_state != undefined ) {
