@@ -1,12 +1,16 @@
 {
   "name": "teslams",
-  "version": "0.5.2",
+  "version": "0.8.1",
   "description": "Utilities for the Tesla Model S ",
   "dependencies": {
     "request": "~2.14.0",
     "optimist": "~0.3.5",
     "open": "~0.0.3",
-    "multimeter-hj": "~0.1.2"
+    "multimeter-hj": "~0.1.2",
+    "mongodb": ">= 1.3.14",
+    "express": ">= 3.3",
+    "passport": ">= 0.1.17",
+    "passport-local": ">= 0.1.6"
   },
   "devDependencies": {},
   "scripts": {
@@ -26,14 +30,32 @@
     "teslamap" : "./examples/teslamap.js",
     "streaming" : "./examples/streaming.js",
     "chargebar" : "./examples/chargebar.js",
-    "climatemon" : "./examples/climatemon.js"
+    "climatemon" : "./examples/climatemon.js",
+    "restla" : "./examples/restla.js",
+    "visualize" : "./examples/visualize/visualize.js"
   },
   "keywords" : [
     "tesla"
   ],
   "author" : {
     "name" : "Hans Jespersen",
-    "email" : "hans.jespersen@gmail.com"
+    "email" : "hans.jespersen@gmail.com",
+    "url" : "https://github.com/hjespers/teslams"
   },
+  "contributors" : [
+    {
+      "name" : "Marshall Rose",
+      "url" : "https://github.com/mrose17"
+    },
+    {
+      "name" : "Dirk Hohndel",
+      "url" : "https://github.com/dirkhh"
+    },
+    {
+      "name" : "Arthur Blake",
+      "url" : "https://github.com/arthurblake"
+    }
+  ],
   "license" : "BSD"
 }
+

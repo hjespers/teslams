@@ -9,6 +9,7 @@ lib-cov
 *.out
 *.pid
 *.gz
+*.old
 
 pids
 logs
@@ -22,4 +23,5 @@ node_modules
 ## Vim
 #############
 *~
+*.swp
 

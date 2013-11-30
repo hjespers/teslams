@@ -1,0 +1,340 @@
+<!DOCTYPE html><html><head>
+<meta name='viewport' content='initial-scale=1.0, user-scalable=no' />
+<script language="javascript" type="text/javascript" src="jquery-1.9.1.js"></script>
+<script language="javascript" type="text/javascript" src="url.min.js"></script>
+<script language="javascript" type="text/javascript" src="lib.js"></script>
+<script language="javascript" type="text/javascript" src="jquery-ui-1.10.3.custom.min.js"></script>
+<script language="javascript" type="text/javascript" src="jquery-ui-timepicker-addon.js"></script>
+<link rel="stylesheet" media="all" type="text/css" href="jquery-ui-timepicker-addon.css" />
+<link rel="stylesheet" media="all" type="text/css" href="jquery-ui.css" />
+<link rel="stylesheet" media="all" type="text/css" href="shared.css" />
+<script type='text/javascript' src='https://maps.googleapis.com/maps/api/js?key=MAGIC_APIKEY&sensor=true'></script>
+<script type='text/javascript'>
+var myLatlng, map, marker, infoWindow, lastDrawn = -1;
+var myUrl = "";
+var speedup, replayControl;
+var msecPerUpdate = 2000; // get AJAX data every 2 seconds
+var drawTimeIncr = 100; // 10 FPS for drawing
+var system = "", lang="";
+function hex(num) { var s = '#0' + num.toString(16) + ''; return s.substring(s.length - 2); }
+function getColor(speed) {
+	var wl = speed*2+440; if(wl>640){wl=640;}
+	var r=Math.round(35+(wl-510)*3.14); if(r<55){r=55;} if(r>255){r=255;}
+	var b=35+(510-wl)*11;if(b<55){b=55;} if(b>255){b=255;}
+	var g=(wl<580) ? Math.round(35+(wl-440)*4.4) : Math.round(35+(640-wl)*3.66); if(g<55){g=55;} if(g>255){g=255;}
+	return '#'+hex(r)+hex(g)+hex(b);
+}
+function startUpdates() {
+	getMore.ID = setInterval(getMore, msecPerUpdate);
+}
+function cancelUpdates() {
+	if (getMore.ID) {
+		clearInterval(getMore.ID);
+		getMore.ID = null;
+	}
+}
+function startStopUpdates() {
+	if (getMore.ID) { // let's stop
+		cancelUpdates();
+		stopDrawing();
+		$('#startStopButton').html(conv("label", "Start Updates", lang));
+	} else {
+		startUpdates();
+		startDrawing();
+		$('#startStopButton').html(conv("label", "Stop Updates", lang));
+	}
+}
+
+function showMarker() {
+	//debug output console.log("lastDrawn", lastDrawn, "available", getMore.lines.length);
+	if (lastDrawn >= 0) {
+		var segment = getMore.lines[lastDrawn];
+		if (segment === undefined)
+			return;
+		var latlng = new google.maps.LatLng(segment[0][6],segment[0][7]);
+		var cStr = '<div id="content">';
+		if (!latlng.equals(marker.getPosition())) {
+			if (showMarker.center)
+				marker.setMap(null);
+			marker.setPosition(latlng);
+			if (showMarker.center) {
+				map.setCenter(latlng);
+				marker.setMap(map);
+			}
+		}
+		if (segment[0][9] == 'D' || segment[0][9] == 'R') {
+			cStr += conv("label", "going", lang) + " " + Math.floor(conv(system, "speed", "conversion")(segment[0][1])) + " " + conv(system, "speed", lang); 
+		} else if (segment[0][8] < 0) {
+			cStr += conv("label", "parked and charging", lang) + ' ~ ' + (-segment[0][8]) + 'kW';
+		} else {
+			cStr += conv("label", "parked", lang);
+		}
+		cStr += "<br/>" + conv("label", "odometer", lang) + " " + Math.floor(conv(system, "distance", "conversion")(segment[0][2])) + conv(system, "distance", lang);
+		cStr += "<br/>" + conv("label", "range", lang) + " " + Math.floor(conv(system, "distance", "conversion")(segment[0][10])) + conv(system, "distance", lang) + "</div>";
+		if (!showMarker.cStr || showMarker.cStr != cStr) {
+			infoWindow.setContent(cStr);
+			showMarker.cStr = cStr;
+		}
+		replayControl.slider("value", segment[0][0]);
+	}
+}
+
+function toggleCentering() {
+	if (showMarker.center) {
+		$('#toggleCenterButton').html(conv("label", "Center map on marker", lang));
+		showMarker.center = false;
+	} else {
+		$('#toggleCenterButton').html(conv("label", "Stop centering map", lang));
+		showMarker.center = true;
+	}
+}
+
+function turnOffCentering() {
+	if (showMarker.center)
+		toggleCentering();
+}
+
+function drawCachedUntil(endTime) {
+	var segment;
+	//debug output console.log("drawCachedUntil", new Date(+endTime), "with", +lastDrawn + 1, "elements drawn and", getMore.lines.length, "cached");
+	replayControl.slider("value", +endTime);
+	if (getMore.lines.length === 0)
+		return 0;
+	while (lastDrawn + 1 < getMore.lines.length) {
+		lastDrawn++;
+		segment = getMore.lines[lastDrawn];
+		if (segment[0][0] > endTime) {
+			lastDrawn--;
+			break;
+		}
+		segment[1].setMap(map);
+	}
+	showMarker();
+	if (lastDrawn + 1 === getMore.lines.length) { // we have drawn everything there is, so return that last ts
+		return getMore.lines[lastDrawn][0][0];
+	}
+	return endTime;
+}
+
+function getMore(ts, cb) {
+	var until;
+	if (myUrl.length === 0 || getMore.running === true)
+		return;
+	getMore.running = true;
+	// this gets us an array of arrays - there is always at least one dummy
+	// entry that gives us the last timestamp that was considered in this batch
+	// debug output console.log("ts", ts, "last", new Date(+getMore.lastTimestamp), speedup, msecPerUpdate);
+	if (ts !== undefined)
+		until = +ts + 2 * speedup * msecPerUpdate;
+	else
+		until =  +getMore.lastTimestamp + (5 * speedup + 10) * msecPerUpdate;
+	// debug output console.log("get AJAX data until", new Date(+until), "which is", (+until - +getMore.lastTimestamp)/1000,"seconds");
+	$.getJSON(myUrl + "/update", { 'until': +until})
+	.done(function (d, textStatus, jqXHR) {
+		// verbose debug console.log("length", d.length, "end", getMore.endTimestamp, "last", new Date(+getMore.lastTimestamp));
+		if (d.length == 1 && d[0][2] == 0) { // that's just the fake entry
+			getMore.lastTimestamp = +d[0][0];
+			//debug output console.log("do we need to stop?", "end", +getMore.endTimestamp, "last", +getMore.lastTimestamp);
+			if (+getMore.endTimestamp - +getMore.lastTimestamp < 120000) {
+				// console.log("done updating");
+				cancelUpdates();
+			}
+			getMore.running = false;
+			return;
+		}
+		for (var i = 0; i < d.length; i++) {
+			// super verbose debug console.log("pos", d[i][6],d[i][7], "timedelta", Math.abs(d[i][0] - getMore.lastTimestamp));
+			if (d[i][6] === "0" && d[i][7] === "0")
+				continue; // no line to GPS (0,0)
+			if (Math.abs(d[i][0] - getMore.lastTimestamp) > 5000) {
+				myLatlng = new google.maps.LatLng(d[i][6],d[i][7]);
+				var points = [myLatlng, myLatlng];
+				var color = getColor(d[i][1]);
+				var path = new google.maps.Polyline({path:points,strokeColor:color,strokeWeight:4});
+				getMore.lines.push([d[i], path]);
+				getMore.lastTimestamp = +d[i][0];
+				continue; // no lines if there is a jump in the time series
+			}
+			// because GoogleMap API doesn't allow for color changes along a line,
+			// each little segment is its own path. We store them in an array so
+			// we can easily move forward and backward
+			var nextLatlng = new google.maps.LatLng(d[i][6],d[i][7]);
+			var points = [myLatlng,nextLatlng];
+			myLatlng = nextLatlng;
+			var color = getColor(d[i][1]);
+			var path = new google.maps.Polyline({path:points,strokeColor:color,strokeWeight:4});
+			getMore.lines.push([d[i], path]);
+			getMore.lastTimestamp = +d[i][0];
+		}
+		if (cb !== undefined)
+			cb();
+		getMore.running = false;
+	})
+	.fail(function(jqXHR, textStatus, errorThrown) { console.log(myUrl + "/update : ajax fail", textStatus, errorThrown); });
+}
+function drawNext() { // this is the timer driven drawing
+	var newLast = drawCachedUntil(+drawNext.last + drawTimeIncr * speedup);
+	// verbose debug output console.log("in drawNext: last", +drawNext.last, "drawTimeIncr * speedup", drawTimeIncr * speedup, "newLast", +newLast);
+	if (drawNext.last == newLast) { // are we done?
+		if (+getMore.endTimestamp - +getMore.lastTimestamp < 120000 && newLast == getMore.lastTimestamp) {
+			// console.log("done drawing");
+			stopDrawing();
+			replayControl.slider("value", +getMore.endTimestamp);
+		}
+	}
+	if (newLast > 0)
+		drawNext.last = newLast;
+}
+function startDrawing() {
+	drawNext.ID = setInterval(drawNext, drawTimeIncr);
+}
+function stopDrawing() {
+	if (drawNext.ID) {
+		clearInterval(drawNext.ID);
+		drawNext.ID = null;
+	}
+}
+function drawUntil(endTime) { // this is manual drawing
+	var segment, path, thisFar;
+	// debug output console.log("drawUntil", new Date(endTime), "we have until", drawNext.last);
+	// do we need to delete things that were drawn?
+	if (+endTime < drawNext.last) {
+		do {
+			segment = getMore.lines[lastDrawn];
+			if (segment[0][0] > endTime) {
+				segment[1].setMap(null);
+				lastDrawn--;
+			}
+		} while (lastDrawn >= 0 && segment[0][0] > endTime);
+		drawNext.last = endTime;
+		showMarker();
+	} else {
+		thisFar =  drawCachedUntil(endTime);
+		if (thisFar < endTime && lastDrawn + 1 === getMore.lines.length) { // we have drawn everything there is
+			getMore(endTime, function(){ drawUntil(endTime); });
+		} else {
+			drawNext.last = thisFar;
+		}
+	}
+}
+function initialize() {
+	getMore.ID = null;
+	getMore.lines = [];
+	myUrl = $.url('protocol') + "://" + $.url('auth') + (($.url('auth').length > 0) ? "@" : "") +
+		$.url('hostname') + ":" + $.url('port');
+	parseDates($.url("?from"), $.url("?to"));
+	$("#frompicker").val(datepickers.fromQ);
+	$("#topicker").val(datepickers.toQ);
+	system = MAGIC_DISPLAY_SYSTEM;
+	if ($.url("?metric") === "true")
+		system = "metric";
+	else if ($.url("?metric") === "false")
+		system = "imperial";
+	if ($.url("?lang"))
+		lang = $.url("?lang").toLowerCase();
+	else
+		lang = "en";
+	var params = "&lang=" + lang;
+	if (system === "metric")
+		params += "&metric=true";
+	datepickers(myUrl + '/map', params);
+	$('#startStopButton').html(conv("label", "Stop Updates", lang));
+	$('#toggleCenterButton').html(conv("label", "Stop centering map",lang));
+	$('#startTimeLabel').html(conv("label", "Start time", lang));
+	$('#endTimeLabel').html(conv("label", "End time", lang));
+	$('#replaySpeedLabel').html(conv("label", "Replay Speed (real time = 1x)",lang));
+	$('#replayControlLabel').html(conv("label", "Replay Control",lang));
+	$("#energylink").attr("href", myUrl + "/energy?from=" + datepickers.fromQ + "&to=" + datepickers.toQ + params);
+	$("#statslink").attr("href", myUrl + "/stats?from=" + datepickers.fromQ + "&to=" + datepickers.toQ + params);
+	$("#triplink").attr("href", myUrl + "/trip");
+	speedup = $.url("?speed");
+	if (speedup === null || speedup === "")
+		speedup = 30;
+	var speedControl  = $('#speedSlider'), tooltipS = $('#speedTT');
+	var sSliderOpts = {'animate': 'fast',
+			   'min': 1,
+			   'max': 120,
+			   'value': speedup,
+			   'slide': function(event, ui) {
+				   speedup = ui.value;
+				   var sliderPos = (speedup - 1) / 119 * speedControl.width();
+				   tooltipS.css('left', sliderPos).text(speedup);  //Adjust the tooltip accordingly
+			   }};
+	tooltipS.css('left', (speedup - 1) / 119 * speedControl.width()).text(speedup); //Adjust the tooltip according to start value
+	speedControl.slider(sSliderOpts);
+	var minV = makeDate(datepickers.fromQ).getTime();
+	var maxV = makeDate(datepickers.toQ).getTime();
+	replayControl  = $('#replayControl'), tooltipR = $('#replayTT');
+	function updateTooltip(ui) {
+		var value  = (ui.value - minV) / (maxV - minV) * replayControl.width();
+		var ts = new Date(ui.value);
+		var text = (ts.getMonth()+1) + '/' + ts.getDate() + ' ' + ts.getHours() + ':' + ('0'+ts.getMinutes()).slice(-2);
+		tooltipR.css('left', value).text(text);  //Adjust the tooltip accordingly
+	}
+	function rSliderUpdate(event, ui) {
+		if (drawNext.ID === null) {
+			startDrawing();
+		}
+		updateTooltip(ui);
+	}
+	var rSliderOpts = {'animate': false,
+			   'range': 'min',
+			   'min': minV,
+			   'max': maxV,
+			   'value': minV,
+			   'slide': function(event, ui) {
+				   stopDrawing();
+				   updateTooltip(ui);
+				   drawUntil(ui.value);
+			   },
+			   'change': rSliderUpdate
+			  };
+	var ts = new Date(minV);
+	drawNext.last = ts.getTime();
+	var text = (ts.getMonth()+1) + '/' + ts.getDate() + ' ' + ts.getHours() + ':' + ts.getMinutes();
+	tooltipR.css('left', 0).text(text);  //Adjust the tooltip according to start value
+	replayControl.slider(rSliderOpts);
+	myLatlng = new google.maps.LatLng(MAGIC_FIRST_LOC);
+	var mapOptions = { center: myLatlng, zoom: 16, mapTypeId: google.maps.MapTypeId.ROADMAP };
+	map = new google.maps.Map(document.getElementById('map-canvas'), mapOptions);
+	showMarker.center = true;
+	google.maps.event.addListener(map, "dragstart", turnOffCentering);
+	marker = new google.maps.Marker({ position: myLatlng, map: map, title: 'Tesla Model S'});
+	infoWindow = new google.maps.InfoWindow({content: ""});
+	infoWindow.open(map, marker);
+	getMore.lastTimestamp = makeDate(datepickers.fromQ);
+	getMore.endTimestamp = makeDate(datepickers.toQ);
+	getMore();
+	startUpdates();
+	startDrawing();
+}
+google.maps.event.addDomListener(window, 'load', initialize);
+</script>
+</head>
+<body>
+MAGIC_NAV
+<div id="container">
+	<h2>Tesla Tracker</h2>
+	<div id="top">
+		<div id="dates">
+			<label id="startTimeLabel">Start time</label><input id="frompicker" type="text">
+			<label id="endTimeLabel">End time</label><input id="topicker" type="text">
+			<button id="startStopButton" onclick="startStopUpdates()">Stop updates</button>
+			<button id="toggleCenterButton" onclick="toggleCentering()">Stop centering map</button>
+		</div>
+		<div id="sliders">
+			<section id="sliderS">
+				<span id="speedTT" class="tooltip"></span> <!-- Tooltip -->
+				<div id="speedSlider"></div> <!-- the Slider -->
+				<div class="label"><label id="replaySpeedLabel">Replay Speed (real time = 1x)</label></div>
+			</section>
+			<section id="sliderR">
+				<span id="replayTT" class="tooltip"></span> <!-- Tooltip -->
+				<div id="replayControl"></div> <!-- the Slider -->
+				<div class="label"><label id="replayControlLabel">Replay Control</label></div>
+			</section>
+		</div>
+	</div>
+	<div id='map-canvas'/>
+</div>
+</body> </html>

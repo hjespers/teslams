@@ -1,0 +1,175 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Tesla Mileage Tracker</title>
+<script language="javascript" type="text/javascript" src="jquery-1.9.1.js"></script>
+<script language="javascript" type="text/javascript" src="jquery-ui-1.10.3.custom.min.js"></script>
+<script language="javascript" type="text/javascript" src="lib.js"></script>
+<link rel="stylesheet" media="all" type="text/css" href="jquery-ui.css" />
+<link rel="stylesheet" media="all" type="text/css" href="shared.css" />
+<script language="javascript" type="text/javascript" src="url.min.js"></script>
+<script type="text/javascript">
+function getData(ts, cb) {
+	$.getJSON(getData.myUrl + "/getdata", { 'at': +ts})
+	.done(function (d, textStatus, jqXHR) {
+		if (cb !== undefined) {
+			cb(d[0]);
+		}
+	})
+	.fail(function(jqXHR, textStatus, errorThrown) { console.log(getData.myUrl + "/getdata : ajax fail", textStatus, errorThrown); });
+}
+function updateDisplay() {
+	var dist;
+	if (!updateDisplay.startOdo) {
+		return;
+	}
+	if (updateDisplay.stopOdo) {
+		dist = updateDisplay.stopOdo - updateDisplay.startOdo;
+		$("#milesDisplay").html(dist.toFixed(1) + " miles");
+		return;
+	}
+	getData(new Date().getTime(), function(data) {
+		dist = data[2] - updateDisplay.startOdo;
+		$("#milesDisplay").html(dist.toFixed(1) + " miles");
+	});
+}
+function startStopFunction() {
+	var tripName, tripType, tripDist, msgText, from, to;
+	if (!startStopFunction.started) {
+		startStopFunction.started = true;
+		startStopFunction.stopTime = null;
+		startStopFunction.startTime = new Date();
+		getData(startStopFunction.startTime.getTime(), function(data) {
+			updateDisplay.startOdo = parseFloat(data[2]);
+			updateDisplay.startLat = parseFloat(data[6]);
+			updateDisplay.startLng = parseFloat(data[7]);
+			updateDisplay.stopOdo = null;
+			if (!updateDisplay.ID) {
+				// we're calling this every two seconds to keep the load
+				// on client and server really low. That still should be
+				// frequently enough to make it feel fluid.
+				updateDisplay.ID = setInterval(updateDisplay, 2000);
+			}
+			tripName = $("#tripName").val();
+			// store a partial trip so we know where we at started (in case the user reloads the web page)
+			$.getJSON(getData.myUrl + "/storetrip", { 'name': tripName, 'type': startStopFunction.tripType, 'dist': -1, 'odo': updateDisplay.startOdo,
+								  'start': { 'lat': updateDisplay.startLat , 'lng': updateDisplay.startLng },
+								  'from': startStopFunction.startTime.getTime() })
+				.done(function (d, textStatus, jqXHR) {
+					console.log(d);
+				});
+		});
+	} else {
+		startStopFunction.started = false;
+		startStopFunction.stopTime = new Date();
+		getData(startStopFunction.stopTime.getTime(), function(data){
+			updateDisplay.stopOdo = parseFloat(data[2]);
+			updateDisplay.stopLat = parseFloat(data[6]);
+			updateDisplay.stopLng = parseFloat(data[7]);
+			if (updateDisplay.ID) {
+				clearInterval(updateDisplay.ID);
+				updateDisplay.ID = null;
+			}
+			updateDisplay();
+			tripName = $("#tripName").val();
+			tripDist = (updateDisplay.stopOdo - updateDisplay.startOdo).toFixed(1);
+			from = startStopFunction.startTime;
+			to = startStopFunction.stopTime;
+			msgText = startStopFunction.tripType + ' trip "' + tripName + '" from ' + from.toString() + ' until ' + to.toString() +
+				' for ' + tripDist + " miles";
+			console.log(msgText);
+			$.getJSON(getData.myUrl + "/storetrip", { 'name': tripName, 'type': startStopFunction.tripType, 'dist': tripDist, 'odo': updateDisplay.stopOdo,
+								  'start': { 'lat': updateDisplay.startLat , 'lng': updateDisplay.startLng },
+								  'end': { 'lat': updateDisplay.stopLat , 'lng': updateDisplay.stopLng },
+								  'from': from.getTime(), 'to': to.getTime()})
+				.done(function (d, textStatus, jqXHR) {
+					console.log(d);
+				});
+
+		});
+	}
+}
+$(function() {
+	startStopFunction.started = false;
+	startStopFunction.tripType = "business";
+	$("div#personalbusiness-inner").attr("data-content-before", "Business");
+	$("div#personalbusiness-inner").attr("data-content-after", "Personal");
+	$("div#startstop-inner").attr("data-content-before", "Start Tracking");
+	$("div#startstop-inner").attr("data-content-after", "Store Trip");
+	$("#personalbusiness").change(function() {
+		if($(this).is(":checked")) {
+			$("#nameDiv").show();
+			startStopFunction.tripType = "business";
+		} else {
+			$("#nameDiv").hide();
+			startStopFunction.tripType = "personal";
+		}
+	});
+	$("#startstop").change(function() {
+		startStopFunction();
+	});
+	getData.myUrl = $.url('protocol') + "://" + $.url('auth') + (($.url('auth').length > 0) ? "@" : "") +
+		$.url('hostname') + ":" + $.url('port');
+	$("#maplink").attr("href", getData.myUrl + "/map");
+	$("#energylink").attr("href", getData.myUrl + "/energy");
+	$("#statslink").attr("href", getData.myUrl + "/stats");
+	// check if there is a partial trip that we should continue
+	$.getJSON(getData.myUrl + "/getlasttrip")
+		.done(function (d, textStatus, jqXHR) {
+			// console.log(d[0]);
+			if(d[0].dist !== undefined && d[0].dist === "-1") {
+				// console.log("found partial trip, setting up stuff");
+				updateDisplay.startOdo = d[0].odo;
+				updateDisplay.startLat = d[0].start.lat;
+				updateDisplay.startLng = d[0].start.lng;
+				if (d[0].type === "business") {
+					$("#personalbusiness").prop("checked", true);
+					$("#nameDiv").show();
+				} else {
+					$("#personalbusiness").prop("checked", false);
+					$("#nameDiv").hide();
+				}
+				$("#startstop").prop("checked", false);
+				$("#tripName").val(d[0].name);
+				startStopFunction.started = true;
+				startStopFunction.startTime = new Date(parseInt(d[0].from));
+				if (!updateDisplay.ID) {
+					// we're calling this every two seconds to keep the load
+					// on client and server really low. That still should be
+					// frequently enough to make it feel fluid.
+					updateDisplay.ID = setInterval(updateDisplay, 2000);
+				}
+			}
+		});
+});
+</script>
+</head>
+<style>
+body { font-size: 20pt;}
+</style>
+<body>
+MAGIC_NAV
+<div id='container'>
+	<h2>Tesla Mileage Tracker</h2>
+	<hr>
+<div class="switches">
+<div class="onoffswitch">
+    <input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox" id="startstop" checked>
+    <label class="onoffswitch-label" for="startstop">
+        <div id="startstop-inner" class="onoffswitch-inner"></div>
+        <div class="onoffswitch-switch"></div>
+    </label>
+</div>
+<div class="onoffswitch">
+    <input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox" id="personalbusiness" checked>
+    <label class="onoffswitch-label" for="personalbusiness">
+        <div id="personalbusiness-inner" class="onoffswitch-inner"></div>
+        <div class="onoffswitch-switch"></div>
+    </label>
+</div>
+</div>
+<div class="info">
+	<div id="milesDiv"><label id="milesLabel">Miles driven</label><label id="milesDisplay">0.0 miles</label></div>
+	<div id="nameDiv"><label id="tripNameLabel">Purpose of trip</label><input id="tripName" type="text" value="" /></div>
+</div>
+</body>
+</html>

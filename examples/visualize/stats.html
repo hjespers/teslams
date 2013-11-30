@@ -1,0 +1,347 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Tesla Daily and Weekly Summary Chart</title>
+<script language="javascript" type="text/javascript" src="jquery-1.9.1.js"></script>
+<script language="javascript" type="text/javascript" src="jquery.flot.js"></script>
+<script language="javascript" type="text/javascript" src="jquery.flot.time.min.js"></script>
+<script language="javascript" type="text/javascript" src="jquery.flot.threshold.min.js"></script>
+<script language="javascript" type="text/javascript" src="jquery.flot.orderBars.js"></script>
+<script language="javascript" type="text/javascript" src="jquery.flot.stack.js"></script>
+<script language="javascript" type="text/javascript" src="jquery-ui-1.10.3.custom.min.js"></script>
+<script language="javascript" type="text/javascript" src="jquery-ui-timepicker-addon.js"></script>
+<script language="javascript" type="text/javascript" src="lib.js"></script>
+<link rel="stylesheet" media="all" type="text/css" href="jquery-ui-timepicker-addon.css" />
+<link rel="stylesheet" media="all" type="text/css" href="jquery-ui.css" />
+<link rel="stylesheet" media="all" type="text/css" href="shared.css" />
+<script language="javascript" type="text/javascript" src="url.min.js"></script>
+<script type="text/javascript">
+$(function() {
+	var p, previousPoint, myUrl, d1, d2, d3, d4, d5, data, options, eschart;
+	var pw, previousPointW, myUrl, dw1, dw2, dw3, dw4, dw5, dataw, optionsw, weschart;
+	var lang;
+	function showTooltip(x, y, contents) {
+		$('<div id="tooltip">' + contents + '</div>').css( {
+			position: 'absolute',
+			display: 'none',
+			top: y + 5,
+			left: x + 5,
+			border: '1px solid #fdd',
+			padding: '2px',
+			'background-color': '#fee',
+			opacity: 0.80
+		}).appendTo("body").fadeIn(200);
+	}
+	previousPoint = null;
+	$("#dcachart").bind("plothover", function (event, pos, item) {
+		var y;
+		if (item) {
+			if (previousPoint != item.dataIndex + item.seriesIndex / 10) {
+				previousPoint = item.dataIndex + item.seriesIndex / 10;
+
+				$("#tooltip").remove();
+				y = item.datapoint[1].toFixed(1);
+				if (item.seriesIndex == 1) {
+					y += " + " + (d5[item.dataIndex][1]).toFixed(1) + " vampire loss";
+				}
+				showTooltip(item.pageX, item.pageY,
+							item.series.label + " : " + y);
+			}
+		} else {
+			$("#tooltip").remove();
+			previousPoint = null;
+		}
+	});
+	myUrl = $.url('protocol') + "://" + $.url('auth') + (($.url('auth').length > 0) ? "@" : "") +
+		$.url('hostname') + ":" + $.url('port');
+	parseDates($.url("?from"), $.url("?to"));
+	system = MAGIC_DISPLAY_SYSTEM;
+	if ($.url("?metric") === "true")
+		system = "metric";
+	else if ($.url("?metric") === "false")
+		system = "imperial";
+	if ($.url("?lang"))
+		lang = $.url("?lang").toLowerCase();
+	else
+		lang = "en";
+	var params = "&lang=" + lang;
+	if (system === "metric")
+		params += "&metric=true";
+	$("title").html(conv("label", document.title, lang));
+	$('#startTimeLabel').html(conv("label", "Start time", lang));
+	$('#endTimeLabel').html(conv("label", "End time", lang));
+	$("div#container h2").html(conv("label", $("div#container h2").text(), lang));
+	$("div#explanation span").html(conv("label", $("div#explanation span").text(), lang));
+	$("div#explanation2").html(conv("label", $("div#explanation2").text(), lang));
+	$("#frompicker").val(datepickers.fromQ);
+	$("#topicker").val(datepickers.toQ);
+	datepickers(myUrl + '/stats', params);
+	$("#maplink").attr("href", myUrl + "/map?from=" + datepickers.fromQ + "&to=" + datepickers.toQ + params);
+	$("#statslink").attr("href", myUrl + "/stats?from=" + datepickers.fromQ + "&to=" + datepickers.toQ + params);
+	$("#energylink").attr("href", myUrl + "/energy?from=" + datepickers.fromQ + "&to=" + datepickers.toQ + params);
+	$("#triplink").attr("href", myUrl + "/trip");
+	d1 = [MAGIC_DISTANCE];
+	d4 = [MAGIC_KWH];
+	d5 = [MAGIC_VKWH];
+	d2 = [MAGIC_CHARGE];
+	d3 = [MAGIC_AVERAGE];
+	if (system === "metric") {
+		for (var i = 0; i < d1.length; i++) {
+			if (d1[i] !== null)
+				d1[i][1] *= 1.609;
+			if (d3[i] !== null)
+				d3[i][1] /= 1.609;
+		}
+	}
+	data = [{
+		data: d1,
+		stack: "dist",
+		bars: { show: true,
+			order: 0,
+			barWidth: 6 * 3600 * 1000,
+			fill: 0.9 },
+		label: conv("label", "distance", lang) + " (" + conv(system, "distance", lang) + ")",
+		color: "#808080",
+		yaxis: 1
+	},{
+		data: d4,
+		stack: "energy",
+		bars: { show: true,
+			order: 1,
+			barWidth: 6 * 3600 * 1000,
+			fill: 0.9 },
+		label: conv("label", "energy used", lang) + " (" + conv(system, "energy", lang) + ")",
+		color: "#D07F27",
+		yaxis: 2
+	},{
+		data: d5,
+		stack: "energy",
+		bars: { show: true,
+			order: 1,
+			barWidth: 6 * 3600 * 1000,
+			fill: 0.9 },
+		label: conv("label", "energy lost", lang) + " (" + conv(system, "energy", lang) + ")",
+		color: "#B05F18",
+		yaxis: 2
+	},{
+		data: d2,
+		stack: "charge",
+		bars: { show: true,
+			order: 2,
+			barWidth: 6 * 3600 * 1000,
+			fill: 0.2 },
+		label: conv("label", "charge", lang) + " (" + conv(system, "energy", lang) + ")",
+		color: "#0a9fd9",
+		yaxis: 2
+	},{
+		data: d3,
+		lines: { show: true },
+		points: { show: true },
+		label: conv("label", "average", lang) + " (" + conv(system, "energy_per_distance", lang) + ")",
+		color: "#0a9f0a",
+		yaxis: 1
+	}];
+	options = {
+		grid: { hoverable: true },
+		yaxes: [{
+			min: 0
+		},{
+			min: 0,
+			position: 'right'
+		}],
+		xaxes: [{
+			mode: "time",
+			show: true,
+			minTickSize: [1, "day"],
+			timezone: "browser",
+			tickFormatter: function (v, axis) {
+				var s = new Date(v);
+				return (s.getMonth()+1) + '/' + s.getDate();
+			}
+		}]
+	};
+	eschart = $("#dcachart");
+	p = $.plot(eschart, data, options);
+
+	// now write the values into the bars
+	var vOffset = [];
+	for (var i = 0; i < 4; i++) {
+		var series = p.getData()[i];
+		var scale = series.xaxis.box.width / (series.xaxis.max - series.xaxis.min);
+		var barWidth = scale * series.bars.barWidth;
+		if (barWidth < 25)
+			continue;
+		var hOffset = ((i <= 1) ? i - 1.5 : i - 2.5) * barWidth;
+		var fontHeight = series.yaxis.labelHeight;
+		$.each(series.data, function(j, el){
+			var yAxis = (i == 0) ? 1 : 2;
+			var o = p.pointOffset({x: el[0], y: el[1], yaxis: yAxis});
+			var left = o.left + hOffset;
+			var top = o.top;
+			if (i == 1) 
+				vOffset[j] = top;
+			if (i == 2)
+				top -= (series.yaxis.box.height - vOffset[j]) - fontHeight *3/4;
+			$('<div class="data-point-label">' + el[1].toFixed(1) + '</div>').css( {
+				position: 'absolute',
+				left: left + 4,
+				top: top,
+				font: fontHeight*3/4 + 'px sans'
+			}).appendTo(p.getPlaceholder());
+		});
+	};
+
+	dw1 = [MAGIC_WDISTANCE];
+	dw4 = [MAGIC_WKWH];
+	dw5 = [MAGIC_WVKWH];
+	dw2 = [MAGIC_WCHARGE];
+	dw3 = [MAGIC_WAVERAGE];
+	if (system === "metric") {
+		for (i = 0; i < dw1.length; i++) {
+			if (dw1[i] !== null)
+				dw1[i][1] *= 1.609;
+			if (dw3[i] !== null)
+				dw3[i][1] /= 1.609;
+		}
+	}
+	dataw = [{
+		data: dw1,
+		stack: "dist",
+		bars: { show: true,
+			order: 0,
+			barWidth: 42 * 3600 * 1000,
+			fill: 0.9 },
+		label: conv("label", "distance", lang) + " (" + conv(system, "distance", lang) + ")",
+		color: "#808080",
+		yaxis: 1
+	},{
+		data: dw4,
+		stack: "energy",
+		bars: { show: true,
+			order: 1,
+			barWidth: 42 * 3600 * 1000,
+			fill: 0.9 },
+		label: conv("label", "energy used", lang) + " (" + conv(system, "energy", lang) + ")",
+		color: "#D07F27",
+		yaxis: 2
+	},{
+		data: dw5,
+		stack: "energy",
+		bars: { show: true,
+			order: 1,
+			barWidth: 42 * 3600 * 1000,
+			fill: 0.9 },
+		label: conv("label", "energy lost", lang) + " (" + conv(system, "energy", lang) + ")",
+		color: "#B05F18",
+		yaxis: 2
+	},{
+		data: dw2,
+		stack: "charge",
+		bars: { show: true,
+			order: 2,
+			barWidth: 42 * 3600 * 1000,
+			fill: 0.2 },
+		label: conv("label", "charge", lang) + " (" + conv(system, "energy", lang) + ")",
+		color: "#0a9fd9",
+		yaxis: 2
+	},{
+		data: dw3,
+		lines: { show: true },
+		points: { show: true },
+		label: conv("label", "average", lang) + " (" + conv(system, "energy_per_distance", lang) + ")",
+		color: "#0a9f0a",
+		yaxis: 1
+	}];
+	optionsw = {
+		grid: { hoverable: true },
+		yaxes: [{
+			min: 0
+		},{
+			min: 0,
+			position: 'right'
+		}],
+		xaxes: [{
+			mode: "time",
+			show: true,
+			tickSize: [1, "day"],
+			timezone: "browser",
+			tickFormatter: function (v, axis) {
+				var s = new Date(v), t = new Date(v + 6 * 24 * 3600 * 1000);
+				if (s.getDay() == 0)
+					return (s.getMonth()+1) + '/' + s.getDate() + ' - ' + (t.getMonth()+1) + '/' + t.getDate();
+				else
+					return "";
+			}
+		}]
+	};
+	weschart = $("#wdcachart");
+	pw = $.plot(weschart, dataw, optionsw);
+
+	previousPointW = null;
+	$("#wdcachart").bind("plothover", function (event, pos, item) {
+		var y;
+		if (item) {
+			if (previousPointW != item.dataIndex + item.seriesIndex / 10) {
+				previousPointW = item.dataIndex + item.seriesIndex / 10;
+
+				$("#tooltip").remove();
+				y = item.datapoint[1].toFixed(1);
+				if (item.seriesIndex == 1) {
+					y += " + " + (dw5[item.dataIndex][1]).toFixed(1) + " vampire loss";
+				}
+				showTooltip(item.pageX, item.pageY,
+							item.series.label + " : " + y);
+			}
+		} else {
+			$("#tooltip").remove();
+			previousPointW = null;
+		}
+	});
+	// now write the values into the bars
+	var vOffset = [];
+	for (var i = 0; i < 4; i++) {
+		var series = pw.getData()[i];
+		var scale = series.xaxis.box.width / (series.xaxis.max - series.xaxis.min);
+		var barWidth = scale * series.bars.barWidth;
+		if (barWidth < 25)
+			continue;
+		var hOffset = ((i <= 1) ? i - 1.5 : i - 2.5) * barWidth;
+		var fontHeight = series.yaxis.labelHeight;
+		$.each(series.data, function(j, el){
+			var yAxis = (i == 0) ? 1 : 2;
+			var o = pw.pointOffset({x: el[0], y: el[1], yaxis: yAxis});
+			var left = o.left + hOffset;
+			var top = o.top;
+			if (i == 1) 
+				vOffset[j] = top;
+			if (i == 2)
+				top -= (series.yaxis.box.height - vOffset[j]) - fontHeight*3/4;
+			$('<div class="data-point-label">' + el[1].toFixed(1) + '</div>').css( {
+				position: 'absolute',
+				left: left + 12,
+				top: top,
+				font: fontHeight*3/4 + 'px sans'
+			}).appendTo(pw.getPlaceholder());
+		});
+	};
+});
+</script>
+</head>
+<body>
+MAGIC_NAV
+<div id="container">
+	<h2>Tesla Daily and Weekly Summary Chart</h2>
+	<div id="dates">
+		<label id="startTimeLabel">Start time</label><input id="frompicker" type="text">
+		<label id="endTimeLabel">End time</label><input id="topicker" type="text">
+	</div>
+	<div id="content">
+		<center><div class="container">
+			<div id="dcachart" style="height:450px; width:90%;"></div>
+			<div id="explanation" style="width:70%"><span>Daily plot, starting</span> MAGIC_START.</div>
+			<div id="wdcachart" style="height:450px; width:90%;"></div>
+			<div id="explanation2" style="width:70%">Weekly plot</div>
+		</div><center>
+	</div>
+</div>
+</body>
+</html>

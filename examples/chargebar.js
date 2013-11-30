@@ -4,21 +4,18 @@ var argv = require('optimist')
 	.usage('Usage: $0 -u username -p password ')
 	.alias('u', 'username')
 	.describe('u', 'Teslamotors.com login')
-	.demand('u')
 	.alias('p', 'password')
-	.describe('p', 'Teslamotors.com password')
-	.demand('p')
-	.argv;
+	.describe('p', 'Teslamotors.com password');
+
+// get credentials either from command line or config.json in ~/.teslams/config.js
+var creds = require('./config.js').config(argv);
+
+argv = argv.argv;
 
 if ( argv.help == true ) {
 	console.log( 'Usage: chargebar.js -u <username> -p <password>');
 	process.exit(1);
 }
-
-var creds = { 
-	email: argv.username, 
-	password: argv.password 
-};
 
 var multimeter = require('multimeter-hj');
 var multi = multimeter(process);
@@ -63,7 +60,7 @@ bars[0].percent( 0, msg='Initializing...' );
 bars[1].percent( 0, msg='Initializing...' );
 bars[2].percent( 0, msg='Initializing...' );
 
-teslams.vehicles( { email: creds.email, password: creds.password }, function ( vehicles ) {
+teslams.vehicles( { email: creds.username, password: creds.password }, function ( vehicles ) {
 	if (vehicles.id == undefined) {
 		// console.log("Error: Undefined vehicle id");
 	} else {
@@ -97,10 +94,13 @@ function get_info( gs, vehicles ) {
 					ttfc = (cs.time_to_full_charge*60).toPrecision(3) + ' minutes';
 				}
 				var r = (cs.charge_to_max_range == false)?'STANDARD':'MAX RANGE';
+				if ( cs.charge_limit_soc != null ) {
+					r = cs.charge_limit_soc + '% limit set';
+				}
 				if ( cs.fast_charger_present ) {
-					bars[2].percent( p, msg=' Supercharger: ' + Math.abs(p) + 'kW, ' + v + ' V, ' + cs.battery_current + ' A          ');
+					bars[2].percent( p, msg=' Supercharger: ' + Math.abs(p) + 'kW, ' + v + ' V, ' + cs.battery_current + ' A                ');
 				} else {
-					bars[2].percent( p, msg=' Charger: ' + p + 'kW, ' + v + ' V, ' + i + ' A          ');
+					bars[2].percent( p, msg=' Charger: ' + p + 'kW, ' + v + ' V, ' + i + ' A               ');
 				}
 				bars[1].percent( cs.battery_level, msg=' Level: ' + cs.battery_level + '% (' + cs.battery_range + ' ' + gs.gui_range_display + ' miles)         ');
 				bars[0].percent( (cs.charge_rate<0)?0:cs.charge_rate, msg=' Charge Rate: ' + cs.charge_rate + ' ' + gs.gui_distance_units + '           ');
