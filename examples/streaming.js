@@ -32,6 +32,10 @@ var ss = "init"; // shift state
 var napmode = false; // flag for enabling pause to allow sleep to set in 
 var napTimeoutId;
 var sleepIntervalId;
+// various instance counters to avoid multiple concurrent instances
+var pcount = 0; 
+var scount = 0;
+var icount = 0;
 
 var argv = require('optimist')
 	.usage(usage)
@@ -91,9 +95,16 @@ if (argv.db) {
 	stream = fs.createWriteStream(argv.file);
 }
 
-function tsla_poll( vid, long_vid, token ) {
+function tsla_poll( vid, long_vid, token ) {	
+	pcount++;
+	if ( pcount > 1 ) {
+		ulog('Too many pollers running, exiting this one');
+		pcount = pcount - 1;
+		return;
+	}	
 	if (napmode) {
 		ulog('Info: car is napping, skipping tsla_poll()');
+		pcount = pcount - 1;
 		return;
 	} 
 	if (long_vid == undefined || token == undefined) {
@@ -113,6 +124,7 @@ function tsla_poll( vid, long_vid, token ) {
 			setTimeout(function() { 
 				tsla_poll( vid, long_vid, token );
 			}, 60000);	// 5 minutes
+			pcount = pcount - 1;
 			return;
 		}	
 	} else { // longer than a minute since last request
@@ -121,7 +133,7 @@ function tsla_poll( vid, long_vid, token ) {
 	}
 	//napmode checking
 	if ( argv.zzz == true && lastss == "" && ss == "") {
-		//if not charging stop polling for 20 minutes
+		//if not charging stop polling for 30 minutes
 		rpm++;
 		teslams.get_charge_state( vid, function (cs) { 
 			if (cs.charging_state == 'Charging') {
@@ -132,36 +144,40 @@ function tsla_poll( vid, long_vid, token ) {
 				// 30 minutes of nap mode to let the car fall asleep		
 				napTimeoutId = setTimeout(function() { 
 					clearInterval(sleepIntervalId);
+					scount = scount - 1;
 					napmode = false;
 					ss = 'nap';
 					lastss = 'nap';
 					initstream();
-					return; // needed???
 				}, 1800000);	// 30 minute of nap time
 				// check if sleep has set in every 3 minutes (default) 
-				sleepIntervalId = setInterval(function(){
-					if (napmode == true) {
-						rpm++;
-						teslams.vehicles( { email: creds.username, password: creds.password }, function ( vehicles ) {	
-							if ( typeof vehicles.state != undefined ) {
-								ulog( 'Vehicle state is: ' + vehicles.state );
-								if (vehicles.state == 'asleep' || vehicles.state == 'unknown') {
-									ulog( 'Stopping nap mode since car is now in (' + vehicles.state + ') state' );
-									clearTimeout(napTimeoutId);
-									clearInterval(sleepIntervalId);
-									napmode = false;
-									ss = 'sleep';
-									lastss = 'sleep';
-									initstream();
-									return; //needed???
+				if (scount == 0) {
+					scount++;
+					sleepIntervalId = setInterval(function(){
+						if (napmode == true) {
+							rpm++;
+							teslams.vehicles( { email: creds.username, password: creds.password }, function ( vehicles ) {	
+								if ( typeof vehicles.state != undefined ) {
+									ulog( 'Vehicle state is: ' + vehicles.state );
+									if (vehicles.state == 'asleep' || vehicles.state == 'unknown') {
+										ulog( 'Stopping nap mode since car is now in (' + vehicles.state + ') state' );
+										clearTimeout(napTimeoutId);
+										clearInterval(sleepIntervalId);
+										scount = scount - 1;
+										napmode = false;
+										ss = 'sleep';
+										lastss = 'sleep';
+										initstream();
+									}
+								} else {
+									ulog( 'Nap checker: undefined vehicle state' );
 								}
-							} else {
-								ulog( 'Nap checker: undefined vehicle state' );
-							}
-						});
-					}					
-				}, argv.sleepcheck); // every 3 minutes	(default)		
-				return;
+							});
+						}					
+					}, argv.sleepcheck); // every 3 minutes	(default)
+				} else {
+					ulog('Sleep checker is already running. Not starting another');
+				}		
 			}
 		});
 	}
@@ -177,6 +193,7 @@ function tsla_poll( vid, long_vid, token ) {
 			setTimeout(function() {
 				tsla_poll( vid, long_vid, token ); // poll again
 			}, 10000);
+			pcount = pcount - 1;
 			return;
 		} else if (response.statusCode == 200) { // HTTP OK
 			if (body===undefined) {
@@ -184,12 +201,14 @@ function tsla_poll( vid, long_vid, token ) {
 				setTimeout(function() {
 					tsla_poll( vid, long_vid, token ); // poll again
 				}, 10000); //10 seconds
+				pcount = pcount - 1;
 				return;
 			} else if (body===null) {
 				ulog('WARN: HTTP returned OK but body is null');
 				setTimeout(function() {
 					tsla_poll( vid, long_vid, token ); // poll again
 				}, 10000); // 10 seconds
+				pcount = pcount - 1;
 				return;
 			} else {
 				ulog('Poll return HTTP OK and body is this:\n' + body);
@@ -197,6 +216,7 @@ function tsla_poll( vid, long_vid, token ) {
 				setTimeout(function() {
 					tsla_poll( vid, long_vid, token ); // poll again
 				}, 1000); // 1 second
+				pcount = pcount - 1;
 				return;
 			}
 		} else if ( response.statusCode == 401) { // HTTP AUTH Failed
@@ -204,6 +224,7 @@ function tsla_poll( vid, long_vid, token ) {
 			setTimeout(function() {
 				initstream();
 			}, 1000); //1 seconds
+			pcount = pcount - 1;
 			return;
 		} else { // all other unexpected responses
 			ulog('Unexpected problem with request:\n	Response status code = ' + response.statusCode + '	Error code = ' + error + '\n Polling again in 10 seconds...');
@@ -211,6 +232,8 @@ function tsla_poll( vid, long_vid, token ) {
 			setTimeout(function() {
 				tsla_poll( vid, long_vid, token ); // poll again
 			}, 10000); // 10 seconds
+			pcount = pcount - 1;
+			return;
 		}
 	}).on('data', function(data) {
 		var d, vals, i, record, doc;
@@ -319,8 +342,15 @@ function ulog( string ) {
 }
 
 function initstream() {
+	icount++;
+	if ( icount > 1 ) {
+		ulog('Too many initializers running, exiting this one');
+		icount = icount - 1;
+		return;
+	}	
 	if (napmode) {
 		ulog('Info: car is napping, skipping initstream()');
+		icount = icount - 1;
 		return;
 	} 
     // make absolutely sure we don't overwhelm the API
@@ -336,6 +366,7 @@ function initstream() {
         	setTimeout(function() { 
         		initstream(); 
         	}, 60000); // 1 minute
+        	icount = icount - 1;
         	return;
         }       
     } else { // longer than a minute since last request
@@ -364,6 +395,7 @@ function initstream() {
 				napmode = false;
 				initstream();
 			}, argv.napcheck); // 5 minutes (default)
+			icount = icount - 1;
 			return;		
 		} else if ( typeof vehicles.tokens == "undefined" || vehicles.tokens[0] == undefined ) {
 			ulog('Info: car is in (' + vehicles.state + ') state, calling /charge_state to reveal the tokens');
@@ -375,6 +407,7 @@ function initstream() {
 					setTimeout(function() { 
 						initstream(); 
 					}, 1000); // 1 second
+					icount = icount - 1;
 					return;
 				} else {
 					ulog('Warn: waking up with charge_state request failed.\n  Waiting 30 secs and then reinitializing...');
@@ -383,6 +416,7 @@ function initstream() {
 					setTimeout(function() { 
 						initstream(); 
 					}, 30000);   // 30 seconds    
+					icount = icount - 1;
 					return;       
 				} 
 			});	
@@ -396,6 +430,7 @@ function initstream() {
 				}
 			}
 			tsla_poll( vehicles.id, vehicles.vehicle_id, vehicles.tokens[0] );
+			icount = icount - 1;
 			return;
 		}
 	}); // end of teslams.vehicles() request
