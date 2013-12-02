@@ -36,6 +36,8 @@ var sleepIntervalId;
 var pcount = 0; 
 var scount = 0;
 var icount = 0;
+var ncount = 0;
+
 
 var argv = require('optimist')
 	.usage(usage)
@@ -139,17 +141,23 @@ function tsla_poll( vid, long_vid, token ) {
 			if (cs.charging_state == 'Charging') {
 				ulog('Info: car is charging, continuing to poll for data');
 			} else {
-				ulog('Info: 30 minute nap starts now');
-				napmode = true;
-				// 30 minutes of nap mode to let the car fall asleep		
-				napTimeoutId = setTimeout(function() { 
-					clearInterval(sleepIntervalId);
-					scount = scount - 1;
-					napmode = false;
-					ss = 'nap';
-					lastss = 'nap';
-					initstream();
-				}, 1800000);	// 30 minute of nap time
+				if (ncount == 0) {
+					ncount++;				
+					ulog('Info: 30 minute nap starts now');
+					napmode = true;
+					// 30 minutes of nap mode to let the car fall asleep		
+					napTimeoutId = setTimeout(function() { 
+						ncount = 0;
+						clearInterval(sleepIntervalId);
+						scount = 0;
+						napmode = false;
+						ss = 'nap';
+						lastss = 'nap';
+						initstream();
+					}, 1800000);	// 30 minute of nap time
+				} else {
+					ulog('Debug: (' + ncount + ') Nap timer is already running. Not starting another');
+				}
 				// check if sleep has set in every 3 minutes (default) 
 				if (scount == 0) {
 					scount++;
@@ -162,8 +170,9 @@ function tsla_poll( vid, long_vid, token ) {
 									if (vehicles.state == 'asleep' || vehicles.state == 'unknown') {
 										ulog( 'Stopping nap mode since car is now in (' + vehicles.state + ') state' );
 										clearTimeout(napTimeoutId);
+										ncount = 0;
 										clearInterval(sleepIntervalId);
-										scount = scount - 1;
+										scount = 0;
 										napmode = false;
 										ss = 'sleep';
 										lastss = 'sleep';
@@ -176,7 +185,7 @@ function tsla_poll( vid, long_vid, token ) {
 						}					
 					}, argv.sleepcheck); // every 3 minutes	(default)
 				} else {
-					ulog('Sleep checker is already running. Not starting another');
+					ulog('Debug: (' + scount + ') Sleep checker is already running. Not starting another');
 				}		
 			}
 		});
@@ -344,7 +353,7 @@ function ulog( string ) {
 function initstream() {
 	icount++;
 	if ( icount > 1 ) {
-		ulog('Too many initializers running, exiting this one');
+		ulog('Debug: Too many initializers running, exiting this one');
 		icount = icount - 1;
 		return;
 	}	
