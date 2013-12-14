@@ -62,10 +62,10 @@ var argv = require('optimist')
 	.default('r', 6)
 	.alias('N', 'napcheck')
 	.describe('N', 'Number of minutes between nap checks')
-	.default('N', 5)
+	.default('N', 1)
 	.alias('S', 'sleepcheck')
 	.describe('S', 'Number of minutes between sleep checks')
-	.default('S', 3)
+	.default('S', 1)
 	.alias('v', 'values')
 	.describe('v', 'List of values to collect')
 	.default('v', 'speed,odometer,soc,elevation,est_heading,est_lat,est_lng,power,shift_state,range,est_range,heading')
@@ -126,7 +126,7 @@ function tsla_poll( vid, long_vid, token ) {
 			ulog('Warn: throttling due to too many streaming requests per minute');
 			setTimeout(function() { 
 				tsla_poll( vid, long_vid, token );
-			}, 60000);	// 5 minutes
+			}, 60000);	// 1 minute
 			pcount = pcount - 1;
 			return;
 		}	
@@ -159,7 +159,7 @@ function tsla_poll( vid, long_vid, token ) {
 				} else {
 					ulog('Debug: (' + ncount + ') Nap timer is already running. Not starting another');
 				}
-				// check if sleep has set in every 3 minutes (default) 
+				// check if sleep has set in every minute (default) 
 				if (scount == 0) {
 					scount++;
 					sleepIntervalId = setInterval(function(){
@@ -184,7 +184,7 @@ function tsla_poll( vid, long_vid, token ) {
 								}
 							});
 						}					
-					}, argv.sleepcheck); // every 3 minutes	(default)
+					}, argv.sleepcheck); // every 1 minute	(default)
 				} else {
 					ulog('Debug: (' + scount + ') Sleep checker is already running. Not starting another');
 				}		
@@ -400,12 +400,12 @@ function initstream() {
 			}
 			ulog('Info: car is in (' + vehicles.state + ') state, will check again in ' + timeDelta);
 			napmode = true;
-			// wait for 5 minutes (default) and check again if car is asleep
+			// wait for 1 minute (default) and check again if car is asleep
 			setTimeout(function() { 
 				napmode = false;
 				sleepmode = true;
 				initstream();
-			}, argv.napcheck); // 5 minutes (default)
+			}, argv.napcheck); // 1 minute (default)
 			icount = icount - 1;
 			return;		
 		} else if ( typeof vehicles.tokens == "undefined" || vehicles.tokens[0] == undefined ) {
