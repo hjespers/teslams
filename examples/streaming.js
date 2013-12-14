@@ -30,6 +30,7 @@ var srpm = 0; // Streaming URL Request Per Minute counter
 var lastss = "init"; // last shift state
 var ss = "init"; // shift state
 var napmode = false; // flag for enabling pause to allow sleep to set in 
+var sleepmode = false;
 var napTimeoutId;
 var sleepIntervalId;
 // various instance counters to avoid multiple concurrent instances
@@ -283,7 +284,7 @@ function getAux() {
 		last = now;
 	}
 	// check if the car is napping
-	if (napmode) {
+	if (napmode || sleepmode) {
 		ulog('Info: car is napping or sleeping, skipping auxiliary REST data sample');
 		//TODO add periodic /vehicles state check to see if nap mode should be cancelled because car is back online again
 		return;
@@ -402,6 +403,7 @@ function initstream() {
 			// wait for 5 minutes (default) and check again if car is asleep
 			setTimeout(function() { 
 				napmode = false;
+				sleepmode = true;
 				initstream();
 			}, argv.napcheck); // 5 minutes (default)
 			icount = icount - 1;
@@ -430,6 +432,7 @@ function initstream() {
 				} 
 			});	
 		} else { // this is the valid condition so we have the required tokens and ids
+			sleepmode = false;
 			if (firstTime) {	// initialize only once
 				firstTime = false;
 				if (argv.db) { // initialize database
