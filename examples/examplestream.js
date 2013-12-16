@@ -19,11 +19,8 @@ try {
 //This is a very simple example to show the sequence required to call the stream() function
 //
 //A much more complicated version of this app is streaming.js which handles continuous long polling
-//for data, expiring tokens, automatically wakes up the car when needed, and writes the data to 
-//either a file or a mongodb database.
-//
-//An experimental version of streaming.js that tries to avoid waking a firmware 5.0 car that
-//is asleep is called zstreaming.js. 
+//for data, expiring tokens, automatically wakes up the car when needed, handles sleep mode properly,
+//and writes the data to either a file or a mongodb database.
 //
 //First you need to call vehicles() to get the vehicle_id and tokens to use as passwords 
 //Note that the password used for the REST call to vehicles() is different than 
