@@ -89,7 +89,9 @@ var nFields = argv.values.split(",").length + 1; // number of fields including t
 if (argv.db) {
 	console.log("database name", argv.db);
 	MongoClient = require('mongodb').MongoClient;
-	MongoClient.connect('mongodb://127.0.0.1:27017/' + argv.db, function(err, db) {
+	var mongoUri = process.env.MONGOLAB_URI|| process.env.MONGOHQ_URI || 'mongodb://127.0.0.1:27017/' + argv.db;
+
+	MongoClient.connect(mongoUri, function(err, db) {
 		if(err) throw err;
 		collectionS = db.collection('tesla_stream');
 		collectionA = db.collection('tesla_aux');
