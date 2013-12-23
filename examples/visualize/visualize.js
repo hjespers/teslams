@@ -32,13 +32,24 @@ var argv = require('optimist')
 	.alias('?', 'help')
 	.describe('?', 'Print usage information');
 
+
+
 var creds = require('../config.js').config(argv);
 argv = argv.argv;
 if ( argv.help === true ) {
 	console.log( 'Usage: visualize.js --db <MongoDB database> [--silent] [--verbose]');
 	process.exit(1);
 }
+// set and check the validity of the HTTP listen port 
+// the environment variable $PORT is read for deployment on heroku
+var httpport = process.env.PORT;
+if ( !isNaN(httpport) && httpport >= 1) {
+	console.log('Using listen port (' + httpport + ') set by $PORT environment variable');
+	argv.port = httpport;
+}
 var MongoClient = require('mongodb').MongoClient;
+var mongoUri = process.env.MONGOLAB_URI|| process.env.MONGOHQ_URI || 'mongodb://127.0.0.1:27017/' + argv.db;
+console.log('Using MongoDB URI: ' + mongoUri);
 var date = new Date();
 var http = require('http');
 var fs = require('fs');
@@ -219,7 +230,7 @@ function weekNr(d) {
 	var yearStart = new Date(d.getFullYear(),0,1);
 	return Math.ceil(( ( (d - yearStart) / 86400000) + 1)/7);
 }
-MongoClient.connect("mongodb://127.0.0.1:27017/" + argv.db, function(err, db) {
+MongoClient.connect(mongoUri, function(err, db) {
 	// this is the first time we connect - if we get an error, just throw it
 	if(err) throw(err);
 	var collectionA = db.collection("tesla_aux");
@@ -313,7 +324,7 @@ app.get('/', ensureAuthenticated, function(req, res) {
 app.get('/getdata', ensureAuthenticated, function (req, res) {
 	var ts, options, vals;
 	if (argv.verbose) console.log('/getdata with',req.query.at);
-	MongoClient.connect("mongodb://127.0.0.1:27017/" + argv.db, function(err, db) {
+	MongoClient.connect(mongoUri, function(err, db) {
 		if(err) {
 			console.log('error connecting to database:', err);
 			return;
@@ -381,7 +392,7 @@ app.get('/update', ensureAuthenticated, function (req, res) {
 	// we don't keep the database connection as that has caused occasional random issues while testing
 	if (!started)
 		return;
-	MongoClient.connect("mongodb://127.0.0.1:27017/" + argv.db, function(err, db) {
+	MongoClient.connect(mongoUri, function(err, db) {
 		if(err) {
 			console.log('error connecting to database:', err);
 			return;
@@ -443,7 +454,7 @@ app.get('/map', ensureAuthenticated, function(req, res) {
 		res.redirect('/map?from=' + dates.fromQ + '&to=' + dates.toQ + '&speed=' + speedQ.toFixed(0) + params);
 		return;
 	}
-	MongoClient.connect("mongodb://127.0.0.1:27017/" + argv.db, function(err, db) {
+	MongoClient.connect(mongoUri, function(err, db) {
 		if(err) {
 			console.log('error connecting to database:', err);
 			return;
@@ -497,7 +508,7 @@ app.get('/energy', ensureAuthenticated, function(req, res) {
 	var gMaxE = -1000, gMaxS = -1000;
 	var gMinE = 1000, gMinS = 1000;
 	var cumulE = 0, cumulR = 0, cumulES, cumulRS, prevTS;
-	MongoClient.connect("mongodb://127.0.0.1:27017/" + argv.db, function(err, db) {
+	MongoClient.connect(mongoUri, function(err, db) {
 		var speed, energy, soc, vals;
 		if(err) {
 			console.log('error connecting to database:', err);
@@ -695,7 +706,7 @@ function calculateDelta(d1, d2) {
 	return delta / 1000;
 }
 app.get('/test', ensureAuthenticated, function(req, res) {
-	MongoClient.connect("mongodb://127.0.0.1:27017/" + argv.db, function(err, db) {
+	MongoClient.connect(mongoUri, function(err, db) {
 		if(err) {
 			console.log('error connecting to database:', err);
 			return;
@@ -740,7 +751,7 @@ app.get('/stats', ensureAuthenticated, function(req, res) {
 	}
 	var outputD = "", outputC = "", outputA = "", comma, firstDate = 0, lastDay = 0, lastDate = 0, distHash = {}, useHash = {};
 	var outputWD = "", outputWC = "", outputWA = "", commaW, distWHash = {}, useWHash ={};
-	MongoClient.connect("mongodb://127.0.0.1:27017/" + argv.db, function(err, db) {
+	MongoClient.connect(mongoUri, function(err, db) {
 		if(err) {
 			console.log('error connecting to database:', err);
 			return;
@@ -1029,7 +1040,7 @@ app.get('/fahrtenbuch', ensureAuthenticated, function(req, res) {
 		table += "<th rowspan=2>Wegstrecke</th><th rowspan=2>Reisezweck</th><th rowspan=2>Auto<br>Kennzeichen</th>";
 		table += "<th rowspan=2>KM Stand am<br>Zielort</th><th rowspan=2>Unterschrift</th></tr>";
 		table += "<tr><th>Datum</th><th>Zeit</th><th>Datum</th><th>Zeit</th></tr></thead>";
-		MongoClient.connect("mongodb://127.0.0.1:27017/" + argv.db, function(err, db) {
+		MongoClient.connect(mongoUri, function(err, db) {
 			if(err) {
 				console.log('error connecting to database:', err);
 				return;
