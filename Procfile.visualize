@@ -1,0 +1,4 @@
+#to start run 'foreman start -f Procfile.visualize'
+mongod: mongod
+streaming: node examples/streaming.js --db tesla --zzz 
+web: node examples/visualize/visualize.js --db tesla

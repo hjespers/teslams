@@ -25,7 +25,7 @@ exports.config = function (opt)
 {
 	var config,
 		configFile = process.env[(process.platform == 'win32') ? 'USERPROFILE' : 'HOME'] +
-			"/.teslams/config.json",
+				"/.teslams/config.json",
 		configSuccess = false;
 
 	if (opt.argv['$0'].indexOf("visualize.js") != -1)
@@ -49,6 +49,17 @@ exports.config = function (opt)
 			console.log("didn't find 'visualize' property in config file, authentication turned off");
 		}
 		return config
+	}
+	// if no user name & password supplied on cmd line options, check environment variable
+	if (!opt.argv.username && !opt.argv.password){
+		config = {
+			username: process.env.TSLA_USERNAME,
+			password: process.env.TSLA_PASSWORD 
+		};
+		if (config.username != undefined && config.password != undefined){
+			console.log('Teslamotors.com logon information loaded from environment variables $TSLA_USERNAME and $TSLA_PASSWORD');
+			return config;
+		}
 	}
 
 	// if no user name & password supplied on cmd line options, look in config file
