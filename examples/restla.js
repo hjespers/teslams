@@ -37,7 +37,8 @@ if ( argv.help == true ) {
 
 var http = require('http');
 // set and check the validity of the HTTP listen port 
-var httpport = argv.port;
+// the environment variable $PORT is read for deployment on heroku
+var httpport = process.env.PORT || argv.port;
 if ( isNaN(httpport) || httpport < 1) {
 	console.log("missing or incorrect http listen port: '" + httpport + "' using default 8888\n");
 	httpport = 8888;
