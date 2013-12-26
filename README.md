@@ -56,6 +56,7 @@ Use these programs at your own risk. The authors do not guaranteed the proper fu
 Marshall Rose (https://github.com/mrose17)
 Dirk Hohndel (https://github.com/dirkhh)
 Arthur Blake (https://github.com/arthurblake)
+Hans Jespersen (https://github.com/hjespers)
 
 #Installation
 
@@ -79,6 +80,8 @@ Or, you can instead create a json file in ~/.teslams/config.json and specify the
 		"username": "Your teslamotors.com username/email",
 		"password": "Your teslamotors.com password"
 	}
+	
+If you don't feel comfortable putting your password as a command line option (visible in the process table) or a file (visible to anyone who can read the file) then you can alternatively use the $TSLA_USERNAME and $TSLA_PASSWORD environment variables. These environment variable allow the execution of these apps in Heroku or other Platform-as-a-Service providers.
 
 #chargebar.js - monitor your car from your desktop 
 
