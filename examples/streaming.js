@@ -260,8 +260,13 @@ function tsla_poll( vid, long_vid, token ) {
 					if(err) util.log(err);
 				});
 			}
-			lastss = ss;
-			ss = vals[9]; // hardcoded position - fix later
+			//check we have a valid timestamp to avoid interpreting corrupt stream data 		
+			if ( !isNaN( vals[0] ) && vals[0] > 1340348400000 ) {
+				lastss = ss; 
+				ss = vals[1] + vals[9]; // hardcoded positions for speed and shift_state - fix later
+			} else {
+				ulog('Bad timestamp (' + vals[0] + ')' );
+			}
 		} else {
 			stream.write(data);
 		}
