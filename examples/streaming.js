@@ -164,7 +164,7 @@ function tsla_poll( vid, long_vid, token ) {
                 // check if sleep has set in every minute (default) 
                 if (scount == 0) {
                     scount++;
-                    sleepIntervalId = setInterval(function(){
+                    sleepIntervalId = setInterval(function() {
                         if (napmode == true) {
                             rpm++;
                             teslams.vehicles( { email: creds.username, password: creds.password }, function ( vehicles ) {  
@@ -195,14 +195,13 @@ function tsla_poll( vid, long_vid, token ) {
         // need to check again if nap mode flag had been changed above
         // [HJ] added some code to the .on('data') function below to detect and cancel 
         // nap mode if the car starts driving again.
-        if (napmode) {
+        if (napmode == true) {
             ulog('Info: code just entered nap mode but we will start one last poll');
             // [HJ]
             // ulog('Info: code just entered nap mode canceling long poll');
             // pcount = pcount - 1;
             // return;
         } 
-
     }
     srpm++; //increment the number of streaming requests per minute
     request({'uri': s_url + long_vid +'/?values=' + argv.values,
@@ -277,14 +276,14 @@ function tsla_poll( vid, long_vid, token ) {
                     });
                 }   
                 lastss = ss; 
-                ss = vals[1] + vals[9]; // hardcoded positions for speed and shift_state - fix later
+                ss = vals[9]; // TODO: fix hardcoded position for shift_state
                 // [HJ] this section goes with the code above which allows one last poll
                 // after entering nap mode. If this turns out to cause other problems
                 // remove this nap cancel section AND switch back to disabling this
                 // final poll
-                if (napmode && ss != null) {
+                if (napmode == true && ss != '') {
                     //cancel nap mode           
-                    ulog('Info: canceling nap mode'); 
+                    ulog('Info: canceling nap mode because shift_state is now (' + ss + ')'); 
                     clearTimeout(napTimeoutId);
                     ncount = 0;
                     clearInterval(sleepIntervalId);
