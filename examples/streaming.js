@@ -117,7 +117,7 @@ function tsla_poll( vid, long_vid, token ) {
         console.log('Exiting...');
         process.exit(1);
     } 
-    now = new Date().getTime();
+    var now = new Date().getTime();
     if ( now - slast < 60000) { // last streaming request was less than 1 minute ago
         ulog( srpm + ' of ' + argv.maxrpm + ' Stream requests since ' + slast);
         if ( now - slast < 0 ) {
@@ -302,7 +302,7 @@ function tsla_poll( vid, long_vid, token ) {
 
 function getAux() {
     // make absolutely sure we don't overwhelm the API
-    now = new Date().getTime();
+    var now = new Date().getTime();
     if ( now - last < 60000) { // last request was within the past minute
         ulog( 'getAux: ' + rpm + ' of ' + argv.maxrpm + ' REST requests since ' + last);
         if ( now - last < 0 ) {
@@ -398,7 +398,7 @@ function initstream() {
         return;
     } 
     // make absolutely sure we don't overwhelm the API
-    now = new Date().getTime();
+    var now = new Date().getTime();
     if ( now - last < 60000) { // last request was within the past minute
         ulog( rpm + ' of ' + argv.maxrpm + ' REST requests since ' + last);
         if ( now - last < 0 ) {
