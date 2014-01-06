@@ -48,7 +48,7 @@ exports.config = function (opt)
 		{
 			console.log("didn't find 'visualize' property in config file, authentication turned off");
 		}
-		return config
+		return config;
 	}
 	// if no user name & password supplied on cmd line options, check environment variable
 	if (!opt.argv.username && !opt.argv.password){
