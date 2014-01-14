@@ -15,11 +15,11 @@ var report = function(error, response, body, cb) {
 var all = exports.all = function(options, cb) {
   if (!cb) cb = function(error, response, body) {/* jshint unused: false */};
 
-  request({ method                     : 'POST'
-          , url                        : portal + '/login'
-          , form                       :
-            { "user_session[email]"    : options.email
-            , "user_session[password]" : options.password
+  request({ method                     : 'POST',
+            url                        : portal + '/login',
+            form                       :
+            { "user_session[email]"    : options.email,
+              "user_session[password]" : options.password
             }
           }, function (error, response, body) {
     if ((!!error) || ((response.statusCode !== 200) && (response.statusCode !== 302))) return report(error, response, body, cb);
@@ -196,7 +196,7 @@ function charge_state( params, cb ) {
 			}
 		});
 	} else {
-		if (typeof cb == 'function') return cb( new Error("Invalid charge state = " + state + " or percent = " + percent));  
+		if (typeof cb == 'function') return cb( new Error("Invalid charge state = " + state));  
 		else return false;
 	} 
 }
@@ -461,29 +461,28 @@ exports.ROOF_OPEN = ROOF_OPEN;
 // See examples/examplestream.js for a simple one poll working example of how to use this function
 // See examples/streaming.js for a more complicated but useful continuous polling example of streaming
 
-exports.stream_columns = [ 'speed'
-                          , 'odometer'
-                          , 'soc'
-                          , 'elevation'
-                          , 'est_heading'
-                          , 'est_lat'
-                          , 'est_lng'
-                          , 'power'
-                          , 'shift_state'
-                          , 'range'
-                          , 'est_range'
-                          , 'heading'
+exports.stream_columns = [ 'speed',
+                           'odometer',
+                           'soc',
+                           'elevation',
+                           'est_heading',
+                           'est_lat',
+                           'est_lng',
+                           'power',
+                           'shift_state',
+                           'range',
+                           'est_range',
+                           'heading'
                           ];
 
 exports.stream = function(options, cb) {
   if (!cb) cb = function(error, response, body) {/* jshint unused: false */};
 
-  request({ method : 'GET'
-          , url    : 'https://streaming.vn.teslamotors.com/stream/' + options.vehicle_id
-                     + '/?values=' + exports.stream_columns.join(',')
-          , auth   :
-            { user : options.email
-            , pass : options.password
+  request({ method : 'GET',
+            url    : 'https://streaming.vn.teslamotors.com/stream/' + options.vehicle_id + '/?values=' + exports.stream_columns.join(','),
+            auth   :
+            { user : options.email,
+              pass : options.password
             }
           }, cb);
 };
