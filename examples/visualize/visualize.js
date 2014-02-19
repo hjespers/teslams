@@ -291,17 +291,23 @@ MongoClient.connect(mongoUri, function(err, db) {
 			console.log("missing vehicleState settings in db");
 		} else {
 			var fwBuild = docs[0].vehicleState.car_version;
-			if (fwBuild.substr(0,4) == "1.25")
-				fwVersion = "4.3 ";
-			else if (fwBuild.substr(0,4) == "1.31")
-				fwVersion = "4.4 ";
-			else if (fwBuild.substr(0,4) == "1.33")
-				fwVersion = "4.5 ";
-			else if (fwBuild.substr(0,4) == "1.35")
-				fwVersion = "5.0 ";
-			else if (fwBuild.substr(0,4) == "1.45")
-				fwVersion = "5.6 ";
-			fwVersion += "(" + fwBuild + ")";
+            if (fwBuild != undefined) {
+			    if (fwBuild.substr(0,4) == "1.25")
+			    	fwVersion = "4.3 ";
+			    else if (fwBuild.substr(0,4) == "1.31")
+				    fwVersion = "4.4 ";
+			    else if (fwBuild.substr(0,4) == "1.33")
+				    fwVersion = "4.5 ";
+			    else if (fwBuild.substr(0,4) == "1.35")
+				    fwVersion = "5.0 ";
+			    else if (fwBuild.substr(0,4) == "1.45")
+				    fwVersion = "5.6 ";
+			    else if (fwBuild.substr(0,4) == "1.49")
+				    fwVersion = "5.8 ";
+			    fwVersion += "(" + fwBuild + ")";
+            } else {
+			    fwVersion = 'unknown';
+            }
 		}
 	});
 
