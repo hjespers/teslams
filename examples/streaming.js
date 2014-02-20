@@ -113,7 +113,7 @@ function tsla_poll( vid, long_vid, token ) {
         return;
     } 
     if (long_vid == undefined || token == undefined) {
-        console.log('Error: undefined vehicle_id (' + long_vid +') or token (' + token +')' );
+        console.log('Error: undefined vehicle_id (' + long_vid +') or token (' + token +')');
         console.log('Exiting...');
         process.exit(1);
     } 
@@ -258,23 +258,26 @@ function tsla_poll( vid, long_vid, token ) {
             return;
         }
     }).on('data', function(data) {
-        var d, vals, i, record, doc;
         // TODO: parse out shift_state field and assign to a global for better sleep checking
-        // TODO: implement sleep mode for file based output, not just mongodb output
-        if (argv.db) {
-            d = data.toString().trim();
-            vals = d.split(/[,\n\r]/);
-            //check we have a valid timestamp to avoid interpreting corrupt stream data             
-            if ( isNaN(vals[0]) || vals[0] < 1340348400000) { //tesla epoch
-                ulog('Bad timestamp (' + vals[0] + ')' );
-            } else {
-                for (i = 0; i < vals.length; i += nFields) {
-                    record = vals.slice(i, nFields);
-                    doc = { 'ts': +vals[i], 'record': record };
-                    collectionS.insert(doc, { 'safe': true }, function(err,docs) {
+        var d, vals, i, record, doc;              
+		d = data.toString().trim();
+		vals = d.split(/[,\n\r]/);
+		//check we have a valid timestamp to avoid interpreting corrupt stream data             
+		if ( isNaN(vals[0]) || vals[0] < 1340348400000) { //tesla epoch
+			ulog('Bad timestamp (' + vals[0] + ')' );
+		} else {
+            if (argv.db) {
+            
+                //for (i = 0; i < vals.length; i += nFields) { // seems unecessary and loops once anyway
+                
+                record = vals.slice(0, nFields);
+                	doc = { 'ts': +vals[0], 'record': record };
+                	collectionS.insert(doc, { 'safe': true }, function(err,docs) {
                         if(err) util.log(err);
-                    });
-                }   
+                	});   
+                	
+                //}
+                
                 lastss = ss; 
                 ss = vals[9]; // TODO: fix hardcoded position for shift_state
                 // [HJ] this section goes with the code above which allows one last poll
@@ -293,9 +296,9 @@ function tsla_poll( vid, long_vid, token ) {
                     lastss = 'abort';
                     initstream();
                 }
+            } else {
+                  stream.write(data);
             }
-        } else {
-            stream.write(data);
         }
     });     
 }
