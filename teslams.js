@@ -5,8 +5,12 @@ var portal = 'https://portal.vn.teslamotors.com';
 exports.portal = portal;
 
 var report = function(error, response, body, cb) {
-  if (!!cb) cb(error || (new Error(response.statusCode + ': ' + body)));
+  if (!!cb) cb(error || (new Error(response.statusCode + ': ' + body)), body);
 };
+var report2 = function(call, body, cb) {
+  if (typeof cb === 'function') cb(new Error('expecting JSON response to ' + call + ' request'), body);
+};
+
 
 // backwards-compatible with previous API
 // all() gives the callback the raw response to the /vehicles call
@@ -58,8 +62,7 @@ function mobile_enabled( vid, cb ) {
 			if (typeof cb == 'function') return cb( data );  
 			else return true;
 		} catch (err) {
-			if (typeof cb == 'function') return cb( new Error('expecting JSON response to mobile_enabled request') );  
-			else return false;
+			return report2('mobile_enabled', body, cb);
 		}
 	});
 }
@@ -73,8 +76,7 @@ function get_charge_state( vid, cb ) {
 			if (typeof cb == 'function') return cb( data );  
 			else return true;
 		} catch (err) {
-			if (typeof cb == 'function') return cb( new Error('expecting JSON response to charge_state request') );  
-			else return false;
+			return report2('charge_state', body, cb);
 		}
 	});
 }
@@ -88,8 +90,7 @@ function get_climate_state( vid, cb ) {
 			if (typeof cb == 'function') return cb( data );  
 			else return true;
 		} catch (err) {
-			if (typeof cb == 'function') return cb( new Error('expecting JSON response to climate_state request') );  
-			else return false;
+			return report2('climate_state', body, cb);
 		}
 	});
 }
@@ -103,8 +104,7 @@ function get_drive_state( vid, cb ) {
 			if (typeof cb == 'function') return cb( data );  
 			else return true;
 		} catch (err) {
-			if (typeof cb == 'function') return cb( new Error('expecting JSON response to drive_state request') );  
-			else return false;
+			return report2('drive_state', body, cb);
 		}
 	});
 }
@@ -118,8 +118,7 @@ function get_vehicle_state( vid, cb ) {
 			if (typeof cb == 'function') return cb( data );  
 			else return true;
 		} catch (err) {
-			if (typeof cb == 'function') return cb( new Error('expecting JSON response to vehicle_state request') );  
-			else return false;
+			return report2('vehicle_state', body, cb);
 		}
 	});
 }
@@ -133,8 +132,7 @@ function get_gui_settings( vid, cb ) {
 			if (typeof cb == 'function') return cb( data );  
 			else return true;
 		} catch (err) {
-			if (typeof cb == 'function') return cb( new Error('expecting JSON response to gui_settings request') );  
-			else return false;
+			return report2('gui_settings', body, cb);
 		}
 	});
 }
@@ -148,8 +146,7 @@ function wake_up( vid, cb ) {
 			if (typeof cb == 'function') return cb( data );  
 			else return true;
 		} catch (err) {
-			if (typeof cb == 'function') return cb( new Error('expecting JSON response to wake_up request') );  
-			else return false;
+			return report2('wake_up', body, cb);
 		}
 	});
 }
@@ -163,8 +160,7 @@ function open_charge_port( vid, cb ) {
 			if (typeof cb == 'function') return cb( data );  
 			else return true;
 		} catch (err) {
-			if (typeof cb == 'function') return cb( new Error('expecting JSON response to charge_port_door_open request') );  
-			else return false;
+			return report2('charge_port_door_open', body, cb);
 		}
 	});
 }
@@ -191,8 +187,7 @@ function charge_state( params, cb ) {
 				if (typeof cb == 'function') return cb( data );  
 				else return true;
 			} catch (err) {
-				if (typeof cb == 'function') return cb( new Error('expecting JSON response to charge_' + state + ' request') );  
-				else return false;
+				return report2('charge_' + state, body, cb);
 			}
 		});
 	} else {
@@ -224,8 +219,7 @@ function charge_range( params, cb ) {
 				if (typeof cb == 'function') return cb( data );  
 				else return true;
 			} catch (err) {
-				if (typeof cb == 'function') return cb( new Error('expecting JSON response to charge_' + range + ' request') );  
-				else return false;
+				return report2('charge_' + range, body, cb);
 			}
 		});
 	} else if ( range == "set" && (percent >= 50) && (percent <= 100) ) {
@@ -236,8 +230,7 @@ function charge_range( params, cb ) {
 				if (typeof cb == 'function') return cb( data );  
 				else return true;
 			} catch (err) {
-				if (typeof cb == 'function') return cb( new Error('expecting JSON response to set_charge_limit request') );  
-				else return false;
+				return report2('set_charge_limit', body, cb);
 			}
 		});
 	} else {
@@ -257,8 +250,7 @@ function flash( vid, cb ) {
 			if (typeof cb == 'function') return cb( data );  
 			else return true;
 		} catch (err) {
-			if (typeof cb == 'function') return cb( new Error('expecting JSON response to flash_lights request') );  
-			else return false;
+			return report2('flash_lights', body, cb);
 		}
 	});
 }
@@ -272,8 +264,7 @@ function honk( vid, cb ) {
 			if (typeof cb == 'function') return cb( data );  
 			else return true;
 		} catch (err) {
-			if (typeof cb == 'function') return cb( new Error('expecting JSON response to honk_horn request') );  
-			else return false;
+			return report2('honk_horn', body, cb);
 		}
 	});
 }
@@ -292,8 +283,7 @@ function door_lock( params, cb ) {
 				if (typeof cb == 'function') return cb( data );  
 				else return true;
 			} catch (err) {
-				if (typeof cb == 'function') return cb( new Error('expecting JSON response to door_lock request') );  
-				else return false;
+				return report2('door_lock', body, cb);
 			}
 		});
 	} else if (state == "unlock" || state === false || state == "off" || state == "open" ) {
@@ -304,8 +294,7 @@ function door_lock( params, cb ) {
 				if (typeof cb == 'function') return cb( data );  
 				else return true;
 			} catch (err) {
-				if (typeof cb == 'function') return cb( new Error('expecting JSON response to door_unlock request') );  
-				else return false;
+				return report2('door_unlock', body, cb);
 			}
 		});
 	} else {
@@ -348,8 +337,7 @@ function set_temperature( params, cb ) {
 				if (typeof cb == 'function') return cb( data );  
 				else return true;
 			} catch (err) {
-				if (typeof cb == 'function') return cb( new Error('expecting JSON response to set_temps request') );  
-				else return false;
+				return report2('set_temps', body, cb);
 			}
 		});
 	} else {
@@ -376,8 +364,7 @@ function auto_conditioning( params, cb ) {
 				if (typeof cb == 'function') return cb( data );  
 				else return true;
 			} catch (err) {
-				if (typeof cb == 'function') return cb( new Error('expecting JSON response to auto_conditioning_start request') );  
-				else return false;
+				return report2('auto_conditioning_start', body, cb);
 			}
 		});
 	} else if (state == "stop" || state === false || state == "off"  ) {
@@ -388,8 +375,7 @@ function auto_conditioning( params, cb ) {
 				if (typeof cb == 'function') return cb( data );  
 				else return true;
 			} catch (err) {
-				if (typeof cb == 'function') return cb( new Error('expecting JSON response to auto_conditioning_stop request') );  
-				else return false;
+				return report2('auto_conditioning_stop', body, cb);
 			}
 		});
 	} else {
@@ -422,8 +408,7 @@ function sun_roof( params, cb ) {
 				if (typeof cb == 'function') return cb( data );  
 				else return true;
 			} catch (err) {
-				if (typeof cb == 'function') return cb( new Error('expecting JSON response to sun_roof_control request') );  
-				else return false;
+				return report2('sun_roof_control ' + state, body, cb);
 			}
 		});
 	} else if ( (state == "move") && (percent >= 0) && (percent <= 100) ) {
@@ -435,8 +420,7 @@ function sun_roof( params, cb ) {
 				if (typeof cb == 'function') return cb( data );  
 				else return true;
 			} catch (err) {
-				if (typeof cb == 'function') return cb( new Error('expecting JSON response to sun_roof_control move request') );  
-				else return false;
+				return report2('sun_roof_control move', body, cb);
 			}
 		});
 	} else {
