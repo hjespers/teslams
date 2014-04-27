@@ -90,7 +90,7 @@ div#container { margin-top: 0;
 		padding-top: 1em;
 		padding-bottom: 1em;
 		border-radius: 0 0 10px 10px;
-		background-color: rgba(244,244,244,0.9);
+		background-color: rgba(244,244,244,0.2);
 		border: 3px solid rgba(2,2,2,0.28);
 		width: 94%;
 		height: auto;
