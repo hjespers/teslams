@@ -2,7 +2,7 @@
 html { height: 100% }
 body { height: 100%; margin: 0; padding: 1em; background-color: #FFFFFF; }
 label.grid { display: inline-block; width: 5em; }
-#map-canvas { height:85%; }
+#map-canvas { height: 512px; }
 #speedSlider { width: 30%; }
 #top { padding-bottom: 0.5em; }
 #speed { border: 0; background-color: #EEE; }
@@ -92,8 +92,8 @@ div#container { margin-top: 0;
 		border-radius: 0 0 10px 10px;
 		background-color: rgba(244,244,244,0.9);
 		border: 3px solid rgba(2,2,2,0.28);
-		height: 95%;
 		width: 94%;
+		height: auto;
 		left: 3%;
 		right: 3%;
 		position: absolute;
