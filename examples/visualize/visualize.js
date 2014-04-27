@@ -55,7 +55,7 @@ var http = require('http');
 var fs = require('fs');
 var lastTime = 0;
 var started = false;
-var to;
+var from, to;
 var capacity;
 var express = require('express');
 var app = express();
@@ -181,7 +181,7 @@ function ensureAuthenticated(req, res, next) {
     if (users === undefined || req.isAuthenticated()) {
         return next();
     }
-    res.redirect('/login')
+    res.redirect('/login');
 }
 
 // read in the shared navigation bar so we can insert this into every page
@@ -335,7 +335,7 @@ app.get('/getdata', ensureAuthenticated, function (req, res) {
             console.log('error connecting to database:', err);
             return;
         }
-        collection = db.collection("tesla_stream");
+        var collection = db.collection("tesla_stream");
         if (req.query.at === null) {
             if (argv.verbose) console.log("why is there no 'at' parameter???");
             return;
@@ -365,7 +365,7 @@ app.get('/storetrip', ensureAuthenticated, function(req, res) {
             console.log('error connecting to database:', err);
             return;
         }
-        collection = db.collection("trip_data");
+        var collection = db.collection("trip_data");
         collection.remove({ 'dist': '-1'}, function(err,docs) {
             collection.insert(req.query, { 'safe': true }, function(err,docs) {
                 if (err) {
@@ -384,7 +384,7 @@ app.get('/getlasttrip', ensureAuthenticated, function(req, res) {
             console.log('error connecting to database:', err);
             return;
         }
-        collection = db.collection("trip_data");
+        var collection = db.collection("trip_data");
         var options = { 'sort': [['chargeState.battery_range', 'desc']] };
         collection.find({},{ 'sort': [['from', 'desc']], 'limit': 1 }).toArray(function(err,docs) {
             console.log(docs);
@@ -403,7 +403,7 @@ app.get('/update', ensureAuthenticated, function (req, res) {
             console.log('error connecting to database:', err);
             return;
         }
-        collection = db.collection("tesla_stream");
+        var collection = db.collection("tesla_stream");
         if (req.query.until === null) {
             console.log("why is there no 'until' parameter???");
             return;
@@ -465,7 +465,7 @@ app.get('/map', ensureAuthenticated, function(req, res) {
             console.log('error connecting to database:', err);
             return;
         }
-        collection = db.collection("tesla_stream");
+        var collection = db.collection("tesla_stream");
         var searchString = {$gte: +from, $lte: +to};
         collection.find({"ts": searchString}).limit(1).toArray(function(err,docs) {
             if (argv.verbose) console.log("got datasets:", docs.length);
@@ -521,7 +521,7 @@ app.get('/energy', ensureAuthenticated, function(req, res) {
             return;
         }
         res.setHeader("Content-Type", "text/html");
-        collection = db.collection("tesla_stream");
+        var collection = db.collection("tesla_stream");
         collection.find({"ts": {$gte: +from, $lte: +to}}).toArray(function(err,docs) {
             docs.forEach(function(doc) {
                 vals = doc.record.toString().replace(",,",",0,").split(",");
@@ -575,7 +575,7 @@ app.get('/energy', ensureAuthenticated, function(req, res) {
 
             // now look for data in the aux collection
 
-            collection = db.collection("tesla_aux");
+            var collection = db.collection("tesla_aux");
             var maxAmp = 0, maxVolt = 0, maxMph = 0, maxPower = 0;
             var outputAmp = "", outputVolt = "", outputPower = "";
             var amp, volt, power;
@@ -586,7 +586,7 @@ app.get('/energy', ensureAuthenticated, function(req, res) {
                 outputAmp = "[" + (+firstDate) + ",0]";
                 outputVolt = "[" + (+firstDate) + ",0]";
                 outputPower = "[" + (+firstDate) + ",0]";
-                comma = "";
+                var comma = "";
                 docs.forEach(function(doc) {
                     amp = volt = 0;
                     if(doc.chargeState.charging_state === 'Charging') {
@@ -731,7 +731,7 @@ app.get('/test', ensureAuthenticated, function(req, res) {
             db.close();
             fs.readFile(__dirname + "/test.html", "utf-8", function(err, data) {
                 if (err) throw err;
-                res.send(data.replace("MAGIC_TEST", output))
+                res.send(data.replace("MAGIC_TEST", output));
             });
         });
     });
@@ -763,7 +763,7 @@ app.get('/stats', ensureAuthenticated, function(req, res) {
             return;
         }
         res.setHeader("Content-Type", "text/html");
-        collection = db.collection("tesla_stream");
+        var collection = db.collection("tesla_stream");
         if (argv.verbose)
             console.log("starting DB request after", new Date().getTime() - debugStartTime, "ms");
         collection.find({"ts": {"$gte": from.getTime(), "$lte": to.getTime()}}).toArray(function(err,docs) {
@@ -790,8 +790,7 @@ app.get('/stats', ensureAuthenticated, function(req, res) {
                 var ld = new Date(lastDate);
                 if (lw == week && f !== true)
                     return;
-                var wts = ld.getTime() - 24 * 3600 * 1000 * ld.getDay() - 3600 * 1000 * ld.getHours()
-                            - 60 * 1000 * ld.getMinutes() - 1000 * ld.getSeconds() - ld.getMilliseconds();
+                var wts = ld.getTime() - 24 * 3600 * 1000 * ld.getDay() - 3600 * 1000 * ld.getHours() - 60 * 1000 * ld.getMinutes() - 1000 * ld.getSeconds() - ld.getMilliseconds();
                 outputWD += commaW + "[" + wts + "," + distW + "]";
                 outputWC += commaW + "[" + wts + "," + chargeW + "]";
                 commaW = ",";
@@ -898,8 +897,7 @@ app.get('/stats', ensureAuthenticated, function(req, res) {
                     } else {
                         ld = new Date(lastDate);
                     }
-                    var wts = ld.getTime() - 24 * 3600 * 1000 * ld.getDay() - 3600 * 1000 * ld.getHours()
-                                - 60 * 1000 * ld.getMinutes() - 1000 * ld.getSeconds() - ld.getMilliseconds();
+                    var wts = ld.getTime() - 24 * 3600 * 1000 * ld.getDay() - 3600 * 1000 * ld.getHours() - 60 * 1000 * ld.getMinutes() - 1000 * ld.getSeconds() - ld.getMilliseconds();
                     outputWY += commaW + "[" + wts + "," + vampirekWhW + "]";
                     outputWCN += commaW + "[" + wts + "," + chargekWhW + "]";
                     outputWUsed += commaW + "[" + wts + "," + usedW + "]";
@@ -910,7 +908,9 @@ app.get('/stats', ensureAuthenticated, function(req, res) {
                         outputWA += commaW + "null";
                     }
                     commaW = ",";
-                    chargekWhW = 0, vampirekWhW = 0, usedW = 0;
+                    chargekWhW = 0;
+                    vampirekWhW = 0;
+                    usedW = 0;
                 }
                 function updateChargeValues(d) {
                     if (vState1) {
@@ -1051,7 +1051,7 @@ app.get('/fahrtenbuch', ensureAuthenticated, function(req, res) {
                 console.log('error connecting to database:', err);
                 return;
             }
-            collection = db.collection("trip_data");
+            var collection = db.collection("trip_data");
             // strangely the timestamps end up in the database as strings
             var searchString = {$and: [ {'from': {$gte: ""+from.getTime()}}, {'to': {$lte: ""+to.getTime()}} ] };
             collection.find(searchString).toArray(function(err,docs) {
