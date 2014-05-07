@@ -2,7 +2,7 @@
 var util = require('util');
 var teslams = require('../teslams.js');
 var argv = require('optimist')
-    .usage('Usage: $0 -u <username> -p <password> -acdFgHimPtvwXZ -A [on|off] -C [start|stop] -R [std|max|50-90,100] -S [close|vent|comfort|open|0-100] -L [lock|unlock] -T temp')
+    .usage('Usage: $0 -u <username> -p <password> -acdFgHimMPtvVwXZ -A [on|off] -C [start|stop] -R [std|max|50-90,100] -S [close|vent|comfort|open|0-100] -L [lock|unlock] -T temp')
     .alias('u', 'username')
     .describe('u', 'Teslamotors.com login')
     .alias('p', 'password')
@@ -45,8 +45,12 @@ var argv = require('optimist')
     .alias('A', 'climate')
     .alias('A', 'air')
     .describe('A', 'Turn the air conditioning and heating on/off')
-    .alias('C', 'charge')
+    .alias('M', 'metric')
+    .describe('M', 'Convert and print all values into metric units')
+    .alias('C', 'charge')   
     .describe('C', 'Turn the charging on/off')
+    .alias('V', 'version')   
+    .describe('V', 'Print the version of teslams')
     .alias('?', 'help')
     .describe('?', 'Print usage information');
 
@@ -55,8 +59,8 @@ var argv = require('optimist')
 var creds = require('./config.js').config(argv);
 argv = argv.argv;
 
-if ( argv.help == true ) {
-    console.log( 'Usage: teslacmd.js -u <username> -p <password> -acdFgHimPtvwXZ');
+if ( argv.help === true ) {
+    console.log( 'Usage: teslacmd.js -u <username> -p <password> -acdFgHimPtvVwXZ');
     console.log( '                   -A [on|off] -C [start|stop] -R [std|max|50-90|100]');
     console.log( '                   -S [close|vent|comfort|open|0-100] -L [lock|unlock] -T temp');
     console.log( '\nOptions:');
@@ -69,10 +73,12 @@ if ( argv.help == true ) {
     console.log( '  -g, --gui       Display the GUI settings                                                    [boolean]');
     console.log( '  -H, --honk      Honk the car horn                                                           [boolean]');
     console.log( '  -m, --mobile    Display the mobile state                                                    [boolean]');
+    console.log( '  -M, --metric    Convert measurements in metric unit                                         [boolean]');
     console.log( '  -P, --port      Open charge port door                                                       [boolean]');
     console.log( '  -t              Display the climate/temp state                                              [boolean]');
     console.log( '  -v              Display the vehicle state                                                   [boolean]');
     console.log( '  -i, --info      Print vehicle info                                                          [boolean]');
+    console.log( '  -V, --version   Print version of teslams software                                           [boolean]');
     console.log( '  -w, --wake      Wake up the car telemetry                                                   [boolean]');
     console.log( '  -X, --isplugged Check if car is plugged in and continue only if connected to a charger      [boolean]');
     console.log( '  -Z, --isawake   Check if car is asleep and continue only if awake                           [boolean]');
@@ -83,7 +89,19 @@ if ( argv.help == true ) {
     console.log( '  -L, --lock      Lock/Unlock the car doors                                                 ');
     console.log( '  -T, --temp      Set the car climate control temperature (in Celcius)                      ');
     console.log( '  -?, --help      Print usage information                                                   ');
-    process.exit(1);
+    process.exit();
+}
+
+if (argv.version) {
+    try
+    {
+        var package = JSON.parse(require('fs').readFileSync("../package.json").toString());
+        console.log( package.version );
+        process.exit();
+    } catch (err) {
+        console.warn("Unable to load package.json file");
+        process.exit(1);
+    }
 }
 
 function pr( stuff ) {
@@ -97,6 +115,7 @@ function parseArgs( vehicle ) {
     if (argv.w) {
         teslams.wake_up( vid, pr );
     }
+
     //
     // get some info
     //
@@ -104,10 +123,22 @@ function parseArgs( vehicle ) {
         teslams.mobile_enabled( vid, pr );
     }
     if (argv.c) {
-        teslams.get_charge_state( vid, pr );
+        teslams.get_charge_state( vid, function ( cs ) {
+            if (argv.metric) {
+                if (cs.battery_range !== undefined) cs.metric_battery_range = (cs.battery_range * 1.609344).toFixed(2);
+                if (cs.est_battery_range !== undefined) cs.metric_est_battery_range = (cs.est_battery_range * 1.609344).toFixed(2);
+                if (cs.ideal_battery_range !== undefined) cs.metric_ideal_battery_range = (cs.ideal_battery_range * 1.609344).toFixed(2);
+            } 
+            pr(cs);
+        } );
     }
     if (argv.t) {
-        teslams.get_climate_state( vid, pr );
+        teslams.get_climate_state( vid, function (ds) {
+            if (argv.metric && ds.speed !== undefined && ds.speed !== null) {
+                ds.metric_speed = (ds.speed * 1.609344).toFixed(2);
+            }
+            pr(ds);
+        } );
     }
     if (argv.d) {
         teslams.get_drive_state( vid, pr );
@@ -133,10 +164,10 @@ function parseArgs( vehicle ) {
     //
     // control some stuff
     //
-    if ( argv.lock != undefined ) {
+    if ( argv.lock !== undefined ) {
         teslams.door_lock( {id: vid, lock: argv.lock }, pr );
     }
-    if ( argv.roof != undefined ) {
+    if ( argv.roof !== undefined ) {
         if ( argv.roof >= 0 && argv.roof <= 100 ) {
             teslams.sun_roof( {id: vid, roof: 'move', percent: argv.roof }, pr );
         } else if (argv.roof == "open" || argv.roof == "close" || argv.roof == "comfort" || argv.roof == "vent") {
@@ -146,17 +177,17 @@ function parseArgs( vehicle ) {
             return pr( err );           
         }
     }
-    if ( argv.climate != undefined ) {
+    if ( argv.climate !== undefined ) {
         teslams.auto_conditioning( { id: vid, climate: argv.climate}, pr ); 
     }
-    if ( argv.range != undefined ) {
+    if ( argv.range !== undefined ) {
         if ( argv.range >= 50 && argv.range <= 100 ) {
             teslams.charge_range( { id: vid, range: 'set', percent: argv.range }, pr );
         } else {
             teslams.charge_range( { id: vid, range: argv.range }, pr ); 
         }
     }
-    if ( argv.charge != undefined ) {
+    if ( argv.charge !== undefined ) {
         if (argv.charge == "start" || argv.charge == "stop" ) {
             teslams.charge_state( { id: vid, charge: argv.charge }, pr ); 
         } else {
@@ -164,7 +195,7 @@ function parseArgs( vehicle ) {
             return pr( err );
         }
     }
-    if ( argv.temp != undefined ) {
+    if ( argv.temp !== undefined ) {
         if ( argv.temp <= teslams.TEMP_HI && argv.temp >= teslams.TEMP_LO) {
             teslams.set_temperature( { id: vid, dtemp: argv.temp}, pr); 
         } else {
@@ -191,7 +222,7 @@ teslams.all( { email: creds.username, password: creds.password }, function ( err
     }
         vehicle = data[0];
     //check the vehicle has a valid id
-    if (vehicle.id == undefined) {
+    if (vehicle.id === undefined) {
         pr( new Error('expecting vehicle ID from Tesla Motors cloud service'));
         process.exit(1);
     }
