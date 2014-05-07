@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 require('pkginfo')(module, 'version');
 
-
 var util = require('util');
 var teslams = require('../teslams.js');
 var argv = require('optimist')
@@ -129,15 +128,20 @@ function parseArgs( vehicle ) {
         } );
     }
     if (argv.t) {
-        teslams.get_climate_state( vid, function (ds) {
-            if (argv.metric && ds.speed !== undefined && ds.speed !== null) {
-                ds.metric_speed = (ds.speed * 1.609344).toFixed(2);
-            }
-            pr(ds);
-        } );
+        teslams.get_climate_state( vid, pr);
     }
     if (argv.d) {
-        teslams.get_drive_state( vid, pr );
+        teslams.get_drive_state( vid, function (ds) {
+            console.log( typeof ds.speed);
+            if (argv.metric && typeof ds.speed !== "undefined") {
+                if (ds.speed === null) {
+                    ds.metric_speed = null;
+                } else {
+                    ds.metric_speed = (ds.speed * 1.609344).toFixed(0);
+                }
+            }
+            pr(ds);
+        });
     }
     if (argv.v) {
         teslams.get_vehicle_state( vid, pr );
