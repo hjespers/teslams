@@ -1,4 +1,7 @@
 #!/usr/bin/env node
+require('pkginfo')(module, 'version');
+
+
 var util = require('util');
 var teslams = require('../teslams.js');
 var argv = require('optimist')
@@ -93,15 +96,8 @@ if ( argv.help === true ) {
 }
 
 if (argv.version) {
-    try
-    {
-        var package = JSON.parse(require('fs').readFileSync("../package.json").toString());
-        console.log( package.version );
-        process.exit();
-    } catch (err) {
-        console.warn("Unable to load package.json file");
-        process.exit(1);
-    }
+    console.log( module.exports.version );
+    process.exit();
 }
 
 function pr( stuff ) {
