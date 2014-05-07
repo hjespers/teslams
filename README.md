@@ -194,8 +194,8 @@ For help run :
 	  -t              Display the climate/temp state                               [boolean]
 	  -v              Display the vehicle state                                    [boolean]
 	  -w, --wake      Wake up the car telemetry                                    [boolean]
-          -X, --isplugged Check if car is plugged in and continue only if connected    [boolean]
-          -Z, --isawake   Check if car is asleep and continue only if awake            [boolean]
+      -X, --isplugged Check if car is plugged in and continue only if connected    [boolean]
+      -Z, --isawake   Check if car is asleep and continue only if awake            [boolean]
 	  -A, --climate   Turn the air conditioning and heating on/off               
 	  -C, --charge    Turn the charging on/off                                   
 	  -R, --range     Charging range mode: "std", "max", or %limit (50-90, or 100 )                       
