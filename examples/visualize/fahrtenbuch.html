@@ -17,16 +17,14 @@ function updateKennzeichen(kennzeichen) {
 	$(".kennzeichen").html(kennzeichen);
 }
 $(function() {
-	var myUrl = $.url('protocol') + "://" + $.url('auth') + (($.url('auth').length > 0) ? "@" : "") +
-		$.url('hostname') + ":" + $.url('port');
 	parseDates($.url("?from"), $.url("?to"));
 	$("#frompicker").val(datepickers.fromQ);
 	$("#topicker").val(datepickers.toQ);
-	datepickers(myUrl + '/fahrtenbuch');
-	$("#statslink").attr("href", myUrl + "/stats?from=" + datepickers.fromQ + "&to=" + datepickers.toQ);
-	$("#maplink").attr("href", myUrl + "/map?from=" + datepickers.fromQ + "&to=" + datepickers.toQ);
-	$("#energylink").attr("href", myUrl + "/energy?from=" + datepickers.fromQ + "&to=" + datepickers.toQ);
-	$("#triplink").attr("href", myUrl + "/trip");
+	datepickers(myUrl + 'fahrtenbuch');
+	$("#statslink").attr("href", "stats?from=" + datepickers.fromQ + "&to=" + datepickers.toQ);
+	$("#maplink").attr("href", "map?from=" + datepickers.fromQ + "&to=" + datepickers.toQ);
+	$("#energylink").attr("href", "energy?from=" + datepickers.fromQ + "&to=" + datepickers.toQ);
+	$("#triplink").attr("href", "trip");
 	var d = [MAGIC_ADDR_TABLE];
 	function getAddress(idx, startStop) {
 		// console.log("http://maps.googleapis.com/maps/api/geocode/json?latlng=" + d[idx][0 + 2 * startStop] + "," + d[idx][1 + 2 * startStop] + "&sensor=true");

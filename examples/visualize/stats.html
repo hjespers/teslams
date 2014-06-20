@@ -16,8 +16,8 @@
 <script language="javascript" type="text/javascript" src="url.min.js"></script>
 <script type="text/javascript">
 $(function() {
-	var p, previousPoint, myUrl, d1, d2, d3, d4, d5, data, options, eschart;
-	var pw, previousPointW, myUrl, dw1, dw2, dw3, dw4, dw5, dataw, optionsw, weschart;
+	var p, previousPoint, d1, d2, d3, d4, d5, data, options, eschart;
+	var pw, previousPointW, dw1, dw2, dw3, dw4, dw5, dataw, optionsw, weschart;
 	var lang;
 	function showTooltip(x, y, contents) {
 		$('<div id="tooltip">' + contents + '</div>').css( {
@@ -51,8 +51,6 @@ $(function() {
 			previousPoint = null;
 		}
 	});
-	myUrl = $.url('protocol') + "://" + $.url('auth') + (($.url('auth').length > 0) ? "@" : "") +
-		$.url('hostname') + ":" + $.url('port');
 	parseDates($.url("?from"), $.url("?to"));
 	system = MAGIC_DISPLAY_SYSTEM;
 	if ($.url("?metric") === "true")
@@ -74,11 +72,11 @@ $(function() {
 	$("div#explanation2").html(conv("label", $("div#explanation2").text(), lang));
 	$("#frompicker").val(datepickers.fromQ);
 	$("#topicker").val(datepickers.toQ);
-	datepickers(myUrl + '/stats', params);
-	$("#maplink").attr("href", myUrl + "/map?from=" + datepickers.fromQ + "&to=" + datepickers.toQ + params);
-	$("#statslink").attr("href", myUrl + "/stats?from=" + datepickers.fromQ + "&to=" + datepickers.toQ + params);
-	$("#energylink").attr("href", myUrl + "/energy?from=" + datepickers.fromQ + "&to=" + datepickers.toQ + params);
-	$("#triplink").attr("href", myUrl + "/trip");
+	datepickers('stats', params);
+	$("#maplink").attr("href", "map?from=" + datepickers.fromQ + "&to=" + datepickers.toQ + params);
+	$("#statslink").attr("href", "stats?from=" + datepickers.fromQ + "&to=" + datepickers.toQ + params);
+	$("#energylink").attr("href", "energy?from=" + datepickers.fromQ + "&to=" + datepickers.toQ + params);
+	$("#triplink").attr("href", "trip");
 	d1 = [MAGIC_DISTANCE];
 	d4 = [MAGIC_KWH];
 	d5 = [MAGIC_VKWH];

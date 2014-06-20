@@ -13,8 +13,6 @@
 $(function() {
 	var now = new Date();
 	var start = new Date(+now - 12 * 3600000);
-	var myUrl = $.url('protocol') + "://" + $.url('auth') + (($.url('auth').length > 0) ? "@" : "") +
-		$.url('hostname') + ":" + $.url('port');
 	var fromQ = $.url("?from");
 	if (fromQ == null || fromQ == "") {
 		fromQ = start.getFullYear() + "-" + (+start.getMonth() + 1) + "-" + start.getDate() + "-" +
@@ -29,9 +27,9 @@ $(function() {
 	if (toQ.split("-").length == 5) toQ += "-00";
 	$("#frompicker").val(fromQ);
 	$("#topicker").val(toQ);
-	$("#maplink").attr("href", myUrl + "/map?from=" + fromQ + "&to=" + toQ);
-	$("#statslink").attr("href", myUrl + "/stats?from=" + fromQ + "&to=" + toQ);
-	$("#energylink").attr("href", myUrl + "/energy?from=" + fromQ + "&to=" + toQ);
+	$("#maplink").attr("href", "map?from=" + fromQ + "&to=" + toQ);
+	$("#statslink").attr("href", "stats?from=" + fromQ + "&to=" + toQ);
+	$("#energylink").attr("href", "energy?from=" + fromQ + "&to=" + toQ);
 	$("#frompicker").datetimepicker({
 		dateFormat: "yy-mm-dd",
 		timeFormat: "HH-mm-ss",
@@ -40,9 +38,9 @@ $(function() {
 		onClose: function(dateText, inst) {
 			if (dateText.length > 10 && compareTime(dateText, fromQ) != 0) {
 				fromQ = dateText;
-				$("#maplink").attr("href", myUrl + "/map?from=" + fromQ + "&to=" + toQ);
-				$("#statslink").attr("href", myUrl + "/stats?from=" + fromQ + "&to=" + toQ);
-				$("#energylink").attr("href", myUrl + "/energy?from=" + fromQ + "&to=" + toQ);
+				$("#maplink").attr("href", "map?from=" + fromQ + "&to=" + toQ);
+				$("#statslink").attr("href", "stats?from=" + fromQ + "&to=" + toQ);
+				$("#energylink").attr("href", "energy?from=" + fromQ + "&to=" + toQ);
 			}
 		}
 	});
@@ -54,9 +52,9 @@ $(function() {
 		onClose: function(dateText, inst) {
 			if (dateText.length > 10 && compareTime(dateText, toQ) != 0) {
 				toQ = dateText;
-				$("#maplink").attr("href", myUrl + "/map?from=" + fromQ + "&to=" + toQ);
-				$("#statslink").attr("href", myUrl + "/stats?from=" + fromQ + "&to=" + toQ);
-				$("#energylink").attr("href", myUrl + "/energy?from=" + fromQ + "&to=" + toQ);
+				$("#maplink").attr("href", "map?from=" + fromQ + "&to=" + toQ);
+				$("#statslink").attr("href", "stats?from=" + fromQ + "&to=" + toQ);
+				$("#energylink").attr("href", "energy?from=" + fromQ + "&to=" + toQ);
 			}
 		}
 	});

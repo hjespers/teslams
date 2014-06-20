@@ -7,16 +7,19 @@
 	{
 		"username": "teslamotors.com username/email",
 		"password": "teslamotors.com password",
-		"visualize": [
+		"visualize": {
+			"baseUrl": "/teslavis",
+			"webusers": [
 				{ "id": 1, "username": "dirk", "password": "secret" },
 				{ "id": 2, "username": "bob", "password": "different" }
 			]
+		}
 	}
 
 	If there is any trouble loading or parsing that file,
 	make the optimist args required as usual.
 
-	This now also contains the user/password database for visualize.js.
+	This now also contains the web user/password database and path for visualize.js.
 	Please note that here all the properties need to be in quotes as we are parsing
 	this file as JSON - so don't just copy the array as it was in visualize.js before
 	(where id, username and password were NOT quoted).
@@ -42,11 +45,11 @@ exports.config = function (opt)
 		}
 		if (configSuccess)
 		{
-			console.log("found " + config.visualize.length + " user / password entries; enabling authentication");
+			console.log("found " + config.visualize.webusers.length + " user / password entries; enabling web authentication");
 		}
 		else
 		{
-			console.log("didn't find 'visualize' property in config file, authentication turned off");
+			console.log("didn't find 'visualize' property in config file, web authentication turned off");
 		}
 		return config;
 	}

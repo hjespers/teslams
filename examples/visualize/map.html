@@ -11,7 +11,6 @@
 <script type='text/javascript' src='https://maps.googleapis.com/maps/api/js?key=MAGIC_APIKEY&sensor=true'></script>
 <script type='text/javascript'>
 var myLatlng, map, marker, infoWindow, lastDrawn = -1;
-var myUrl = "";
 var speedup, replayControl;
 var msecPerUpdate = 2000; // get AJAX data every 2 seconds
 var drawTimeIncr = 100; // 10 FPS for drawing
@@ -118,7 +117,7 @@ function drawCachedUntil(endTime) {
 
 function getMore(ts, cb) {
 	var until;
-	if (myUrl.length === 0 || getMore.running === true)
+	if (getMore.running === true)
 		return;
 	getMore.running = true;
 	// this gets us an array of arrays - there is always at least one dummy
@@ -129,7 +128,7 @@ function getMore(ts, cb) {
 	else
 		until =  +getMore.lastTimestamp + (5 * speedup + 10) * msecPerUpdate;
 	// debug output console.log("get AJAX data until", new Date(+until), "which is", (+until - +getMore.lastTimestamp)/1000,"seconds");
-	$.getJSON(myUrl + "/update", { 'until': +until})
+	$.getJSON("update", { 'until': +until})
 	.done(function (d, textStatus, jqXHR) {
 		// verbose debug console.log("length", d.length, "end", getMore.endTimestamp, "last", new Date(+getMore.lastTimestamp));
 		if (d.length == 1 && d[0][2] == 0) { // that's just the fake entry
@@ -170,7 +169,7 @@ function getMore(ts, cb) {
 			cb();
 		getMore.running = false;
 	})
-	.fail(function(jqXHR, textStatus, errorThrown) { console.log(myUrl + "/update : ajax fail", textStatus, errorThrown); });
+	.fail(function(jqXHR, textStatus, errorThrown) { console.log("update : ajax fail", textStatus, errorThrown); });
 }
 function drawNext() { // this is the timer driven drawing
 	var newLast = drawCachedUntil(+drawNext.last + drawTimeIncr * speedup);
@@ -220,8 +219,6 @@ function drawUntil(endTime) { // this is manual drawing
 function initialize() {
 	getMore.ID = null;
 	getMore.lines = [];
-	myUrl = $.url('protocol') + "://" + $.url('auth') + (($.url('auth').length > 0) ? "@" : "") +
-		$.url('hostname') + ":" + $.url('port');
 	parseDates($.url("?from"), $.url("?to"));
 	$("#frompicker").val(datepickers.fromQ);
 	$("#topicker").val(datepickers.toQ);
@@ -237,16 +234,16 @@ function initialize() {
 	var params = "&lang=" + lang;
 	if (system === "metric")
 		params += "&metric=true";
-	datepickers(myUrl + '/map', params);
+	datepickers('map', params);
 	$('#startStopButton').html(conv("label", "Stop Updates", lang));
 	$('#toggleCenterButton').html(conv("label", "Stop centering map",lang));
 	$('#startTimeLabel').html(conv("label", "Start time", lang));
 	$('#endTimeLabel').html(conv("label", "End time", lang));
 	$('#replaySpeedLabel').html(conv("label", "Replay Speed (real time = 1x)",lang));
 	$('#replayControlLabel').html(conv("label", "Replay Control",lang));
-	$("#energylink").attr("href", myUrl + "/energy?from=" + datepickers.fromQ + "&to=" + datepickers.toQ + params);
-	$("#statslink").attr("href", myUrl + "/stats?from=" + datepickers.fromQ + "&to=" + datepickers.toQ + params);
-	$("#triplink").attr("href", myUrl + "/trip");
+	$("#energylink").attr("href", "energy?from=" + datepickers.fromQ + "&to=" + datepickers.toQ + params);
+	$("#statslink").attr("href", "stats?from=" + datepickers.fromQ + "&to=" + datepickers.toQ + params);
+	$("#triplink").attr("href", "trip");
 	speedup = $.url("?speed");
 	if (speedup === null || speedup === "")
 		speedup = 30;

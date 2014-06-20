@@ -9,13 +9,13 @@
 <script language="javascript" type="text/javascript" src="url.min.js"></script>
 <script type="text/javascript">
 function getData(ts, cb) {
-	$.getJSON(getData.myUrl + "/getdata", { 'at': +ts})
+	$.getJSON("getdata", { 'at': +ts})
 	.done(function (d, textStatus, jqXHR) {
 		if (cb !== undefined) {
 			cb(d[0]);
 		}
 	})
-	.fail(function(jqXHR, textStatus, errorThrown) { console.log(getData.myUrl + "/getdata : ajax fail", textStatus, errorThrown); });
+	.fail(function(jqXHR, textStatus, errorThrown) { console.log("getdata : ajax fail", textStatus, errorThrown); });
 }
 function updateDisplay() {
 	var dist;
@@ -51,7 +51,7 @@ function startStopFunction() {
 			}
 			tripName = $("#tripName").val();
 			// store a partial trip so we know where we at started (in case the user reloads the web page)
-			$.getJSON(getData.myUrl + "/storetrip", { 'name': tripName, 'type': startStopFunction.tripType, 'dist': -1, 'odo': updateDisplay.startOdo,
+			$.getJSON("storetrip", { 'name': tripName, 'type': startStopFunction.tripType, 'dist': -1, 'odo': updateDisplay.startOdo,
 								  'start': { 'lat': updateDisplay.startLat , 'lng': updateDisplay.startLng },
 								  'from': startStopFunction.startTime.getTime() })
 				.done(function (d, textStatus, jqXHR) {
@@ -77,7 +77,7 @@ function startStopFunction() {
 			msgText = startStopFunction.tripType + ' trip "' + tripName + '" from ' + from.toString() + ' until ' + to.toString() +
 				' for ' + tripDist + " miles";
 			console.log(msgText);
-			$.getJSON(getData.myUrl + "/storetrip", { 'name': tripName, 'type': startStopFunction.tripType, 'dist': tripDist, 'odo': updateDisplay.stopOdo,
+			$.getJSON("storetrip", { 'name': tripName, 'type': startStopFunction.tripType, 'dist': tripDist, 'odo': updateDisplay.stopOdo,
 								  'start': { 'lat': updateDisplay.startLat , 'lng': updateDisplay.startLng },
 								  'end': { 'lat': updateDisplay.stopLat , 'lng': updateDisplay.stopLng },
 								  'from': from.getTime(), 'to': to.getTime()})
@@ -107,13 +107,11 @@ $(function() {
 	$("#startstop").change(function() {
 		startStopFunction();
 	});
-	getData.myUrl = $.url('protocol') + "://" + $.url('auth') + (($.url('auth').length > 0) ? "@" : "") +
-		$.url('hostname') + ":" + $.url('port');
-	$("#maplink").attr("href", getData.myUrl + "/map");
-	$("#energylink").attr("href", getData.myUrl + "/energy");
-	$("#statslink").attr("href", getData.myUrl + "/stats");
+	$("#maplink").attr("href", "map");
+	$("#energylink").attr("href", "energy");
+	$("#statslink").attr("href", "stats");
 	// check if there is a partial trip that we should continue
-	$.getJSON(getData.myUrl + "/getlasttrip")
+	$.getJSON("getlasttrip")
 		.done(function (d, textStatus, jqXHR) {
 			// console.log(d[0]);
 			if(d[0].dist !== undefined && d[0].dist === "-1") {
