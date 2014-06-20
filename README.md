@@ -57,6 +57,7 @@ Marshall Rose (https://github.com/mrose17)
 Dirk Hohndel (https://github.com/dirkhh)
 Arthur Blake (https://github.com/arthurblake)
 Hans Jespersen (https://github.com/hjespers)
+Nick Triantos
 
 #Installation
 
