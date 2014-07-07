@@ -176,7 +176,10 @@ app.namespace(baseUrl, function() {
 
     app.configure(function() {
         app.use(express.cookieParser());
-        app.use(express.bodyParser());
+        //deprecated in connect 3.0
+        //app.use(express.bodyParser());
+        app.use(express.urlencoded())
+        app.use(express.json())
         app.use(express.session({ secret: localSecret }));
         app.use(passport.initialize());
         app.use(passport.session());
