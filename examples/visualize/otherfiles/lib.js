@@ -78,7 +78,7 @@ var strings = {
 			"de": "Gesamtenergierückgewinnung"
 		},
 		"Voltage and current while charging.": {
-			"en": "Voltage and current while charing.",
+			"en": "Voltage and current while charging.",
 			"de": "Spannung und Strom beim Laden."
 		},
 		"Maximum charge power:": {
