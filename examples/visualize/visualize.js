@@ -323,6 +323,16 @@ app.namespace(baseUrl, function() {
                         fwVersion = "5.6 ";
                     else if (fwBuild.substr(0,4) == "1.49")
                         fwVersion = "5.8 ";
+                    else if (fwBuild.substr(0,4) == "1.51")
+                        fwVersion = "5.9 ";
+                    else if (fwBuild.substr(0,4) == "1.59")
+                        fwVersion = "5.11 ";
+                    else if (fwBuild.substr(0,4) == "1.64")
+                        fwVersion = "5.12 ";
+                    else if (fwBuild.substr(0,4) == "1.66")
+                        fwVersion = "5.14 ";
+                    else if (fwBuild.substr(0,4) == "1.67")
+                        fwVersion = "6.0 ";
                     fwVersion += "(" + fwBuild + ")";
                 } else {
                     fwVersion = 'unknown';
