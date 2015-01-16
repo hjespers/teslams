@@ -67,16 +67,19 @@ var system = "";
 var fwVersion = "";
 var vin = "";
 var optionString = "";
+var baseString = "";
 
-var optionText = {
+var baseText = {
     RENA: "North American",
     REEU: "European",
-    TM02: " Signature",
-    PF01: " P",
-    PF00: " S",
+    TM02: "Signature",
+    PF01: "P",
+    PF00: "S",
     BT85: "85PLUS",
     BT60: "60",
-    BT40: "40",
+    BT40: "40"
+};
+var optionText = {
     PBSB: "<li> black</li>",
     PBCW: "<li> solid white</li>",
     PMSS: "<li> silver</li>",
@@ -174,17 +177,16 @@ passport.use(new LocalStrategy(
 
 app.namespace(baseUrl, function() {
 
-    app.configure(function() {
-        app.use(express.cookieParser());
-        //deprecated in connect 3.0
-        //app.use(express.bodyParser());
-        app.use(express.urlencoded())
-        app.use(express.json())
-        app.use(express.session({ secret: localSecret }));
-        app.use(passport.initialize());
-        app.use(passport.session());
-        app.use(app.router);
-    });
+    app.use(express.cookieParser());
+    //deprecated in connect 3.0
+    //app.use(express.bodyParser());
+    app.use(express.urlencoded())
+    app.use(express.json())
+    app.use(express.session({ secret: localSecret }));
+    app.use(passport.initialize());
+    app.use(passport.session());
+    app.use(app.router);
+
     // simple login screen with correspoding POST setup
     app.get('/login', function(req,res) {
         fs.readFile(__dirname + "/login.html", "utf-8", function(err, data) {
@@ -265,12 +267,17 @@ app.namespace(baseUrl, function() {
                 if (docs.length > 1)
                     console.log("congratulations, you have more than one Tesla Model S - this only supports your first car");
                 vin = docs[0].vehicles.vin;
+                
+                optionString = "<ul>";
                 var options = docs[0].vehicles.option_codes.split(',');
                 for (var i = 0; i < options.length; i++) {
                     if (optionText[options[i]] !== undefined)
                         optionString += optionText[options[i]];
+                    if (baseText[options[i]] !== undefined)
+                        baseString += " " + baseText[options[i]];
+
                     if (options[i] == "PX01") {
-                        optionString = optionString.replace("PLUS", "+");
+                        baseString = baseString.replace("PLUS", "+");
                     }
                     if (options[i].substring(0,2) == "BT") {
                         if (options[i] == "BT85") {
@@ -280,12 +287,13 @@ app.namespace(baseUrl, function() {
                         } else if (options[i] == "BT40") {
                             capacity = 60;
                         }
-                        optionString += "<ul>";
                     }
                 }
-                optionString = optionString.replace("PLUS", "");
                 optionString += "</ul>";
-                console.log(optionString);
+                baseString = baseString.replace("PLUS", "");
+
+                if (argv.verbose) console.log(baseString);
+                if (argv.verbose) console.log(optionString);
             }
             if (argv.verbose) console.log("battery capacity", capacity);
         });
@@ -349,7 +357,7 @@ app.namespace(baseUrl, function() {
         fs.readFile(__dirname + "/welcome.html", "utf-8", function(err, data) {
             if (err) throw err;
             res.send(data.replace("MAGIC_NAV",nav)
-                 .replace("MAGIC_OPTIONS", optionString)
+                 .replace("MAGIC_OPTIONS", baseString + optionString)
                  .replace("MAGIC_VIN", vin)
                  .replace("MAGIC_FIRMWARE_VERSION", fwVersion)
                  .replace("MAGIC_DISPLAY_SYSTEM", system));
