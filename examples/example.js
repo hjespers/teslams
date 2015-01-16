@@ -28,36 +28,34 @@ teslams.get_vid( { email: creds.email, password: creds.password }, function ( vi
 		console.log("Error: Undefined vehicle id");
 	} else {
 		//
-		// Remember NODE is all async non-blocking so all these requests go in parallel
+		// Remember node.js is all async and non-blocking so any uncommented lines below will generate requests in parallel
+        // Uncomment too many lines at once and you will get yourself blocked by the Tesla DoS protection systems.
 		//
-		// not needed for REST API but test all known REST functions anyway
-		//
-		teslams.wake_up( vid, pr );
+		// teslams.wake_up( vid, pr );
 		//
 		// get some info
 		//
-		teslams.mobile_enabled( vid, pr );
+		// teslams.mobile_enabled( vid, pr );
 		teslams.get_charge_state( vid, pr );
-		teslams.get_climate_state( vid, pr );
-		teslams.get_drive_state( vid, pr );
-		teslams.get_vehicle_state( vid, pr );
-		teslams.get_gui_settings( vid, pr );
+		// teslams.get_climate_state( vid, pr );
+		// teslams.get_drive_state( vid, pr );
+		// teslams.get_vehicle_state( vid, pr );
+		// teslams.get_gui_settings( vid, pr );
 		//
-		//  cute but annoying stuff while debugging
+		// cute but annoying stuff while debugging
 		//
-		//teslams.flash( vid, pr ); 
-		//teslams.honk( vid, pr ); 
-		//teslams.open_charge_port( vid, pr ) 
+		// teslams.flash( vid, pr ); 
+		// teslams.honk( vid, pr ); 
+		// teslams.open_charge_port( vid, pr ) 
 		//
 		// control some stuff
 		//
-		teslams.door_lock( { id: vid, lock: teslams.LOCK_ON }, pr );
-		teslams.sun_roof( { id: vid, roof: teslams.ROOF_CLOSE }, pr );
-		teslams.auto_conditioning( { id: vid, climate: teslams.CLIMATE_OFF }, pr ); 
-		teslams.charge_range( { id: vid, range: teslams.RANGE_STD }, pr ); 
-		teslams.charge_state( { id: vid, charge: teslams.CHARGE_ON }, pr ); 
-		teslams.set_temperature( { id: vid, dtemp: 20 }, pr ); 
-		// teslams.set_temperature( { id: vid, dtemp: teslams.TEMP_LO , ptemp: teslams.TEMP_HI }, pr ); 
+		// teslams.door_lock( { id: vid, lock: "lock" }, pr );
+		// teslams.sun_roof( { id: vid, roof: "close" }, pr );
+		// teslams.auto_conditioning( { id: vid, climate: "off" }, pr ); 
+		// teslams.charge_range( { id: vid, range: "standard" }, pr ); 
+		// teslams.charge_state( { id: vid, charge: "on" }, pr ); 
+		// teslams.set_temperature( { id: vid, dtemp: 20 }, pr ); 
 	}
   }
 );

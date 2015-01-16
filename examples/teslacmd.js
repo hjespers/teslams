@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 require('pkginfo')(module, 'version');
 
+var JSONbig = require('json-bigint');
 var util = require('util');
 var teslams = require('../teslams.js');
 var argv = require('optimist')
@@ -105,7 +106,11 @@ function pr( stuff ) {
 
 function parseArgs( vehicle ) {
     var vid = vehicle.id, err;
-    if (argv.i) { pr(vehicle); }
+    if (argv.i) { 
+        vehicle.id = vehicle.id.toString();
+        vehicle.vehicle_id = vehicle.vehicle_id.toString();
+        pr(vehicle); 
+    }
     // wake up the car's telematics system
     if (argv.w) {
         teslams.wake_up( vid, pr );
@@ -132,7 +137,7 @@ function parseArgs( vehicle ) {
     }
     if (argv.d) {
         teslams.get_drive_state( vid, function (ds) {
-            console.log( typeof ds.speed);
+            //console.log( typeof ds.speed);
             if (argv.metric && typeof ds.speed !== "undefined") {
                 if (ds.speed === null) {
                     ds.metric_speed = null;
@@ -210,17 +215,17 @@ teslams.all( { email: creds.username, password: creds.password }, function ( err
     var data, vehicle;
     //check we got a valid JSON response from Tesla
     try { 
-        data = JSON.parse(body); 
+        data = JSONbig.parse(body); 
     } catch(err) { 
         pr(new Error('login failed')); 
         process.exit(1);
     }
     //check we got an array of vehicles and get the first one
-        if (!util.isArray(data)) {
+        if (!util.isArray(data.response)) {
         pr(new Error('expecting an array from Tesla Motors cloud service'));
         process.exit(1);
     }
-        vehicle = data[0];
+        vehicle = data.response[0];
     //check the vehicle has a valid id
     if (vehicle.id === undefined) {
         pr( new Error('expecting vehicle ID from Tesla Motors cloud service'));

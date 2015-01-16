@@ -20,8 +20,6 @@ if ( argv.help == true ) {
 	process.exit(1);
 }
 
-teslams.get_vid( { email: creds.username, password: creds.password }, function ( id ) {
-	teslams.vehicles( id , function ( state) {
-		console.log( util.inspect( state ) );
-	});
+teslams.vehicles( { email: creds.username, password: creds.password }, function ( response ) {
+	console.log( util.inspect( response ) );
 }); 

@@ -1,5 +1,5 @@
 {
-	"portal_url": "https://portal.vn.teslamotors.com/vehicles/",
+	"portal_url": "https://owner-api.teslamotors.com/api/1/vehicles/",
 	"stream_url": "https://streaming.vn.teslamotors.com/stream/",
 	"username": "yourMyTeslaLogin@email.com",
 	"password": "yourPassword",

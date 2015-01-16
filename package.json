@@ -1,6 +1,6 @@
 {
   "name": "teslams",
-  "version": "0.9.5",
+  "version": "1.0.0",
   "description": "Utilities for the Tesla Model S ",
   "dependencies": {
     "request": "~2.14.0",
@@ -12,6 +12,7 @@
     "express-namespace": "~0.1.1",
     "passport": ">= 0.1.17",
     "passport-local": ">= 0.1.6",
+    "json-bigint": ">= 0.1.4",
     "pkginfo": "~0.3.0"
   },
   "devDependencies": {},
@@ -33,7 +34,6 @@
     "streaming" : "./examples/streaming.js",
     "chargebar" : "./examples/chargebar.js",
     "climatemon" : "./examples/climatemon.js",
-    "restla" : "./examples/restla.js",
     "visualize" : "./examples/visualize/visualize.js"
   },
   "keywords" : [
