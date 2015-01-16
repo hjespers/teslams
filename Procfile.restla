@@ -1,3 +1,0 @@
-#to start run 'foreman start -f Profile.restla'
-#HTTP port is set with the environment variable $PORT (foreman defaults this to 5000)
-web: node examples/restla.js 
