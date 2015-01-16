@@ -10,6 +10,14 @@ exports.portal = owner_api;
 var token = '';
 exports.token = token;
 
+// emulate the android mobile app
+var version = '2.1.79';
+var model = 'SM-G900V';
+var codename = 'REL';
+var release = '4.4.4';
+var locale = 'en_US';
+var user_agent = 'Model S ' + version + ' (' + model + '; Android ' + codename + ' ' + release + '; ' + locale + ')';
+
 var report = function(error, response, body, cb) {
   if (!!cb) cb(error || (new Error(response.statusCode + ': ' + body)), body);
 };
@@ -49,7 +57,7 @@ var all = exports.all = function(options, cb) {
              headers: { 
                  'Authorization': 'Bearer ' + token, 
                  'Content-Type': 'application/json; charset=utf-8', 
-                 'User-Agent': 'Model S 2.1.79 (Nexus 5; Android REL 4.4.4; en_US)', 
+                 'User-Agent': user_agent, 
                  'Accept-Encoding': 'gzip,deflate'
              }
           }, cb); 
@@ -83,7 +91,7 @@ function mobile_enabled( vid, cb ) {
     request( {
         method: 'GET',
         url:  portal + '/vehicles/' + vid + '/mobile_enabled', 
-        headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json; charset=utf-8', 'User-Agent': 'Model S 2.1.79 (Nexus 5; Android REL 4.4.4; en_US)', 'Accept-Encoding': 'gzip,deflate' }
+        headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json; charset=utf-8', 'User-Agent': user_agent, 'Accept-Encoding': 'gzip,deflate' }
     }, function (error, response, body) { 
         if ((!!error) || (response.statusCode !== 200)) return report(error, response, body, cb);
         try {
@@ -101,7 +109,7 @@ function get_charge_state( vid, cb ) {
     request( {
         method: 'GET',
         url: portal + '/vehicles/' + vid + '/data_request/charge_state', 
-        headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json; charset=utf-8', 'User-Agent': 'Model S 2.1.79 (Nexus 5; Android REL 4.4.4; en_US)', 'Accept-Encoding': 'gzip,deflate' }
+        headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json; charset=utf-8', 'User-Agent': user_agent, 'Accept-Encoding': 'gzip,deflate' }
     }, function (error, response, body) { 
         if ((!!error) || (response.statusCode !== 200)) return report(error, response, body, cb);
         try {
@@ -119,7 +127,7 @@ function get_climate_state( vid, cb ) {
     request( {
         method: 'GET',
         url: portal + '/vehicles/' + vid + '/data_request/climate_state',
-        headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json; charset=utf-8', 'User-Agent': 'Model S 2.1.79 (Nexus 5; Android REL 4.4.4; en_US)', 'Accept-Encoding': 'gzip,deflate' }
+        headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json; charset=utf-8', 'User-Agent': user_agent, 'Accept-Encoding': 'gzip,deflate' }
     }, function (error, response, body) { 
         if ((!!error) || (response.statusCode !== 200)) return report(error, response, body, cb);
         try {
@@ -137,7 +145,7 @@ function get_drive_state( vid, cb ) {
     request( {
         method: 'GET',
         url: portal + '/vehicles/' + vid + '/data_request/drive_state', 
-        headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json; charset=utf-8', 'User-Agent': 'Model S 2.1.79 (Nexus 5; Android REL 4.4.4; en_US)', 'Accept-Encoding': 'gzip,deflate' }
+        headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json; charset=utf-8', 'User-Agent': user_agent, 'Accept-Encoding': 'gzip,deflate' }
     }, function (error, response, body) { 
         if ((!!error) || (response.statusCode !== 200)) return report(error, response, body, cb);
         try {
@@ -155,7 +163,7 @@ function get_vehicle_state( vid, cb ) {
     request( {
         method: 'GET',
         url: portal + '/vehicles/' + vid + '/data_request/vehicle_state',
-        headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json; charset=utf-8', 'User-Agent': 'Model S 2.1.79 (Nexus 5; Android REL 4.4.4; en_US)', 'Accept-Encoding': 'gzip,deflate' }
+        headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json; charset=utf-8', 'User-Agent': user_agent, 'Accept-Encoding': 'gzip,deflate' }
     }, function (error, response, body) { 
         if ((!!error) || (response.statusCode !== 200)) return report(error, response, body, cb);
         try {
@@ -173,7 +181,7 @@ function get_gui_settings( vid, cb ) {
     request( { 
         method: 'GET', 
         url: portal + '/vehicles/' + vid + '/data_request/gui_settings', 
-        headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json; charset=utf-8', 'User-Agent': 'Model S 2.1.79 (Nexus 5; Android REL 4.4.4; en_US)', 'Accept-Encoding': 'gzip,deflate' }
+        headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json; charset=utf-8', 'User-Agent': user_agent, 'Accept-Encoding': 'gzip,deflate' }
     }, function (error, response, body) { 
         if ((!!error) || (response.statusCode !== 200)) return report(error, response, body, cb);
         try {
@@ -191,7 +199,7 @@ function wake_up( vid, cb ) {
     request( { 
         method: 'POST', 
         url: portal + '/vehicles/' + vid + '/command/wake_up', 
-        headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json; charset=utf-8', 'User-Agent': 'Model S 2.1.79 (Nexus 5; Android REL 4.4.4; en_US)', 'Accept-Encoding': 'gzip,deflate' }
+        headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json; charset=utf-8', 'User-Agent': user_agent, 'Accept-Encoding': 'gzip,deflate' }
     }, function (error, response, body) { 
         if ((!!error) || (response.statusCode !== 200)) return report(error, response, body, cb);
         try {
@@ -210,7 +218,7 @@ function open_charge_port( vid, cb ) {
     request( {
         method: 'POST', 
         url: portal + '/vehicles/' + vid + '/command/charge_port_door_open', 
-        headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json; charset=utf-8', 'User-Agent': 'Model S 2.1.79 (Nexus 5; Android REL 4.4.4; en_US)', 'Accept-Encoding': 'gzip,deflate' }
+        headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json; charset=utf-8', 'User-Agent': user_agent, 'Accept-Encoding': 'gzip,deflate' }
     }, function (error, response, body) { 
         if ((!!error) || (response.statusCode !== 200)) return report(error, response, body, cb);
         try {
@@ -241,7 +249,7 @@ function charge_state( params, cb ) {
         request( {
             method: 'POST', 
             url: portal + '/vehicles/' + vid + '/command/charge_' + state, 
-            headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json; charset=utf-8', 'User-Agent': 'Model S 2.1.79 (Nexus 5; Android REL 4.4.4; en_US)', 'Accept-Encoding': 'gzip,deflate' }
+            headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json; charset=utf-8', 'User-Agent': user_agent, 'Accept-Encoding': 'gzip,deflate' }
         }, function (error, response, body) { 
             if ((!!error) || (response.statusCode !== 200)) return report(error, response, body, cb);
             try {
@@ -277,7 +285,7 @@ function charge_range( params, cb ) {
         request( {
             method: 'POST', 
             url: portal + '/vehicles/' + vid + '/command/charge_' + range, 
-            headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json; charset=utf-8', 'User-Agent': 'Model S 2.1.79 (Nexus 5; Android REL 4.4.4; en_US)', 'Accept-Encoding': 'gzip,deflate' }
+            headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json; charset=utf-8', 'User-Agent': user_agent, 'Accept-Encoding': 'gzip,deflate' }
         }, function (error, response, body) { 
             if ((!!error) || (response.statusCode !== 200)) return report(error, response, body, cb);
             try {
@@ -292,7 +300,7 @@ function charge_range( params, cb ) {
         request( {
             method: 'POST', 
             url: portal + '/vehicles/' + vid + '/command/set_charge_limit', 
-            headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json; charset=utf-8', 'User-Agent': 'Model S 2.1.79 (Nexus 5; Android REL 4.4.4; en_US)', 'Accept-Encoding': 'gzip,deflate' },
+            headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json; charset=utf-8', 'User-Agent': user_agent, 'Accept-Encoding': 'gzip,deflate' },
             form: { 
                 "percent" : percent.toString()
             }
@@ -319,7 +327,7 @@ function flash( vid, cb ) {
     request({ 
         method: 'POST', 
         url: portal + '/vehicles/' + vid + '/command/flash_lights',
-        headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json; charset=utf-8', 'User-Agent': 'Model S 2.1.79 (Nexus 5; Android REL 4.4.4; en_US)', 'Accept-Encoding': 'gzip,deflate' }
+        headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json; charset=utf-8', 'User-Agent': user_agent, 'Accept-Encoding': 'gzip,deflate' }
     }, function (error, response, body) { 
         if ((!!error) || (response.statusCode !== 200)) return report(error, response, body, cb);
         try {
@@ -337,7 +345,7 @@ function honk( vid, cb ) {
     request( {
         method: 'POST', 
         url: portal + '/vehicles/' + vid + '/command/honk_horn',
-        headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json; charset=utf-8', 'User-Agent': 'Model S 2.1.79 (Nexus 5; Android REL 4.4.4; en_US)', 'Accept-Encoding': 'gzip,deflate' }
+        headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json; charset=utf-8', 'User-Agent': user_agent, 'Accept-Encoding': 'gzip,deflate' }
     }, function (error, response, body) { 
         if ((!!error) || (response.statusCode !== 200)) return report(error, response, body, cb);
         try {
@@ -360,7 +368,7 @@ function door_lock( params, cb ) {
         request( {
             method: 'POST',
             url: portal + '/vehicles/' + vid + '/command/door_lock', 
-            headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json; charset=utf-8', 'User-Agent': 'Model S 2.1.79 (Nexus 5; Android REL 4.4.4; en_US)', 'Accept-Encoding': 'gzip,deflate' }
+            headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json; charset=utf-8', 'User-Agent': user_agent, 'Accept-Encoding': 'gzip,deflate' }
         }, function (error, response, body) { 
             if ((!!error) || (response.statusCode !== 200)) return report(error, response, body, cb);
             try {
@@ -375,7 +383,7 @@ function door_lock( params, cb ) {
         request( { 
             method: 'POST',
             url: portal + '/vehicles/' + vid + '/command/door_unlock', 
-            headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json; charset=utf-8', 'User-Agent': 'Model S 2.1.79 (Nexus 5; Android REL 4.4.4; en_US)', 'Accept-Encoding': 'gzip,deflate' }
+            headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json; charset=utf-8', 'User-Agent': user_agent, 'Accept-Encoding': 'gzip,deflate' }
         }, function (error, response, body) { 
             if ((!!error) || (response.statusCode !== 200)) return report(error, response, body, cb);
             try {
@@ -421,7 +429,7 @@ function set_temperature( params, cb ) {
         request( {
             method: 'POST',
             url: portal + '/vehicles/' + vid + '/command/set_temps',
-            headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json; charset=utf-8', 'User-Agent': 'Model S 2.1.79 (Nexus 5; Android REL 4.4.4; en_US)', 'Accept-Encoding': 'gzip,deflate' },
+            headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json; charset=utf-8', 'User-Agent': user_agent, 'Accept-Encoding': 'gzip,deflate' },
             form: {
                 "driver_temp" : dtemp.toString(),
                 "passenger_temp" : ptemp.toString(),
@@ -457,7 +465,7 @@ function auto_conditioning( params, cb ) {
         request( {
             method: 'POST',
             url: portal + '/vehicles/' + vid + '/command/auto_conditioning_start',
-            headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json; charset=utf-8', 'User-Agent': 'Model S 2.1.79 (Nexus 5; Android REL 4.4.4; en_US)', 'Accept-Encoding': 'gzip,deflate' }
+            headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json; charset=utf-8', 'User-Agent': user_agent, 'Accept-Encoding': 'gzip,deflate' }
         }, function (error, response, body) { 
             if ((!!error) || (response.statusCode !== 200)) return report(error, response, body, cb);
             try {
@@ -472,7 +480,7 @@ function auto_conditioning( params, cb ) {
         request( {
             method: 'POST',
             url: portal + '/vehicles/' + vid + '/command/auto_conditioning_stop', 
-            headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json; charset=utf-8', 'User-Agent': 'Model S 2.1.79 (Nexus 5; Android REL 4.4.4; en_US)', 'Accept-Encoding': 'gzip,deflate' }
+            headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json; charset=utf-8', 'User-Agent': user_agent, 'Accept-Encoding': 'gzip,deflate' }
         }, function (error, response, body) { 
             if ((!!error) || (response.statusCode !== 200)) return report(error, response, body, cb);
             try {
@@ -509,7 +517,7 @@ function sun_roof( params, cb ) {
         request( {
             method: 'POST',
             url: portal +'/vehicles/' + vid + '/command/sun_roof_control',
-            headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json; charset=utf-8', 'User-Agent': 'Model S 2.1.79 (Nexus 5; Android REL 4.4.4; en_US)', 'Accept-Encoding': 'gzip,deflate' },
+            headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json; charset=utf-8', 'User-Agent': user_agent, 'Accept-Encoding': 'gzip,deflate' },
             form: {
                 'state': state
             }
@@ -527,7 +535,7 @@ function sun_roof( params, cb ) {
         request( {
             method: 'POST',
             url: portal +'/vehicles/' + vid + '/command/sun_roof_control',
-            headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json; charset=utf-8', 'User-Agent': 'Model S 2.1.79 (Nexus 5; Android REL 4.4.4; en_US)', 'Accept-Encoding': 'gzip,deflate' },
+            headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json; charset=utf-8', 'User-Agent': user_agent, 'Accept-Encoding': 'gzip,deflate' },
             form: {
                 'state': 'move',
                 'percent': percent.toString()
