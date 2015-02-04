@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Utilities for the Tesla Model S ",
   "dependencies": {
-    "request": "~2.14.0",
+    "request": ">=2.14.0",
     "optimist": "~0.3.5",
     "open": "~0.0.3",
     "multimeter-hj": "~0.1.2",
