@@ -133,7 +133,9 @@ function parseArgs( vehicle ) {
         } );
     }
     if (argv.t) {
+
         teslams.get_climate_state( vid, pr);
+
     }
     if (argv.d) {
         teslams.get_drive_state( vid, function (ds) {
@@ -249,6 +251,6 @@ teslams.all( { email: creds.username, password: creds.password }, function ( err
         });
     } else {
         // passed through all exit condition checks 
-        parseArgs( vehicle );
+        setTimeout(function(){ parseArgs( vehicle ); }, 5000);
     }
 });
