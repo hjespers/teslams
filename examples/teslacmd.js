@@ -5,12 +5,12 @@ var JSONbig = require('json-bigint');
 var util = require('util');
 var teslams = require('../teslams.js');
 var argv = require('optimist')
-    .usage('Usage: $0 -u <username> -p <password> -acdFgHimMPtvVwXZ -A [on|off] -C [start|stop] -R [std|max|50-90,100] -S [close|vent|comfort|open|0-100] -L [lock|unlock] -T temp')
+    .usage('Usage: $0 -u <username> -p <password> -acdDFgHimMPtvVwXZ -A [on|off] -C [start|stop] -L [lock|unlock] -O offset -R [std|max|50-90,100] -S [close|vent|comfort|open|0-100] -T temp')
     .alias('u', 'username')
     .describe('u', 'Teslamotors.com login')
     .alias('p', 'password')
     .describe('p', 'Teslamotors.com password')
-    .boolean(['a', 'c', 'd', 'F', 'g', 'H', 'i', 'm', 'P', 't', 'v', 'w', 'Z'])
+    .boolean(['a', 'c', 'd', 'D', 'F', 'g', 'H', 'i', 'm', 'M', 'P', 't', 'v', 'V', 'w', 'X', 'Z'])
     .alias('a', 'all')
     .describe('a', 'Print information about all vehicles on the account')
     .describe('c', 'Display the charge state')
@@ -28,16 +28,28 @@ var argv = require('optimist')
     .describe('i', 'Print vehicle information')
     .describe('m', 'Display the mobile state')
     .alias('m', 'mobile')
+    .alias('M', 'metric')
+    .describe('M', 'Convert and print all values into metric units')
     .describe('P', 'Open charge port door')
     .alias('P', 'port')
     .describe('t', 'Display the climate/temp state')
     .describe('v', 'Display the vehicle state')
+    .alias('V', 'version')   
+    .describe('V', 'Print the version of teslams')
     .alias('w', 'wake')
     .describe('w', 'Wake up the car telemetry')
     .alias('X', 'isplugged')
     .describe('X', 'Check if car is plugged in and continue only if connected to a charger')
     .alias('Z', 'isawake')
     .describe('Z', 'Check if car is asleep and continue only if awake')
+    .alias('A', 'climate')
+    .alias('A', 'air')
+    .describe('A', 'Turn the air conditioning and heating on/off')
+    .alias('C', 'charge')   
+    .describe('C', 'Turn the charging on/off')
+    .alias('O', 'vehicle')   
+    .describe('O', 'Select the vehicle offset for accounts with multiple vehicles')
+    .default('O', 0)
     .alias('R', 'range')
     .describe('R', 'Charging range mode: "std" or "max"')
     .alias('S', 'roof')
@@ -46,16 +58,7 @@ var argv = require('optimist')
     .alias('T', 'temp')
     .describe('T', 'Set the car climate control temperature (in Celcius)')
     .alias('L', 'lock')
-    .describe('L', 'Lock/Unlock the car doors')
-    .alias('A', 'climate')
-    .alias('A', 'air')
-    .describe('A', 'Turn the air conditioning and heating on/off')
-    .alias('M', 'metric')
-    .describe('M', 'Convert and print all values into metric units')
-    .alias('C', 'charge')   
-    .describe('C', 'Turn the charging on/off')
-    .alias('V', 'version')   
-    .describe('V', 'Print the version of teslams')
+    .describe('L', 'Lock/Unlock the car doors')    
     .alias('?', 'help')
     .describe('?', 'Print usage information');
 
@@ -65,34 +68,35 @@ var creds = require('./config.js').config(argv);
 argv = argv.argv;
 
 if ( argv.help === true ) {
-    console.log( 'Usage: teslacmd.js -u <username> -p <password> -acdDFgHimPtvVwXZ');
-    console.log( '                   -A [on|off] -C [start|stop] -R [std|max|50-90|100]');
-    console.log( '                   -S [close|vent|comfort|open|0-100] -L [lock|unlock] -T temp');
+    console.log( 'Usage: teslacmd.js -u <username> -p <password> -acdDFgHimMPtvVwXZ');
+    console.log( '                   -A [on|off] -C [start|stop] -L [lock|unlock] -O offset');
+    console.log( '                   -R [std|max|50-90|100] -S [close|vent|comfort|open|0-100] -T temp');
     console.log( '\nOptions:');
     console.log( '  -u, --username  Teslamotors.com login                                                       [required]');
     console.log( '  -p, --password  Teslamotors.com password                                                    [required]');
     console.log( '  -a, --all       Print info for all vehicle on the users account                             [boolean]');
     console.log( '  -c              Display the charge state                                                    [boolean]');
     console.log( '  -d, --drive     Display the drive state                                                     [boolean]');
+    console.log( '  -D, --debug     Display debug information                                                   [boolean]');
     console.log( '  -F, --flash     Flash the car headlights                                                    [boolean]');
     console.log( '  -g, --gui       Display the GUI settings                                                    [boolean]');
     console.log( '  -H, --honk      Honk the car horn                                                           [boolean]');
+    console.log( '  -i, --info      Print vehicle info                                                          [boolean]');
     console.log( '  -m, --mobile    Display the mobile state                                                    [boolean]');
     console.log( '  -M, --metric    Convert measurements in metric unit                                         [boolean]');
     console.log( '  -P, --port      Open charge port door                                                       [boolean]');
     console.log( '  -t              Display the climate/temp state                                              [boolean]');
     console.log( '  -v              Display the vehicle state                                                   [boolean]');
-    console.log( '  -i, --info      Print vehicle info                                                          [boolean]');
     console.log( '  -V, --version   Print version of teslams software                                           [boolean]');
     console.log( '  -w, --wake      Wake up the car telemetry                                                   [boolean]');
     console.log( '  -X, --isplugged Check if car is plugged in and continue only if connected to a charger      [boolean]');
     console.log( '  -Z, --isawake   Check if car is asleep and continue only if awake                           [boolean]');
     console.log( '  -A, --climate   Turn the air conditioning and heating on/off                              ');
     console.log( '  -C, --charge    Turn the charging on/off                                                  ');
-    console.log( '  -D, --debug     Display debug information                                                 ');
+    console.log( '  -L, --lock      Lock/Unlock the car doors                                                 ');
+    console.log( '  -O, --vehicle   Vehicle offset (i.e. 0 or 1) for accounts with multiple vehicles          ');
     console.log( '  -R, --range     Charging range mode: "std" or "max" or any percent from 50-90 or 100      ');
     console.log( '  -S, --roof      Move the car sunroof to: "close", "vent", "comfort", "open" or any percent');
-    console.log( '  -L, --lock      Lock/Unlock the car doors                                                 ');
     console.log( '  -T, --temp      Set the car climate control temperature (in Celcius)                      ');
     console.log( '  -?, --help      Print usage information                                                   ');
     process.exit();
@@ -230,7 +234,11 @@ teslams.all( { email: creds.username, password: creds.password }, function ( err
         pr(new Error('expecting an array from Tesla Motors cloud service'));
         process.exit(1);
     }
-        vehicle = data.response[0];
+    vehicle = data.response[argv.vehicle];
+    if (vehicle === undefined) {
+        pr( new Error('No vehicle data returned for car number ' + argv.vehicle));
+        process.exit(1);    
+    }
     //check the vehicle has a valid id
     if (vehicle.id === undefined) {
         pr( new Error('expecting vehicle ID from Tesla Motors cloud service'));
