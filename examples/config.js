@@ -45,7 +45,9 @@ exports.config = function (opt)
 		}
 		if (configSuccess)
 		{
-			console.log("found " + config.visualize.webusers.length + " user / password entries; enabling web authentication");
+			if (opt.argv.debug) {
+				console.log("found " + config.visualize.webusers.length + " user / password entries; enabling web authentication");
+			}
 		}
 		else
 		{
@@ -60,7 +62,9 @@ exports.config = function (opt)
 			password: process.env.TSLA_PASSWORD 
 		};
 		if (config.username != undefined && config.password != undefined){
-			console.log('Teslamotors.com logon information loaded from environment variables $TSLA_USERNAME and $TSLA_PASSWORD');
+			if (opt.argv.debug) {
+				console.log('Teslamotors.com logon information loaded from environment variables $TSLA_USERNAME and $TSLA_PASSWORD');
+			}
 			return config;
 		}
 	}
@@ -80,7 +84,9 @@ exports.config = function (opt)
 	}
 	if (configSuccess)
 	{
-		console.log('Teslamotors.com logon information loaded from ' + configFile);
+		if (opt.argv.debug) {
+			console.log('Teslamotors.com logon information loaded from ' + configFile);
+		}
 	}
 	else
 	{

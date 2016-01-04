@@ -16,6 +16,8 @@ var argv = require('optimist')
     .describe('c', 'Display the charge state')
     .describe('d', 'Display the drive state')
     .alias('d', 'drive')
+    .alias('D', 'debug')   
+    .describe('D', 'Print additional debug information')
     .describe('F', 'Flash the car headlights')
     .alias('F', 'flash')
     .describe('g', 'Display the GUI settings')
@@ -63,7 +65,7 @@ var creds = require('./config.js').config(argv);
 argv = argv.argv;
 
 if ( argv.help === true ) {
-    console.log( 'Usage: teslacmd.js -u <username> -p <password> -acdFgHimPtvVwXZ');
+    console.log( 'Usage: teslacmd.js -u <username> -p <password> -acdDFgHimPtvVwXZ');
     console.log( '                   -A [on|off] -C [start|stop] -R [std|max|50-90|100]');
     console.log( '                   -S [close|vent|comfort|open|0-100] -L [lock|unlock] -T temp');
     console.log( '\nOptions:');
@@ -87,6 +89,7 @@ if ( argv.help === true ) {
     console.log( '  -Z, --isawake   Check if car is asleep and continue only if awake                           [boolean]');
     console.log( '  -A, --climate   Turn the air conditioning and heating on/off                              ');
     console.log( '  -C, --charge    Turn the charging on/off                                                  ');
+    console.log( '  -D, --debug     Display debug information                                                 ');
     console.log( '  -R, --range     Charging range mode: "std" or "max" or any percent from 50-90 or 100      ');
     console.log( '  -S, --roof      Move the car sunroof to: "close", "vent", "comfort", "open" or any percent');
     console.log( '  -L, --lock      Lock/Unlock the car doors                                                 ');
