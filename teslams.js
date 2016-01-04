@@ -49,6 +49,7 @@ var all = exports.all = function(options, cb) {
           try{ 
               var authdata = JSON.parse( body );
               token = authdata.access_token;
+              exports.token = token;
               // set common HTTP Header used for all requests
               http_header = { 
                 'Authorization': 'Bearer ' + token, 
