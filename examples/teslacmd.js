@@ -229,7 +229,7 @@ teslams.all( { email: creds.username, password: creds.password }, function ( err
         pr(new Error('login failed')); 
         process.exit(1);
     }
-    //check we got an array of vehicles and get the first one
+    //check we got an array of vehicles and get the right one using the (optionally) specified vehicle offset
         if (!util.isArray(data.response)) {
         pr(new Error('expecting an array from Tesla Motors cloud service'));
         process.exit(1);

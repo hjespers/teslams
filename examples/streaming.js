@@ -8,16 +8,16 @@ var request = require('request');
 var teslams = require('../teslams.js');
 var fs = require('fs');
 var util = require('util');
+var JSONbig = require('json-bigint');
 
 function argchecker( argv ) {
     if (argv.db == true) throw 'MongoDB database name is unspecified. Use -d dbname or --db dbname';
 }
 
 var usage = 'Usage: $0 -u <username> -p <password> [-sz] [--file <filename> || --db <MongoDB database>] \n' +
-    '   [--values <value list>] [--maxrpm <#num>] \n' +
+    '   [--values <value list>] [--maxrpm <#num>] --vehicle offset\n' +
     '# if --db <MongoDB database> argument is given, store data in MongoDB, otherwise in a flat file';
 
-var p_url = 'https://portal.vn.teslamotors.com/vehicles/';
 var s_url = 'https://streaming.vn.teslamotors.com/stream/';
 var collectionS, collectionA;
 var firstTime = true;
@@ -63,6 +63,9 @@ var argv = require('optimist')
     .alias('N', 'napcheck')
     .describe('N', 'Number of minutes between nap checks')
     .default('N', 1)
+    .alias('O', 'vehicle')   
+    .describe('O', 'Select the vehicle offset (i.e. 0 or 1) for accounts with multiple vehicles')
+    .default('O', 0)
     .alias('S', 'sleepcheck')
     .describe('S', 'Number of minutes between sleep checks')
     .default('S', 1)
@@ -167,7 +170,28 @@ function tsla_poll( vid, long_vid, token ) {
                     sleepIntervalId = setInterval(function() {
                         if (napmode == true) {
                             rpm++;
-                            teslams.vehicles( { email: creds.username, password: creds.password }, function ( vehicles ) {  
+                            // adding support for selecting which vehicle to poll from a multiple vehicle account 
+                            teslams.all( { email: creds.username, password: creds.password }, function ( error, response, body ) {
+                                var vdata, vehicles;
+                                //check we got a valid JSON response from Tesla
+                                try { 
+                                    vdata = JSONbig.parse(body); 
+                                } catch(err) { 
+                                    ulog('Error: login failed, unable to parse vehicle data'); 
+                                    process.exit(1);
+                                }
+                                //check we got an array of vehicles and get the right one using the (optionally) specified offset
+                                if (!util.isArray(vdata.response)) {
+                                    ulog('Expecting an response array from Tesla Motors');
+                                    process.exit(1);
+                                }
+                                vehicles = vdata.response[argv.vehicle]; // cast to a string for BigInt protection????
+                                if (vehicles === undefined) {
+                                    ulog( 'No vehicle data returned for car number ' + argv.vehicle);
+                                    process.exit(1);    
+                                }
+                            // end of new block added for multi-vehicle support                          
+                            //teslams.vehicles( { email: creds.username, password: creds.password }, function ( vehicles ) {  
                                 if ( typeof vehicles.state != undefined ) {
                                     ulog( 'Vehicle state is: ' + vehicles.state );
                                     if (vehicles.state == 'asleep' || vehicles.state == 'unknown') {
@@ -259,7 +283,7 @@ function tsla_poll( vid, long_vid, token ) {
         }
     }).on('data', function(data) {
         // TODO: parse out shift_state field and assign to a global for better sleep checking
-        var d, vals, i, record, doc;              
+        var d, vals, record, doc;              
 		d = data.toString().trim();
 		vals = d.split(/[,\n\r]/);
 		//check we have a valid timestamp to avoid interpreting corrupt stream data             
@@ -267,17 +291,11 @@ function tsla_poll( vid, long_vid, token ) {
 			ulog('Bad timestamp (' + vals[0] + ')' );
 		} else {
             if (argv.db) {
-            
-                //for (i = 0; i < vals.length; i += nFields) { // seems unecessary and loops once anyway
-                
                 record = vals.slice(0, nFields);
                 	doc = { 'ts': +vals[0], 'record': record };
                 	collectionS.insert(doc, { 'safe': true }, function(err,docs) {
                         if(err) util.log(err);
                 	});   
-                	
-                //}
-                
                 lastss = ss; 
                 ss = vals[9]; // TODO: fix hardcoded position for shift_state
                 // [HJ] this section goes with the code above which allows one last poll
@@ -421,7 +439,28 @@ function initstream() {
         rpm = 0; // reset the REST API request counter
     }
     rpm++; // increment the REST API request counter
-    teslams.vehicles( { email: creds.username, password: creds.password }, function ( vehicles ) {  
+    // adding support for selecting which vehicle to poll from a multiple vehicle account 
+    teslams.all( { email: creds.username, password: creds.password }, function ( error, response, body ) {
+        var vdata, vehicles;
+        //check we got a valid JSON response from Tesla
+        try { 
+            vdata = JSONbig.parse(body); 
+        } catch(err) { 
+            ulog('Error: unable to parse vehicle data, login failed'); 
+            process.exit(1);
+        }
+        //check we got an array of vehicles and get the right one using the (optionally) specified offset
+        if (!util.isArray(vdata.response)) {
+            ulog('Error: expecting an array from Tesla');
+            process.exit(1);
+        }
+        vehicles = vdata.response[argv.vehicle];
+        if (vehicles === undefined) {
+            ulog('Error: No vehicle data returned for car number ' + argv.vehicle);
+            process.exit(1);    
+        }
+    // end of new block added for multi-vehicle support
+    // teslams.vehicles( { email: creds.username, password: creds.password }, function ( vehicles ) {  
         if ( typeof vehicles == "undefined" ) {
             console.log('Error: undefined response to vehicles request' );
             console.log('Exiting...');
@@ -482,7 +521,7 @@ function initstream() {
             icount = icount - 1;
             return;
         }
-    }); // end of teslams.vehicles() request
+    }); 
 }
 
 // this is the main part of this program
