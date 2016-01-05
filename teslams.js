@@ -39,6 +39,7 @@ var all = exports.all = function(options, cb) {
     request( { 
        method: 'POST',
        url: owner_api + '/oauth/token',
+       gzip: true,
        form: { 
            "grant_type" : "password",
            "client_id" : cid, 
@@ -54,8 +55,9 @@ var all = exports.all = function(options, cb) {
               http_header = { 
                 'Authorization': 'Bearer ' + token, 
                 'Content-Type': 'application/json; charset=utf-8', 
-                'User-Agent': user_agent
-                // 'Accept-Encoding': 'gzip,deflate' // TODO add support for compressed encoding
+                'User-Agent': user_agent,
+                'Accept-Encoding': 'gzip'
+                // 'Accept-Encoding': 'gzip,deflate'
               };
           } catch (e) {
               console.log( 'Error parsing response to oauth token request');
@@ -64,7 +66,8 @@ var all = exports.all = function(options, cb) {
           if ((!!error) || ((response.statusCode !== 200) && (response.statusCode !== 302))) return report(error, response, body, cb);
           request( {
              method : 'GET',
-             url: portal + '/vehicles', 
+             url: portal + '/vehicles',
+             gzip: true,
              headers: http_header
           }, cb); 
     });
@@ -96,7 +99,8 @@ exports.get_vid = function(options, cb) {
 function mobile_enabled( vid, cb ) {
     request( {
         method: 'GET',
-        url:  portal + '/vehicles/' + vid + '/mobile_enabled', 
+        url:  portal + '/vehicles/' + vid + '/mobile_enabled',
+        gzip: true,
         headers: http_header
     }, function (error, response, body) { 
         if ((!!error) || (response.statusCode !== 200)) return report(error, response, body, cb);
@@ -114,7 +118,8 @@ exports.mobile_enabled = mobile_enabled;
 function get_charge_state( vid, cb ) {
     request( {
         method: 'GET',
-        url: portal + '/vehicles/' + vid + '/data_request/charge_state', 
+        url: portal + '/vehicles/' + vid + '/data_request/charge_state',
+        gzip: true,
         headers: http_header
     }, function (error, response, body) { 
         if ((!!error) || (response.statusCode !== 200)) return report(error, response, body, cb);
@@ -133,6 +138,7 @@ function get_climate_state( vid, cb ) {
     request( {
         method: 'GET',
         url: portal + '/vehicles/' + vid + '/data_request/climate_state',
+        gzip: true,
         headers: http_header
     }, function (error, response, body) { 
         if ((!!error) || (response.statusCode !== 200)) return report(error, response, body, cb);
@@ -150,7 +156,8 @@ exports.get_climate_state = get_climate_state;
 function get_drive_state( vid, cb ) {
     request( {
         method: 'GET',
-        url: portal + '/vehicles/' + vid + '/data_request/drive_state', 
+        url: portal + '/vehicles/' + vid + '/data_request/drive_state',
+        gzip: true,
         headers: http_header
     }, function (error, response, body) { 
         if ((!!error) || (response.statusCode !== 200)) return report(error, response, body, cb);
@@ -169,6 +176,7 @@ function get_vehicle_state( vid, cb ) {
     request( {
         method: 'GET',
         url: portal + '/vehicles/' + vid + '/data_request/vehicle_state',
+        gzip: true,
         headers: http_header
     }, function (error, response, body) { 
         if ((!!error) || (response.statusCode !== 200)) return report(error, response, body, cb);
@@ -186,7 +194,8 @@ exports.get_vehicle_state = get_vehicle_state;
 function get_gui_settings( vid, cb ) {
     request( { 
         method: 'GET', 
-        url: portal + '/vehicles/' + vid + '/data_request/gui_settings', 
+        url: portal + '/vehicles/' + vid + '/data_request/gui_settings',
+        gzip: true,
         headers: http_header
     }, function (error, response, body) { 
         if ((!!error) || (response.statusCode !== 200)) return report(error, response, body, cb);
@@ -204,7 +213,8 @@ exports.get_gui_settings = get_gui_settings;
 function wake_up( vid, cb ) {
     request( { 
         method: 'POST', 
-        url: portal + '/vehicles/' + vid + '/command/wake_up', 
+        url: portal + '/vehicles/' + vid + '/command/wake_up',
+        gzip: true,
         headers: http_header
     }, function (error, response, body) { 
         if ((!!error) || (response.statusCode !== 200)) return report(error, response, body, cb);
@@ -223,7 +233,8 @@ exports.wake_up = wake_up;
 function open_charge_port( vid, cb ) {
     request( {
         method: 'POST', 
-        url: portal + '/vehicles/' + vid + '/command/charge_port_door_open', 
+        url: portal + '/vehicles/' + vid + '/command/charge_port_door_open',
+        gzip: true,
         headers: http_header
     }, function (error, response, body) { 
         if ((!!error) || (response.statusCode !== 200)) return report(error, response, body, cb);
@@ -254,7 +265,8 @@ function charge_state( params, cb ) {
     if (state == "start" || state == "stop" ) {
         request( {
             method: 'POST', 
-            url: portal + '/vehicles/' + vid + '/command/charge_' + state, 
+            url: portal + '/vehicles/' + vid + '/command/charge_' + state,
+            gzip: true,
             headers: http_header
         }, function (error, response, body) { 
             if ((!!error) || (response.statusCode !== 200)) return report(error, response, body, cb);
@@ -290,7 +302,8 @@ function charge_range( params, cb ) {
     if (range == "standard" || range == "max_range" ) {
         request( {
             method: 'POST', 
-            url: portal + '/vehicles/' + vid + '/command/charge_' + range, 
+            url: portal + '/vehicles/' + vid + '/command/charge_' + range,
+            gzip: true,
             headers: http_header
         }, function (error, response, body) { 
             if ((!!error) || (response.statusCode !== 200)) return report(error, response, body, cb);
@@ -305,7 +318,8 @@ function charge_range( params, cb ) {
     } else if ( range == "set" && (percent >= 50) && (percent <= 100) ) {
         request( {
             method: 'POST', 
-            url: portal + '/vehicles/' + vid + '/command/set_charge_limit', 
+            url: portal + '/vehicles/' + vid + '/command/set_charge_limit',
+            gzip: true,
             headers: http_header,
             form: { 
                 "percent" : percent.toString()
@@ -333,6 +347,7 @@ function flash( vid, cb ) {
     request({ 
         method: 'POST', 
         url: portal + '/vehicles/' + vid + '/command/flash_lights',
+        gzip: true,
         headers: http_header
     }, function (error, response, body) { 
         if ((!!error) || (response.statusCode !== 200)) return report(error, response, body, cb);
@@ -351,6 +366,7 @@ function honk( vid, cb ) {
     request( {
         method: 'POST', 
         url: portal + '/vehicles/' + vid + '/command/honk_horn',
+        gzip: true,
         headers: http_header
     }, function (error, response, body) { 
         if ((!!error) || (response.statusCode !== 200)) return report(error, response, body, cb);
@@ -373,7 +389,8 @@ function door_lock( params, cb ) {
     if (state == "lock" || state === true || state == "on" || state == "close" ) {
         request( {
             method: 'POST',
-            url: portal + '/vehicles/' + vid + '/command/door_lock', 
+            url: portal + '/vehicles/' + vid + '/command/door_lock',
+            gzip: true,
             headers: http_header
         }, function (error, response, body) { 
             if ((!!error) || (response.statusCode !== 200)) return report(error, response, body, cb);
@@ -388,7 +405,8 @@ function door_lock( params, cb ) {
     } else if (state == "unlock" || state === false || state == "off" || state == "open" ) {
         request( { 
             method: 'POST',
-            url: portal + '/vehicles/' + vid + '/command/door_unlock', 
+            url: portal + '/vehicles/' + vid + '/command/door_unlock',
+            gzip: true,
             headers: http_header
         }, function (error, response, body) { 
             if ((!!error) || (response.statusCode !== 200)) return report(error, response, body, cb);
@@ -435,6 +453,7 @@ function set_temperature( params, cb ) {
         request( {
             method: 'POST',
             url: portal + '/vehicles/' + vid + '/command/set_temps',
+            gzip: true,
             headers: http_header,
             form: {
                 "driver_temp" : dtemp.toString(),
@@ -471,6 +490,7 @@ function auto_conditioning( params, cb ) {
         request( {
             method: 'POST',
             url: portal + '/vehicles/' + vid + '/command/auto_conditioning_start',
+            gzip: true,
             headers: http_header
         }, function (error, response, body) { 
             if ((!!error) || (response.statusCode !== 200)) return report(error, response, body, cb);
@@ -485,7 +505,8 @@ function auto_conditioning( params, cb ) {
     } else if (state == "stop" || state === false || state == "off"  ) {
         request( {
             method: 'POST',
-            url: portal + '/vehicles/' + vid + '/command/auto_conditioning_stop', 
+            url: portal + '/vehicles/' + vid + '/command/auto_conditioning_stop',
+            gzip: true,
             headers: http_header
         }, function (error, response, body) { 
             if ((!!error) || (response.statusCode !== 200)) return report(error, response, body, cb);
@@ -523,6 +544,7 @@ function sun_roof( params, cb ) {
         request( {
             method: 'POST',
             url: portal +'/vehicles/' + vid + '/command/sun_roof_control',
+            gzip: true,
             headers: http_header,
             form: {
                 'state': state
@@ -541,6 +563,7 @@ function sun_roof( params, cb ) {
         request( {
             method: 'POST',
             url: portal +'/vehicles/' + vid + '/command/sun_roof_control',
+            gzip: true,
             headers: http_header,
             form: {
                 'state': 'move',
@@ -598,6 +621,7 @@ exports.stream = function(options, cb) {
 
   request({ method : 'GET',
             url    : 'https://streaming.vn.teslamotors.com/stream/' + options.vehicle_id + '/?values=' + exports.stream_columns.join(','),
+            gzip: true,
             auth   :
             { user : options.email,
               pass : options.password

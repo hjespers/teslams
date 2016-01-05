@@ -177,17 +177,17 @@ function tsla_poll( vid, long_vid, token ) {
                                 try { 
                                     vdata = JSONbig.parse(body); 
                                 } catch(err) { 
-                                    ulog('Error: login failed, unable to parse vehicle data'); 
+                                    console.log('Error: login failed, unable to parse vehicle data'); 
                                     process.exit(1);
                                 }
                                 //check we got an array of vehicles and get the right one using the (optionally) specified offset
                                 if (!util.isArray(vdata.response)) {
-                                    ulog('Expecting an response array from Tesla Motors');
+                                    console.log('Expecting an response in array format from Tesla Motors');
                                     process.exit(1);
                                 }
                                 vehicles = vdata.response[argv.vehicle]; // cast to a string for BigInt protection????
                                 if (vehicles === undefined) {
-                                    ulog( 'No vehicle data returned for car number ' + argv.vehicle);
+                                    console.log( 'No vehicle data returned for car number ' + argv.vehicle);
                                     process.exit(1);    
                                 }
                             // end of new block added for multi-vehicle support                          
