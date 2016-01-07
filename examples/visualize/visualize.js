@@ -7,8 +7,7 @@
 // You need a valid Google Maps v3 API key to use this script
 //  https://developers.google.com/maps/documentation/javascript/tutorial#api_key
 //
-var apiKey = 'AIzaSyAtYQ9xjedv3B6_2HwsDVMY7oHlbNs-cvk';
-
+var apiKey = 'AIzaSyBAQ9orToKfA-vAzbFjdyE-PIE86P2IKBY';
 
 function argchecker( argv ) {
     if (argv.db === true) throw 'MongoDB database name is unspecified. Use -d dbname or --db dbname';
