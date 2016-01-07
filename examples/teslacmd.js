@@ -262,6 +262,6 @@ teslams.all( { email: creds.username, password: creds.password }, function ( err
         });
     } else {
         // passed through all exit condition checks 
-        setTimeout(function(){ parseArgs( vehicle ); }, 5000);
+        setTimeout(function(){ parseArgs( vehicle ); }, 5000); // 5 sec delay just to avoid login errors and throttling by Tesla
     }
 });
