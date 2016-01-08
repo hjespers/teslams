@@ -15,7 +15,7 @@ function argchecker( argv ) {
 }
 
 var usage = 'Usage: $0 -u <username> -p <password> [-sz] [--file <filename> || --db <MongoDB database>] \n' +
-    '   [--values <value list>] [--maxrpm <#num>] --vehicle offset\n' +
+    '   [--values <value list>] [--maxrpm <#num>] [--vehicle offset] [--naptime <#num_mins>]\n' +
     '# if --db <MongoDB database> argument is given, store data in MongoDB, otherwise in a flat file';
 
 var s_url = 'https://streaming.vn.teslamotors.com/stream/';
@@ -60,6 +60,9 @@ var argv = require('optimist')
     .alias('r', 'maxrpm')
     .describe('r', 'Maximum number of requests per minute')
     .default('r', 6)
+    .alias('n', 'naptime')
+    .describe('n', 'Number of minutes to nap')
+    .default('n', 30)
     .alias('N', 'napcheck')
     .describe('N', 'Number of minutes between nap checks')
     .default('N', 1)
@@ -79,8 +82,10 @@ var argv = require('optimist')
 var creds = require('./config.js').config(argv);
 
 argv = argv.argv;
+//convert time values from minutes to milliseconds
 argv.napcheck *= 60000;
 argv.sleepcheck *= 60000;
+argv.naptime *= 60000;
 
 if ( argv.help == true ) {
     console.log(usage);
@@ -160,7 +165,7 @@ function tsla_poll( vid, long_vid, token ) {
                         ss = 'nap';
                         lastss = 'nap';
                         initstream();
-                    }, 1800000);    // 30 minute of nap time
+                    }, argv.naptime);    // 30 minute of nap time (default)
                 } else {
                     ulog('Debug: (' + ncount + ') Nap timer is already running. Not starting another');
                 }
