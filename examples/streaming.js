@@ -277,14 +277,6 @@ function tsla_poll( vid, long_vid, token ) {
             }, 1000); //1 seconds
             pcount = pcount - 1;
             return;
-        } else if ( response.statusCode == 429) {  // HTTP 429 Too Many Requests (Tesla is temporarily blocking requests, wait for 15 minutes).
-            ulog('WARN: HTTP 429: Too Many Requests, Error code = ' + error + '\n Waiting 15 minutes before polling again...');
-            // put long delay to avoid aggrevating the situation.
-            setTimeout(function() {
-                tsla_poll( vid, long_vid, token ); // poll again
-            }, 900000); // 15 minutes
-            pcount = pcount - 1;
-            return;
         } else { // all other unexpected responses
             ulog('Unexpected problem with request:\n    Response status code = ' + response.statusCode + '  Error code = ' + error + '\n Polling again in 10 seconds...');
             // put short delay to avoid infinite recursive loop and stack overflow
