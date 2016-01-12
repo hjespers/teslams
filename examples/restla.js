@@ -60,17 +60,16 @@ function parseUrl(vehicle, req, res) {
         res.end(JSONbig.stringify(stuff));
     }
 
-    var vid = vehicle.id_s, url = req.url;
+    var vid = vehicle.id, url = req.url;
 
     switch (url) {
-    case "/vehicle":
-        teslams.vehicles(vid, function (resp) {
-            console.log( resp );
+    case "/vehicles":
+        teslams.all({ email: creds.username, password: creds.password }, function (error, response, body) {
             res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
             res.setHeader("Pragma", "no-cache");
             res.setHeader("Expires", 0);
             res.writeHead(200, {'Content-Type': 'application/json'});
-            res.end(JSON.stringify(resp));
+            res.end(body);
         });
         break;
     case "/mobile":
@@ -202,7 +201,7 @@ function parseUrl(vehicle, req, res) {
         res.setHeader("Expires", 0);
         res.writeHead(200, {'Content-Type': 'text/html'});
         res.write('<html><body><table>');
-        res.write('<tr><td><a href="../vehicle">/vehicle</a><td>Print vehicle info</tr>');
+        res.write('<tr><td><a href="../vehicles">/vehicles</a><td>Print vehicle info</tr>');
         res.write('<tr><td><a href="../vehicle_state">/vehicle_state</a><td>Display the vehicle state</tr>');
         res.write('<tr><td><a href="../charge">/charge</a><td>Display the charge state</tr>');
         res.write('<tr><td><a href="../charge/start">/charge/start</a><td>Start charging the car</tr>');
@@ -251,13 +250,10 @@ teslams.all({ email: creds.username, password: creds.password }, function (error
 
     var data, vehicle;
     //check we got a valid JSON response from Tesla
-    console.log( 'error is : ' + error );
-    console.log( 'response is : ' +response );
-    console.log( 'body is : ' +body );
     try {
         data = JSONbig.parse(body);
     } catch (err) {
-        pr(new Error('login failed'));
+        pr(new Error('parsing error: ' + err ));
         process.exit(1);
     }
     //check we got an array of vehicles and get the first one
@@ -266,7 +262,8 @@ teslams.all({ email: creds.username, password: creds.password }, function (error
         pr(new Error('expecting an array from Tesla Motors cloud service'));
         process.exit(1);
     }
-    vehicle = data.response[argv.vehicle];
+    //vehicle = data.response[argv.vehicle];
+    vehicle = data.response[0];
     //check the vehicle has a valid id
     if (vehicle.id_s === undefined) {
         pr(new Error('No vehicle data returned for car number ' + argv.vehicle));
