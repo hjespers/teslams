@@ -72,9 +72,9 @@ var baseText = {
     RENA: "North American",
     REEU: "European",
     TM02: "Signature",
-    PF01: "P",
     PF00: "S",
-    BT85: "85PLUS",
+    PBT85: "P85",
+    PX01: "PLUS",
     BT60: "60",
     BT40: "40"
 };
