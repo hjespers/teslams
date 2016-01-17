@@ -65,6 +65,7 @@ var nav = "";
 var system = "";
 var fwVersion = "";
 var vin = "";
+var name = "";
 var optionString = "";
 var baseString = "";
 
@@ -316,6 +317,7 @@ app.namespace(baseUrl, function() {
                 if (docs.length > 1)
                     console.log("congratulations, you have more than one Tesla Model S - this only supports your first car");
                 vin = docs[0].vehicles.vin;
+                name = docs[0].vehicles.display_name;
                 
                 optionString = "<ul>";
                 var options = docs[0].vehicles.option_codes.split(',');
@@ -439,6 +441,7 @@ app.namespace(baseUrl, function() {
             res.send(data.replace("MAGIC_NAV",nav)
                  .replace("MAGIC_OPTIONS", baseString + optionString)
                  .replace("MAGIC_VIN", vin)
+                 .replace("MAGIC_NAME", name)
                  .replace("MAGIC_FIRMWARE_VERSION", fwVersion)
                  .replace("MAGIC_DISPLAY_SYSTEM", system));
         });
