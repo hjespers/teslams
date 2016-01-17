@@ -85,12 +85,16 @@ var baseText = {
     
 };
 var optionText = {
+    PPTI: "<li> titanium metallic</li>",
     PBSB: "<li> black</li>",
+    PMBL: "<li> obsidian black</li>",
     PBCW: "<li> solid white</li>",
     PMSS: "<li> silver</li>",
+    PMNG: "<li> midnight silver metallic</li>",
     PMTG: "<li> dolphin gray metallic</li>",
     PMAB: "<li> metallic brown</li>",
     PMMB: "<li> metallic blue</li>",
+    PPSB: "<li> metallic blue</li>",
     PMSG: "<li> metallic green</li>",
     PPSW: "<li> pearl white</li>",
     PPMR: "<li> multi-coat red</li>",
@@ -154,7 +158,7 @@ var optionText = {
     BC0R: "<li> red brake calipers</li>",
     PA01: "<li> paint armor</li>",
     YF01: "<li> matching yacht floor</li>",
-    DA02: "<li> autopilot</li>",
+    DA02: "<li> autopilot</li>"
 };
     
 
