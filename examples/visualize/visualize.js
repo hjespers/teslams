@@ -390,6 +390,37 @@ app.namespace(baseUrl, function() {
                         fwVersion = "5.14 ";
                     else if (fwBuild.substr(0,4) == "1.67")
                         fwVersion = "6.0 ";
+                    else if (fwBuild.substr(0,4) == "2.2.")
+                        fwVersion = "6.1 ";
+                    else if (fwBuild.substr(0,4) == "2.4.")
+                        fwVersion = "6.2 ";
+                    else if (fwBuild.substr(0,4) == "2.5.")
+                        fwVersion = "6.2 ";
+                    else if (fwBuild.substr(0,4) == "2.7.")
+                        fwVersion = "7.0 ";
+                    else if (fwBuild.substr(0,4) == "2.8.")
+                        fwVersion = "7.0 ";
+                    else if (fwBuild.substr(0,6) == "2.9.12")
+                        fwVersion = "7.0 ";
+                    else if (fwBuild.substr(0,6) == "2.9.40")
+                        fwVersion = "7.0 ";
+                    else if (fwBuild.substr(0,6) == "2.9.68")
+                        fwVersion = "7.0 ";
+                    else if (fwBuild.substr(0,6) == "2.9.74")
+                        fwVersion = "7.0 ";
+                    else if (fwBuild.substr(0,6) == "2.9.77")
+                        fwVersion = "7.0 ";
+                    else if (fwBuild.substr(0,7) == "2.10.10")
+                        fwVersion = "7.0 ";
+                    else if (fwBuild.substr(0,7) == "2.10.20")
+                        fwVersion = "7.0 ";
+                    else if (fwBuild.substr(0,7) == "2.10.26")
+                        fwVersion = "7.0 ";
+                    else if (fwBuild.substr(0,7) == "2.9.154")
+                        fwVersion = "7.1 ";
+                    else if (fwBuild.substr(0,7) == "2.9.172")
+                        fwVersion = "7.1 ";
+                    
                     fwVersion += "(" + fwBuild + ")";
                 } else {
                     fwVersion = 'unknown';
