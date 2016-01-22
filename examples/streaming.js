@@ -384,7 +384,6 @@ function tsla_poll( vid, long_vid, token ) {
                 if (argv.mqtt) {
                     try {
                         client.publish(argv.topic + '/' + vid, JSON.stringify(streamdata));
-                        //console.log ( 'mqtt publish to ' + argv.topic + '/' + vid)
                     } catch (error) {
                         // failed to send, therefore stop publishing and log the error thrown
                         console.log('Error while publishing message to mqtt broker: ' + error.toString());
@@ -457,7 +456,6 @@ function getAux() {
         rpm = rpm + 2; // increase REST request counter by 2 for following requests
         ulog( 'getting charge state Aux data');
         teslams.get_charge_state( getAux.vid, function(data) {
-            console.log ( data );
             var doc = { 'ts': new Date().getTime(), 'chargeState': data };
             if (argv.db) {
                 collectionA.insert(doc, { 'safe': true }, function(err,docs) {
