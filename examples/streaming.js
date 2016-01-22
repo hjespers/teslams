@@ -9,14 +9,19 @@ var teslams = require('../teslams.js');
 var fs = require('fs');
 var util = require('util');
 var JSONbig = require('json-bigint');
+var mqtt = require('mqtt');
+var awsIot = require('aws-iot-device-sdk');
 
 function argchecker( argv ) {
-    if (argv.db == true) throw 'MongoDB database name is unspecified. Use -d dbname or --db dbname';
+    if (argv.db === true) throw 'MongoDB database name is unspecified. Use -d, --db <dbname>';
+    if (argv.mqtt === true) throw 'MQTT broker URL is unspecified. Use -m, -mqtt <broker_url> (i.e. "-m mqtt://hostname")';
+    if (argv.topic === true) throw 'MQTT topic is unspecified. Use -t, --topic <topic>';
 }
 
-var usage = 'Usage: $0 -u <username> -p <password> [-sz] [--file <filename> || --db <MongoDB database>] \n' +
-    '   [--values <value list>] [--maxrpm <#num>] [--vehicle offset] [--naptime <#num_mins>]\n' +
-    '# if --db <MongoDB database> argument is given, store data in MongoDB, otherwise in a flat file';
+var usage = 'Usage: $0 -u <username> -p <password> [-sz] \n' +
+    '   [--file <filename>] [--db <MongoDB database>] \n' +
+    '   [--mqtt <mqtt://hostname>] [--topic <mqtt_topic>] \n' +
+    '   [--values <value list>] [--maxrpm <#num>] [--vehicle offset] [--naptime <#num_mins>]'; 
 
 var s_url = 'https://streaming.vn.teslamotors.com/stream/';
 var collectionS, collectionA;
@@ -39,7 +44,6 @@ var scount = 0;
 var icount = 0;
 var ncount = 0;
 
-
 var argv = require('optimist')
     .usage(usage)
     .check(argchecker)
@@ -55,11 +59,17 @@ var argv = require('optimist')
     .describe('z', 'enable sleep mode checking')
     .boolean(['s', 'z'])
     .alias('f', 'file')
-    .describe('f', 'Comma Separated Values (CSV) output file. Defaults to streaming.out')
-    .default('f', 'streaming.out')
+    .describe('f', 'Comma Separated Values (CSV) output filename')
+ //   .default('f', 'streaming.out')
     .alias('r', 'maxrpm')
     .describe('r', 'Maximum number of requests per minute')
     .default('r', 6)
+    .alias('m', 'mqtt')
+    .describe('m', 'MQTT broker')
+    .alias('a', 'awsiot')
+    .describe('a', 'Amazon Web Service IoT')
+    .alias('t', 'topic')
+    .describe('t', 'MQTT publish topic')
     .alias('n', 'naptime')
     .describe('n', 'Number of minutes to nap')
     .default('n', 30)
@@ -94,6 +104,10 @@ if ( argv.help == true ) {
 
 var nFields = argv.values.split(",").length + 1; // number of fields including ts
 
+if (!argv.db && !argv.awsiot && !argv.mqtt && !argv.file) {
+    console.log('No outputs specified. Add one (or more) of --file, --mqtt or --awsiot flags to specify outputs');
+    process.exit();
+}
 if (argv.db) {
     console.log("database name", argv.db);
     MongoClient = require('mongodb').MongoClient;
@@ -104,9 +118,50 @@ if (argv.db) {
         collectionS = db.collection('tesla_stream');
         collectionA = db.collection('tesla_aux');
     });
-} else {
+} 
+if (argv.awsiot) {
+    var device = awsIot.device({
+        keyPath: creds.awsiot.keyPath,    //path to your AWS Private Key
+        certPath: creds.awsiot.certPath,  //path to your AWS Public Key
+        caPath: creds.awsiot.caPath,      //path tp your AWS Root Certificate
+        clientId: creds.awsiot.clientId,  //Your AWS IoT Client ID
+        region: creds.awsiot.region       //The AWS region in whcih your IoT account is registered
+    });
+    if (!argv.topic) {
+        console.log('No AWS IOT topic specified. Using teslams/{id} where {id} is the vehicle id of the car');
+        argv.topic = 'teslams';
+    }
+    //
+    // Device is an instance returned by mqtt.Client(), see mqtt.js for full
+    // documentation.
+    //
+    device.on('connect', function() {
+        console.log('awsiot device connected!');
+    });
+} 
+if (argv.mqtt) {
+    var client  = mqtt.connect(argv.mqtt);
+    if (!argv.topic) {
+        console.log('No MQTT topic specified. Using teslams/{id} where {id} is the vehicle id of the car');
+        argv.topic = 'teslams';
+    }
+    client.on('connect', function () {
+        console.log('mqtt connected to broker ' + argv.mqtt);
+    });
+    client.on('error', function (error) {
+        console.log('mqtt error: ' + error);
+    });
+}
+if (argv.file) {
+    console.log( 'argv.file = ' + argv.file);
+    if (argv.file === true) {
+        console.log('No output filename  specified. Using ./streaming.out');
+        argv.file = 'streaming.out';
+    }
+    console.log( 'argv.file = ' + argv.file);
     stream = fs.createWriteStream(argv.file);
 }
+
 
 function tsla_poll( vid, long_vid, token ) {    
     pcount++;
@@ -274,7 +329,7 @@ function tsla_poll( vid, long_vid, token ) {
             ulog('WARN: HTTP 401: Unauthorized - token has likely expired, reinitializing');
             setTimeout(function() {
                 initstream();
-            }, 1000); //1 seconds
+            }, 5000); //5 seconds
             pcount = pcount - 1;
             return;
         } else { // all other unexpected responses
@@ -301,26 +356,76 @@ function tsla_poll( vid, long_vid, token ) {
                 	collectionS.insert(doc, { 'safe': true }, function(err,docs) {
                         if(err) util.log(err);
                 	});   
-                lastss = ss; 
-                ss = vals[9]; // TODO: fix hardcoded position for shift_state
-                // [HJ] this section goes with the code above which allows one last poll
-                // after entering nap mode. If this turns out to cause other problems
-                // remove this nap cancel section AND switch back to disabling this
-                // final poll
-                if (napmode == true && ss != '') {
-                    //cancel nap mode           
-                    ulog('Info: canceling nap mode because shift_state is now (' + ss + ')'); 
-                    clearTimeout(napTimeoutId);
-                    ncount = 0;
-                    clearInterval(sleepIntervalId);
-                    scount = 0;
-                    napmode = false;
-                    ss = 'abort';
-                    lastss = 'abort';
-                    initstream();
+            } else if ((argv.mqtt || argv.awsiot) && argv.topic) {
+                //publish to MQTT broker on specified topic
+                var newchunk = d.replace(/[\n\r]/g, '');
+                var array = newchunk.split(',');
+                //var datetime = new Date(parseInt(array[0]));
+                var streamdata = { 
+                    id_s : vid.toString(),
+                    vehicle_id : long_vid,
+                    timestamp : array[0], 
+                    //timestamp : datetime.toJSON(), 
+                    speed : array[1], 
+                    odometer : array[2], 
+                    soc : array[3], 
+                    elevation : array[4], 
+                    est_heading : array[5], 
+                    est_lat : array[6], 
+                    est_lng : array[7], 
+                    power : array[8], 
+                    shift_state : array[9],
+                    range : array[10],
+                    est_range : array[11],
+                    heading : array[12]
+                };
+                if (!argv.silent) { ulog( 'streamdata is: ' + JSON.stringify(streamdata) ); }
+                // Publish message
+                if (argv.mqtt) {
+                    try {
+                        client.publish(argv.topic + '/' + vid, JSON.stringify(streamdata));
+                        //console.log ( 'mqtt publish to ' + argv.topic + '/' + vid)
+                    } catch (error) {
+                        // failed to send, therefore stop publishing and log the error thrown
+                        console.log('Error while publishing message to mqtt broker: ' + error.toString());
+                    }
                 }
-            } else {
-                  stream.write(data);
+                if (argv.awsiot) {
+                    try {                    
+                        //Argh!!!! AWS DynamoDB doesn't allow empty strings so replace will null values.
+                        var dynamoDBdata = JSON.stringify(streamdata, function(k, v) {
+                            if (v === "") {
+                                return null;
+                            } 
+                            return v;
+                        });
+                        device.publish(argv.topic + '/' + vid, dynamoDBdata);
+                    } catch (error) {
+                        // failed to send, therefore stop publishing and log the error thrown
+                        console.log('Error while publishing message to aws iot: ' + error.toString());
+                    }
+                }
+            } else if (argv.file) {
+                stream.write(data);
+            } 
+            //after data is written deal with the napmode stuff
+            lastss = ss; 
+            ss = vals[9]; // TODO: fix hardcoded position for shift_state
+            // [HJ] this section goes with the code above which allows one last poll
+            // after entering nap mode. If this turns out to cause other problems
+            // remove this nap cancel section AND switch back to disabling this
+            // final poll
+            if (napmode == true && ss != '') {
+                //cancel nap mode           
+                ulog('Info: canceling nap mode because shift_state is now (' + ss + ')'); 
+                clearTimeout(napTimeoutId);
+                ncount = 0;
+                clearInterval(sleepIntervalId);
+                scount = 0;
+                napmode = false;
+                ss = 'abort';
+                lastss = 'abort';
+                initstream();
             }
         }
     });     
@@ -352,46 +457,101 @@ function getAux() {
         rpm = rpm + 2; // increase REST request counter by 2 for following requests
         ulog( 'getting charge state Aux data');
         teslams.get_charge_state( getAux.vid, function(data) {
+            console.log ( data );
             var doc = { 'ts': new Date().getTime(), 'chargeState': data };
-            collectionA.insert(doc, { 'safe': true }, function(err,docs) {
-                if(err) throw err;
-            });
-        });
-        ulog( 'getting climate state Aux data');
-        teslams.get_climate_state( getAux.vid, function(data) {
-            var ds = JSON.stringify(data), doc;
-
-            if (ds.length > 2 && ds != JSON.stringify(getAux.climate)) {
-                getAux.climate = data;
-                doc = { 'ts': new Date().getTime(), 'climateState': data };
+            if (argv.db) {
                 collectionA.insert(doc, { 'safe': true }, function(err,docs) {
                     if(err) throw err;
                 });
             }
+            if (argv.mqtt) {
+                //publish charge_state data
+                try {
+                    client.publish(argv.topic + '/' + getAux.vid + '/charge_state', JSON.stringify(doc));
+                } catch (error) {
+                    // failed to send, therefore stop publishing and log the error thrown
+                    console.log('Error while publishing charge_state message to mqtt broker: ' + error.toString());
+                }
+            }
+        });
+        ulog( 'getting climate state Aux data');
+        teslams.get_climate_state( getAux.vid, function(data) {
+            var ds = JSON.stringify(data), doc;
+            if (ds.length > 2 && ds != JSON.stringify(getAux.climate)) {
+                getAux.climate = data;
+                doc = { 'ts': new Date().getTime(), 'climateState': data };
+                if (argv.db) {                  
+                    collectionA.insert(doc, { 'safe': true }, function(err,docs) {
+                        if(err) throw err;
+                    });
+                }
+                if (argv.mqtt) {
+                    //publish climate_state data
+                    try {
+                        client.publish(argv.topic + '/' + getAux.vid + '/climate_state', JSON.stringify(doc));
+                    } catch (error) {
+                        // failed to send, therefore stop publishing and log the error thrown
+                        console.log('Error while publishing climate_state message to mqtt broker: ' + error.toString());
+                    }
+                }   
+            }         
         });
     }
 }
 
-
 function storeVehicles(vehicles) {
     var doc = { 'ts': new Date().getTime(), 'vehicles': vehicles };
-    collectionA.insert(doc, { 'safe': true }, function (err, docs) {
-        if (err) console.dir(err);
-    });
+    if (argv.db) {
+        collectionA.insert(doc, { 'safe': true }, function (err, docs) {
+            if (err) console.dir(err);
+        });
+    }
+    if (argv.mqtt) {
+        //publish vehicles data
+        try {
+            // make this unique somehow 
+            client.publish(argv.topic + '/vehicles', JSON.stringify(doc));
+        } catch (error) {
+            // failed to send, therefore stop publishing and log the error thrown
+            console.log('Error while publishing vehicles message to mqtt broker: ' + error.toString());
+        }
+    }
     rpm = rpm + 2; // increment REST request counter for following 2 requests
     teslams.get_vehicle_state(vehicles.id, function(data) {
         ulog( util.inspect(data));
         doc = { 'ts': new Date().getTime(), 'vehicleState': data };
-        collectionA.insert(doc, { 'safe': true }, function (err, docs) {
-            if (err) console.dir(err);
-        });
+        if (argv.db) {
+            collectionA.insert(doc, { 'safe': true }, function (err, docs) {
+                if (err) console.dir(err);
+            });
+        }
+        if (argv.mqtt) {
+            //publish vehicle_state data
+            try {
+                client.publish(argv.topic + '/' + vehicles.id + '/vehicle_state', JSON.stringify(doc));
+            } catch (error) {
+                // failed to send, therefore stop publishing and log the error thrown
+                console.log('Error while publishing vehicle_state message to mqtt broker: ' + error.toString());
+            }
+        }
     });
     teslams.get_gui_settings(vehicles.id, function(data) {
         ulog(util.inspect(data));
         doc = { 'ts': new Date().getTime(), 'guiSettings': data };
-        collectionA.insert(doc, { 'safe': true }, function (err, docs) {
-            if (err) console.dir(err);
-        });
+        if (argv.db) {
+            collectionA.insert(doc, { 'safe': true }, function (err, docs) {
+                if (err) console.dir(err);
+            });
+        }
+        if (argv.mqtt) {
+            //publish gui_settings data
+            try {
+                client.publish(argv.topic + '/' + vehicles.id + '/gui_settings', JSON.stringify(doc));
+            } catch (error) {
+                // failed to send, therefore stop publishing and log the error thrown
+                console.log('Error while publishing gui_settings message to mqtt broker: ' + error.toString());
+            }
+        }
     });
 }
 
@@ -451,14 +611,21 @@ function initstream() {
         try { 
             vdata = JSONbig.parse(body); 
         } catch(err) { 
-            ulog('Error: unable to parse vehicle data, login failed'); 
-            process.exit(1);
+            ulog('Error: unable to parse vehicle data response as JSON, login failed. Trying again.'); 
+            setTimeout(function() { 
+                initstream(); 
+            }, 10000); // 10 second
+            icount = icount - 1;
+            return;
+            //process.exit(1);
         }
         //check we got an array of vehicles and get the right one using the (optionally) specified offset
         if (!util.isArray(vdata.response)) {
-            ulog('Error: expecting an array from Tesla');
+            ulog('Error: expecting an array if vehicle data from Tesla but got this:');
+            util.log( vdata.response );
             process.exit(1);
         }
+        // use the vehicle offset from the command line (if specified) to identify the right car in case of multi-car account
         vehicles = vdata.response[argv.vehicle];
         if (vehicles === undefined) {
             ulog('Error: No vehicle data returned for car number ' + argv.vehicle);
@@ -516,9 +683,10 @@ function initstream() {
             sleepmode = false;
             if (firstTime) {    // initialize only once
                 firstTime = false;
-                if (argv.db) { // initialize database
+                //if (argv.db) { // initialize database
                     initdb(vehicles);
-                } else { // initialize first line of CSV file output with field names 
+                //} 
+                if (argv.file) { // initialize first line of CSV file output with field names 
                     stream.write('timestamp,' + argv.values + '\n');
                 }
             }
