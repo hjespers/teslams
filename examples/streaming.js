@@ -153,12 +153,10 @@ if (argv.mqtt) {
     });
 }
 if (argv.file) {
-    console.log( 'argv.file = ' + argv.file);
     if (argv.file === true) {
         console.log('No output filename  specified. Using ./streaming.out');
         argv.file = 'streaming.out';
     }
-    console.log( 'argv.file = ' + argv.file);
     stream = fs.createWriteStream(argv.file);
 }
 
