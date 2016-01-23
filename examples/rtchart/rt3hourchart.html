@@ -11,7 +11,7 @@
 			window.console = window.console || { log: function (d) {} };
 
 			// Paho MQTT over websockets config params
-			var topic = "teslams/+"; // "teslams/{id}" format from streaming.js publisher
+			var topic = "teslams/+/stream"; // "teslams/{id}" format from streaming.js publisher
 			var mqtt = {
 				hostname : "localhost",
 				port : 3000, // mqtt over websockets port, *NOT* the standard mqtt 1883 port

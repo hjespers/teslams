@@ -354,7 +354,8 @@ function tsla_poll( vid, long_vid, token ) {
                 	collectionS.insert(doc, { 'safe': true }, function(err,docs) {
                         if(err) util.log(err);
                 	});   
-            } else if ((argv.mqtt || argv.awsiot) && argv.topic) {
+            } 
+            if ((argv.mqtt || argv.awsiot) && argv.topic) {
                 //publish to MQTT broker on specified topic
                 var newchunk = d.replace(/[\n\r]/g, '');
                 var array = newchunk.split(',');
@@ -381,7 +382,8 @@ function tsla_poll( vid, long_vid, token ) {
                 // Publish message
                 if (argv.mqtt) {
                     try {
-                        client.publish(argv.topic + '/' + vid, JSON.stringify(streamdata));
+                        client.publish(argv.topic + '/' + vid + '/stream', JSON.stringify(streamdata));
+                        console.log('Published to topic = ' + argv.topic + '/' + vid +'\n streamdata = ' + JSON.stringify(streamdata));
                     } catch (error) {
                         // failed to send, therefore stop publishing and log the error thrown
                         console.log('Error while publishing message to mqtt broker: ' + error.toString());
@@ -396,13 +398,14 @@ function tsla_poll( vid, long_vid, token ) {
                             } 
                             return v;
                         });
-                        device.publish(argv.topic + '/' + vid, dynamoDBdata);
+                        device.publish(argv.topic + '/' + vid+ '/stream', dynamoDBdata);
                     } catch (error) {
                         // failed to send, therefore stop publishing and log the error thrown
                         console.log('Error while publishing message to aws iot: ' + error.toString());
                     }
                 }
-            } else if (argv.file) {
+            }  
+            if (argv.file) {
                 stream.write(data);
             } 
             //after data is written deal with the napmode stuff
