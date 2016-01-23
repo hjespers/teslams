@@ -67,6 +67,7 @@ var fwVersion = "";
 var vin = "";
 var name = "";
 var optionString = "";
+var rawoptions = "";
 var baseString = "";
 
 var baseText = {
@@ -324,6 +325,21 @@ app.namespace(baseUrl, function() {
                 name = docs[0].vehicles.display_name;
                 
                 optionString = "<ul>";
+                rawoptions = docs[0].vehicles.option_codes;
+                rawoptions = rawoptions.replace("PPSR", "COL0-PPSR");
+                rawoptions = rawoptions.replace("PBSB", "COL1-PBSB");
+                rawoptions = rawoptions.replace("PBCW", "COL1-PBCW");
+                rawoptions = rawoptions.replace("PMAB", "COL2-PMAB");
+                rawoptions = rawoptions.replace("PMSG", "COL2-PMSG");
+                rawoptions = rawoptions.replace("PMMB", "COL2-PMMB");
+                rawoptions = rawoptions.replace("PMNG", "COL2-PMNG");
+                rawoptions = rawoptions.replace("PMBL", "COL2-PMBL");
+                rawoptions = rawoptions.replace("PMSS", "COL2-PMSS");
+                rawoptions = rawoptions.replace("PMTG", "COL2-PMTG");
+                rawoptions = rawoptions.replace("PMTI", "COL2-PMTI");
+                rawoptions = rawoptions.replace("PMMB", "COL2-PMMB");
+                rawoptions = rawoptions.replace("PPSW", "COL3-PPSW");
+                rawoptions = rawoptions.replace("PPMR", "COL3-PPMR");
                 var options = docs[0].vehicles.option_codes.split(',');
                 for (var i = 0; i < options.length; i++) {
                     if (optionText[options[i]] !== undefined)
@@ -443,6 +459,7 @@ app.namespace(baseUrl, function() {
         fs.readFile(__dirname + "/welcome.html", "utf-8", function(err, data) {
             if (err) throw err;
             res.send(data.replace("MAGIC_NAV",nav)
+                 .replace("MAGIC_RAWOPTIONS", rawoptions)
                  .replace("MAGIC_OPTIONS", baseString + optionString)
                  .replace("MAGIC_VIN", vin)
                  .replace("MAGIC_NAME", name)
