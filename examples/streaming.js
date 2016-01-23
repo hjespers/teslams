@@ -383,7 +383,7 @@ function tsla_poll( vid, long_vid, token ) {
                 if (argv.mqtt) {
                     try {
                         client.publish(argv.topic + '/' + vid + '/stream', JSON.stringify(streamdata));
-                        console.log('Published to topic = ' + argv.topic + '/' + vid +'\n streamdata = ' + JSON.stringify(streamdata));
+                        //console.log('Published to topic = ' + argv.topic + '/' + vid +'\n streamdata = ' + JSON.stringify(streamdata));
                     } catch (error) {
                         // failed to send, therefore stop publishing and log the error thrown
                         console.log('Error while publishing message to mqtt broker: ' + error.toString());
@@ -465,8 +465,10 @@ function getAux() {
             }
             if (argv.mqtt) {
                 //publish charge_state data
+                data.timestamp = new Date().getTime();
+                data.id_s = getAux.vid.toString();
                 try {
-                    client.publish(argv.topic + '/' + getAux.vid + '/charge_state', JSON.stringify(doc));
+                    client.publish(argv.topic + '/' + getAux.vid + '/charge_state', JSON.stringify(data));
                 } catch (error) {
                     // failed to send, therefore stop publishing and log the error thrown
                     console.log('Error while publishing charge_state message to mqtt broker: ' + error.toString());
@@ -486,8 +488,10 @@ function getAux() {
                 }
                 if (argv.mqtt) {
                     //publish climate_state data
+                    data.timestamp = new Date().getTime();
+                    data.id_s = getAux.vid.toString();
                     try {
-                        client.publish(argv.topic + '/' + getAux.vid + '/climate_state', JSON.stringify(doc));
+                        client.publish(argv.topic + '/' + getAux.vid + '/climate_state', JSON.stringify(data));
                     } catch (error) {
                         // failed to send, therefore stop publishing and log the error thrown
                         console.log('Error while publishing climate_state message to mqtt broker: ' + error.toString());

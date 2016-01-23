@@ -1,0 +1,146 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		<title>Tesla Real-Time Chart Monitor</title>
+		<script type="text/javascript" src="./mqttws31.js"></script>
+		<script type="text/javascript" src="smoothie.js"></script>
+		
+		<script type="text/javascript">
+			// Suppress console.log for IE an browsers that don't support it
+			window.console = window.console || { log: function (d) {} };
+
+			// Paho MQTT over websockets config params
+			var topic = "teslams/+/climate_state"; // "teslams/{id}/{data_source}" format from streaming.js publisher
+			var mqtt = {
+				hostname : "localhost",
+				port : 3000, // mqtt over websockets port, *NOT* the standard mqtt 1883 port
+				username: 'mqtt_username',
+			    password: 'mqtt_password'
+			}
+
+			// Smoothie Charts params
+			var hours = 0.5; // # hours of data to display
+			var chartwidth = 800; // chart width (in pixels)
+			var charttime = hours*60*60; // chart width (in seconds)
+			var mpp = charttime*1000/chartwidth; // milliseconds per pixel
+			var mpl = charttime*1000/hours; // milliseconds per line
+
+			// Initialize the charts and the web streaming session to a remote Solace appliance
+			function init() {
+
+				//Initialize Smoothie Charts and the time series lines plotted on each chart	
+								
+				// Climate Chart - two lines: Rated Climate (Red) and Estimated Climate(Yellow)
+				var climate_chart = new SmoothieChart({
+					millisPerPixel:mpp, 
+					grid:{ millisPerLine:mpl, verticalSections:8}
+					//labels:{disabled:true}, 
+					//maxValue:30, 
+					//minValue:-30
+				});
+				climate_chart.streamTo(document.getElementById("climate"));
+				var inside_temp_ts = new TimeSeries();	
+				var outside_temp_ts = new TimeSeries();
+				var driver_temp_setting_ts = new TimeSeries();
+				var passenger_temp_setting_ts = new TimeSeries();
+				climate_chart.addTimeSeries(inside_temp_ts, { 
+					strokeStyle:'rgb(255, 0, 0)', 
+					//fillStyle:'rgba(255, 0, 0, 0.4)', 
+					lineWidth:3 });
+				climate_chart.addTimeSeries(outside_temp_ts, { 
+					strokeStyle:'rgb(0, 255, 0)', 
+					//fillStyle:'rgba(0, 255, 0, 0.4)', 
+					lineWidth:3 });
+				climate_chart.addTimeSeries(driver_temp_setting_ts, { 
+					strokeStyle:'rgb(255, 255, 255)', 
+					//fillStyle:'rgba(0, 0, 255, 0.4)', 
+					lineWidth:3 });
+				//Climate Text Display
+				var c=document.getElementById("climate_text");
+				var rgtx=c.getContext("2d");
+				rgtx.font="30px Arial";
+				rgtx.fillStyle="#ff0000";
+
+			    function mqtt_init() {
+					// mqtt session init and subscription
+					// Create a client instance, empty ClientID forces unique generation of this parameter
+					client = new Paho.MQTT.Client( mqtt.hostname, mqtt.port, ""); 
+
+					// set callback handlers
+					client.onConnectionLost = onConnectionLost;
+					client.onMessageArrived = onMessageArrived;
+
+					// connect the mqtt client
+			        var options = {
+			            timeout: 10, //connect timeout in seconds, default is 30
+			            userName: mqtt.username, 
+			            password: mqtt.password, 
+			            keepAliveInterval: 120,
+			            useSSL: false,
+			            cleanSession: true,
+			            onSuccess: onConnect,
+			            onFailure: function (response) {
+			                console.log("connection failed: " + response.errorMessage + " Retrying");
+			                setTimeout(mqtt_init, 2000);
+			            }
+			        };
+					console.log("connecting...");
+					client.connect(options);
+
+					// called when the mqtt client connects
+					function onConnect() {
+					  // Once a connection has been made, make a subscription and send a message.
+					  console.log("connected, now subscribing...");
+					  client.subscribe(topic); //TODO: make this configurable
+					}
+
+				    function onConnectionLost(response) {
+				        setTimeout(mqtt_init, 2000);
+				        console.log("connection lost, error code = " +response.errorCode + "-" + response.errorMessage + ". Reconnecting");
+				    };
+
+					// called when a mqtt message arrives
+					function onMessageArrived(message) {
+						console.log("onMessageArrived:" + message.payloadString);
+						try {
+							var data = JSON.parse( message.payloadString );
+							d = new Date( data.timestamp); 
+						} catch (e) {
+							console.log( 'Error parsing JSON: ' + e.toString());
+						}
+						rgtx.clearRect ( 0 , 0 ,450 , 450 ); //clear climate canvas
+						if (data.inside_temp !== null) {
+							inside_temp_ts.append(d, data.inside_temp );
+						} else {
+							data.inside_temp = "null";
+						}
+						rgtx.fillStyle="#ff0000";	
+						rgtx.fillText(data.inside_temp,10,50); //update inside_temp text display
+						if (data.outside_temp !== null) {
+							outside_temp_ts.append(d, data.outside_temp );
+						} else {
+							data.outside_temp = "null";
+						}
+						rgtx.fillStyle="#00ff00";
+						rgtx.fillText(data.outside_temp,10,100); //update outside_temp text display
+						if (data.driver_temp_setting !== null) {
+							driver_temp_setting_ts.append(d, data.driver_temp_setting );
+						} else {
+							data.driver_temp_setting = "null";
+						}
+						rgtx.fillStyle="#ffffff";
+						rgtx.fillText(data.driver_temp_setting,10,150); //update driver_temp_setting text display
+					}	
+				}
+				mqtt_init();
+			}
+		</script>
+	</head>
+
+  	<body onload="init()" style="background-color:#333333">
+	<h4><FONT COLOR="ff0000"><h4>Inside Temp (C)</FONT>   <FONT COLOR="00ff00">Outside Temp (C)</FONT>   <FONT COLOR="fffff">Driver Temp Setting(C)</FONT></h4>
+    	<canvas id="climate" width="800" height="450"></canvas><canvas id="climate_text" width="150" height="450"></canvas>
+	</body>
+</html>
+
