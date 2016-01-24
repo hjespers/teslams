@@ -200,11 +200,12 @@ URLs are of the form http://localhost:8766/energy?from=YYYY-MM-DD-HH-MM&to=YYYY-
 
 visualize.js now supports authentication. In your ~/.teslams/config.json file simply add a section for visualize like this:
 
-	"visualize":
-	[
-		{ "id": 1, "username": "dirk", "password": "secret" },
-		{ "id": 2, "username": "bob", "password": "different" }
-	]
+	"visualize": {
+		"webusers": [
+			{ "id": 1, "username": "dirk", "password": "secret" },
+			{ "id": 2, "username": "bob", "password": "different" }
+  		]
+  	}
 
 if you don't have a "visualize" property in your config file, authentication is off by default.
 

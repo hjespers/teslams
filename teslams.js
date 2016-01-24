@@ -56,7 +56,7 @@ var all = exports.all = function(options, cb) {
                 'Authorization': 'Bearer ' + token, 
                 'Content-Type': 'application/json; charset=utf-8', 
                 'User-Agent': user_agent,
-                'Accept-Encoding': 'gzip'
+                //'Accept-Encoding': 'gzip'
                 // 'Accept-Encoding': 'gzip,deflate'
               };
           } catch (e) {

@@ -1,20 +1,22 @@
 {
   "name": "teslams",
-  "version": "1.0.8",
+  "version": "1.1.0",
   "description": "Utilities for the Tesla Model S ",
   "dependencies": {
-    "request": ">=2.14.0",
-    "optimist": "~0.3.5",
-    "open": "~0.0.3",
-    "multimeter-hj": "~0.1.2",
-    "mongodb": ">= 1.3.14",
-    "kerberos": "~0.0",
     "express": "= 3.x",
     "express-namespace": "~0.1.1",
+    "json-bigint": ">= 0.1.4",
+    "kerberos": "~0.0",
+    "mongodb": ">= 1.3.14",
+    "mqtt": "^1.6.3",
+    "aws-iot-device-sdk": ">= 1.0.9",
+    "multimeter-hj": "~0.1.2",
+    "open": "~0.0.3",
+    "optimist": "~0.3.5",
     "passport": ">= 0.1.17",
     "passport-local": ">= 0.1.6",
-    "json-bigint": ">= 0.1.4",
-    "pkginfo": "~0.3.0"
+    "pkginfo": "~0.3.0",
+    "request": ">=2.14.0"
   },
   "devDependencies": {},
   "scripts": {
@@ -26,40 +28,39 @@
   },
   "main": "./teslams.js",
   "directories": {
-	"lib": ".",
-	"example": "examples"
+    "lib": ".",
+    "example": "examples"
   },
-  "bin" : { 
-    "teslacmd" : "./examples/teslacmd.js",
-    "teslamap" : "./examples/teslamap.js",
-    "streaming" : "./examples/streaming.js",
-    "chargebar" : "./examples/chargebar.js",
-    "climatemon" : "./examples/climatemon.js",
-    "restla" : "./examples/restla.js",
-    "visualize" : "./examples/visualize/visualize.js"
+  "bin": {
+    "teslacmd": "./examples/teslacmd.js",
+    "teslamap": "./examples/teslamap.js",
+    "streaming": "./examples/streaming.js",
+    "chargebar": "./examples/chargebar.js",
+    "climatemon": "./examples/climatemon.js",
+    "restla": "./examples/restla.js",
+    "visualize": "./examples/visualize/visualize.js"
   },
-  "keywords" : [
+  "keywords": [
     "tesla"
   ],
-  "author" : {
-    "name" : "Hans Jespersen",
-    "email" : "hans.jespersen@gmail.com",
-    "url" : "https://github.com/hjespers/teslams"
+  "author": {
+    "name": "Hans Jespersen",
+    "email": "hans.jespersen@gmail.com",
+    "url": "https://github.com/hjespers/teslams"
   },
-  "contributors" : [
+  "contributors": [
     {
-      "name" : "Marshall Rose",
-      "url" : "https://github.com/mrose17"
+      "name": "Marshall Rose",
+      "url": "https://github.com/mrose17"
     },
     {
-      "name" : "Dirk Hohndel",
-      "url" : "https://github.com/dirkhh"
+      "name": "Dirk Hohndel",
+      "url": "https://github.com/dirkhh"
     },
     {
-      "name" : "Arthur Blake",
-      "url" : "https://github.com/arthurblake"
+      "name": "Arthur Blake",
+      "url": "https://github.com/arthurblake"
     }
   ],
-  "license" : "BSD"
+  "license": "BSD"
 }
-

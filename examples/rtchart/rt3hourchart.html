@@ -1,0 +1,218 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		<title>Tesla Real-Time Chart Monitor</title>
+		<script type="text/javascript" src="./mqttws31.js"></script>
+		<script type="text/javascript" src="smoothie.js"></script>
+		
+		<script type="text/javascript">
+			// Suppress console.log for IE an browsers that don't support it
+			window.console = window.console || { log: function (d) {} };
+
+			// Paho MQTT over websockets config params
+			var topic = "teslams/+/stream"; // "teslams/{id}" format from streaming.js publisher
+			var mqtt = {
+				hostname : "localhost",
+				port : 3000, // mqtt over websockets port, *NOT* the standard mqtt 1883 port
+				username: 'mqtt_username',
+			    password: 'mqtt_password'
+			}
+
+			// Smoothie Charts params
+			var hours = 3; // # hours of data to display
+			var chartwidth = 800; // chart width (in pixels)
+			var charttime = hours*60*60; // chart width (in seconds)
+			var mpp = charttime*1000/chartwidth; // milliseconds per pixel
+			var mpl = charttime*1000/hours; // milliseconds per line
+
+			// Initialize the charts and the web streaming session to a remote Solace appliance
+			function init() {
+
+				//Initialize Smoothie Charts and the time series lines plotted on each chart	
+				// Speed Chart in Cyan
+				var sc1 = new SmoothieChart({
+					millisPerPixel:mpp, 
+					grid:{millisPerLine:mpl}, 
+					maxValue:100, minValue:0 });
+				sc1.streamTo(document.getElementById("speed"));
+				var line1 = new TimeSeries();	
+				sc1.addTimeSeries(line1, { 
+					strokeStyle:'rgb(0, 255, 255)', 
+					fillStyle:'rgba(0, 255, 255, 0.4)', 
+					lineWidth:3 });
+				//Initialize Speed Text Display	
+				var c=document.getElementById("speed_text");
+				var sptx=c.getContext("2d");
+				sptx.font="30px Arial";
+				sptx.fillStyle="#00FFFF";
+
+				// State Of Charge (SOC) Chart in Green
+				var sc2 = new SmoothieChart({
+					millisPerPixel:mpp, 
+					grid:{millisPerLine:mpl}, 
+					maxValue:100, minValue:0, 
+					timestampFormatter:SmoothieChart.timeFormatter});
+				sc2.streamTo(document.getElementById("soc"));
+				var line2 = new TimeSeries();	
+				sc2.addTimeSeries(line2, { 
+					strokeStyle:'rgb(0, 128, 0)', 
+					fillStyle:'rgba(0, 128, 0, 0.4)', 
+					lineWidth:3 });
+				//Initialize SOC Text Display	
+				var c=document.getElementById("soc_text");
+				var soctx=c.getContext("2d");
+				soctx.font="30px Arial";
+				soctx.fillStyle="#008000";
+				
+				// Power Chart - two lines: power used (Orange) or generated (Lime Green)
+				var sc3 = new SmoothieChart({
+					millisPerPixel:mpp, 
+					grid:{ millisPerLine:mpl, verticalSections:2},
+					labels:{disabled:true}, 
+					maxValue:160, 
+					minValue:0,
+					horizontalLines:[{color:'#880000',lineWidth:1,value:80},
+									{color:'#880000',lineWidth:2,value:120}, 
+									{color:'#880000',lineWidth:2,value:140}]
+				});
+				sc3.streamTo(document.getElementById("power"));
+				var line3 = new TimeSeries();	
+				var line4 = new TimeSeries();
+				sc3.addTimeSeries(line3, { 
+					strokeStyle:'rgb(255, 140, 0)', 
+					fillStyle:'rgba(255, 140, 0, 0.4)', 
+					lineWidth:3 });
+				sc3.addTimeSeries(line4, { 
+					strokeStyle:'rgb(0, 255, 0)', 
+					fillStyle:'rgba(0, 255, 0, 0.4)', 
+					lineWidth:3 });
+				//Power Text Display	
+				var c=document.getElementById("power_text");
+				var pwtx=c.getContext("2d");
+				pwtx.font="30px Arial";
+				pwtx.fillStyle="#00FF00";
+								
+				// Range Chart - two lines: Rated Range (Red) and Estimated Range(Yellow)
+				var range_chart = new SmoothieChart({
+					millisPerPixel:mpp, 
+					grid:{ millisPerLine:mpl, verticalSections:8},
+					//labels:{disabled:true}, 
+					maxValue:200, 
+					minValue:0
+				});
+				range_chart.streamTo(document.getElementById("range"));
+				var range_ts = new TimeSeries();	
+				var est_range_ts = new TimeSeries();
+				range_chart.addTimeSeries(range_ts, { 
+					strokeStyle:'rgb(255, 0, 0)', 
+					fillStyle:'rgba(255, 0, 0, 0.4)', 
+					lineWidth:3 });
+				range_chart.addTimeSeries(est_range_ts, { 
+					strokeStyle:'rgb(255, 255, 0)', 
+					fillStyle:'rgba(255, 255, 0, 0.4)', 
+					lineWidth:3 });
+				//Range Text Display
+				var c=document.getElementById("range_text");
+				var rgtx=c.getContext("2d");
+				rgtx.font="30px Arial";
+				rgtx.fillStyle="#ff0000";
+
+			    function mqtt_init() {
+					// mqtt session init and subscription
+					// Create a client instance, empty ClientID forces unique generation of this parameter
+					client = new Paho.MQTT.Client( mqtt.hostname, mqtt.port, ""); 
+
+					// set callback handlers
+					client.onConnectionLost = onConnectionLost;
+					client.onMessageArrived = onMessageArrived;
+
+					// connect the mqtt client
+			        var options = {
+			            timeout: 3, //connect timeout in seconds, default is 30
+			            userName: mqtt.username, 
+			            password: mqtt.password, 
+			            keepAliveInterval: 120,
+			            useSSL: false,
+			            cleanSession: true,
+			            onSuccess: onConnect,
+			            onFailure: function (response) {
+			                console.log("connection failed: " + response.errorMessage + " Retrying");
+			                setTimeout(mqtt_init, 2000);
+			            }
+			        };
+					console.log("connecting...");
+					client.connect(options);
+
+					// called when the mqtt client connects
+					function onConnect() {
+					  // Once a connection has been made, make a subscription and send a message.
+					  console.log("connected, now subscribing...");
+					  client.subscribe(topic); //TODO: make this configurable
+					}
+
+				    function onConnectionLost(response) {
+				        setTimeout(mqtt_init, 2000);
+				        console.log("connection lost, error code = " +response.errorCode + "-" + response.errorMessage + ". Reconnecting");
+				    };
+
+					// called when a mqtt message arrives
+					function onMessageArrived(message) {
+						//console.log("onMessageArrived:"+message.payloadString);
+						try {
+							var data = JSON.parse( message.payloadString );
+							d = new Date( parseInt(data.timestamp));
+							//d = new Date( data.timestamp );
+							s = (!data.speed)?0:data.speed;
+						} catch (e) {
+							console.log( 'Error parsing JSON: ' + e.toString());
+						}
+						line1.append(d, (s > 100)?100:s );
+						sptx.clearRect ( 0 , 0 ,150 , 150 ); //clear canvas
+						sptx.fillText(s,10,50); //update display
+						line2.append(d, data.soc );
+						soctx.clearRect ( 0 , 0 ,150 , 150 ); //clear soc canvas
+						soctx.fillText(data.soc,10,50); //update soc display
+						if (data.power >= 0) { 
+							if (data.power > 160 ) {
+								line3.append(d, 120 + (0.25 * (data.power - 120)) );
+							} else if (data.power > 80 ) {
+								line3.append(d, 80 + (0.5 * (data.power - 80)) );
+							} else {
+								line3.append(d, data.power );
+							}
+							line4.append(d, 0 );
+							pwtx.fillStyle="#ff8c00";
+						} else { // negative power value means "regen" so green color 
+							line3.append(d, 0 );
+							line4.append(d, Math.abs(data.power) );
+							pwtx.fillStyle="#00ff00";
+						}
+						pwtx.clearRect ( 0 , 0 ,150 , 150 ); //clear power canvas
+						pwtx.fillText(data.power,10,50); //update power display
+						range_ts.append(d, data.range );
+						est_range_ts.append(d, data.est_range );
+						rgtx.clearRect ( 0 , 0 ,150 , 150 ); //clear range canvas
+						rgtx.fillStyle="#ff0000";
+						rgtx.fillText(data.range,10,50); //update range display
+						rgtx.fillStyle="#ffff00";
+						rgtx.fillText(data.est_range,10,100); //update est_range display
+					}	
+				}
+				mqtt_init();
+			}
+		</script>
+	</head>
+
+  	<body onload="init()" style="background-color:#333333">
+	<h4><FONT COLOR="00ffff">Speed (mph)</FONT></h4>
+    	<canvas id="speed" width="800" height="150"></canvas><canvas id="speed_text" width="150" height="150"></canvas>
+	<h4><FONT COLOR="ff8c00">Power (kW)</FONT>   <FONT COLOR="00ff00">Regen (kW)</FONT></h4>
+    	<canvas id="power" width="800" height="150"></canvas><canvas id="power_text" width="150" height="150"></canvas>
+	<h4><FONT COLOR="008000"><h4>SOC (%)</FONT></h4>
+    	<canvas id="soc" width="800" height="150"></canvas><canvas id="soc_text" width="150" height="150"></canvas>
+	<h4><FONT COLOR="ff0000"><h4>Rated Range (mi)</FONT>   <FONT COLOR="ffff00">Estimated Range (mi)</FONT></h4>
+    	<canvas id="range" width="800" height="150"></canvas><canvas id="range_text" width="150" height="150"></canvas>
+	</body>
+</html>
+
