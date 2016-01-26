@@ -337,7 +337,7 @@ app.namespace(baseUrl, function() {
                 rawoptions = rawoptions.replace("PMSS", "COL2-PMSS");
                 rawoptions = rawoptions.replace("PMTG", "COL2-PMTG");
                 rawoptions = rawoptions.replace("PMTI", "COL2-PMTI");
-                rawoptions = rawoptions.replace("PMMB", "COL2-PMMB");
+                rawoptions = rawoptions.replace("PPTI", "COL2-PPTI");
                 rawoptions = rawoptions.replace("PPSW", "COL3-PPSW");
                 rawoptions = rawoptions.replace("PPMR", "COL3-PPMR");
                 var options = docs[0].vehicles.option_codes.split(',');
