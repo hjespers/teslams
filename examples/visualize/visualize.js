@@ -7,6 +7,8 @@
 // You need a valid Google Maps v3 API key to use this script
 //  https://developers.google.com/maps/documentation/javascript/tutorial#api_key
 //
+require('pkginfo')(module, 'version');
+console.log( module.exports.version );
 var apiKey = 'AIzaSyBAQ9orToKfA-vAzbFjdyE-PIE86P2IKBY';
 
 function argchecker( argv ) {
@@ -464,7 +466,8 @@ app.namespace(baseUrl, function() {
                  .replace("MAGIC_VIN", vin)
                  .replace("MAGIC_NAME", name)
                  .replace("MAGIC_FIRMWARE_VERSION", fwVersion)
-                 .replace("MAGIC_DISPLAY_SYSTEM", system));
+                 .replace("MAGIC_DISPLAY_SYSTEM", system)
+                 .replace("MAGIC_TESLAMS_VERSION", module.exports.version));
         });
     });
 

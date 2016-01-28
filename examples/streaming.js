@@ -105,12 +105,12 @@ if ( argv.help == true ) {
 var nFields = argv.values.split(",").length + 1; // number of fields including ts
 
 if (!argv.db && !argv.awsiot && !argv.mqtt && !argv.file) {
-    console.log('No outputs specified. Add one (or more) of --file, --mqtt or --awsiot flags to specify outputs');
+    console.log('No outputs specified. Add one (or more) of --db, --file, --mqtt, or --awsiot flags to specify outputs');
     process.exit();
 }
 if (argv.db) {
-    console.log("database name", argv.db);
     MongoClient = require('mongodb').MongoClient;
+    // TODO: maybe add a mongouri config paramter to the config.json so people can set this explicitly
     var mongoUri = process.env.MONGOLAB_URI|| process.env.MONGOHQ_URI || 'mongodb://127.0.0.1:27017/' + argv.db;
 
     MongoClient.connect(mongoUri, function(err, db) {
@@ -136,17 +136,17 @@ if (argv.awsiot) {
     // documentation.
     //
     device.on('connect', function() {
-        console.log('awsiot device connected!');
+        ulog('awsiot device connected!');
     });
 } 
 if (argv.mqtt) {
     var client  = mqtt.connect(argv.mqtt);
     if (!argv.topic) {
-        console.log('No MQTT topic specified. Using teslams/{id} where {id} is the vehicle id of the car');
+        console.log('No MQTT topic prefix specified. Using "teslams/{id}/stream" where {id} is the vehicle id of the car');
         argv.topic = 'teslams';
     }
     client.on('connect', function () {
-        console.log('mqtt connected to broker ' + argv.mqtt);
+        ulog('mqtt connected to broker ' + argv.mqtt);
     });
     client.on('error', function (error) {
         console.log('mqtt error: ' + error);
@@ -154,7 +154,7 @@ if (argv.mqtt) {
 }
 if (argv.file) {
     if (argv.file === true) {
-        console.log('No output filename  specified. Using ./streaming.out');
+        console.log('No output filename specified. Using ./streaming.out');
         argv.file = 'streaming.out';
     }
     stream = fs.createWriteStream(argv.file);
@@ -240,7 +240,7 @@ function tsla_poll( vid, long_vid, token ) {
                                 }
                                 //check we got an array of vehicles and get the right one using the (optionally) specified offset
                                 if (!util.isArray(vdata.response)) {
-                                    console.log('Expecting an response in array format from Tesla Motors');
+                                    console.log('Expected an response in JSON array format from Tesla Motors');
                                     process.exit(1);
                                 }
                                 vehicles = vdata.response[argv.vehicle]; // cast to a string for BigInt protection????
@@ -327,7 +327,14 @@ function tsla_poll( vid, long_vid, token ) {
             ulog('WARN: HTTP 401: Unauthorized - token has likely expired, reinitializing');
             setTimeout(function() {
                 initstream();
-            }, 5000); //5 seconds
+            }, 5000); //5 seconds in milliseconds
+            pcount = pcount - 1;
+            return;
+        } else if ( response.statusCode == 429) { // HTTP AUTH Failed - To Many Requests
+            ulog('WARN: HTTP 429: Too Many Requests - Tesla is likely blocking or throttling your IP address');
+            setTimeout(function() {
+                initstream();
+            }, 900000); //15 minutes in milliseconds
             pcount = pcount - 1;
             return;
         } else { // all other unexpected responses
@@ -359,12 +366,10 @@ function tsla_poll( vid, long_vid, token ) {
                 //publish to MQTT broker on specified topic
                 var newchunk = d.replace(/[\n\r]/g, '');
                 var array = newchunk.split(',');
-                //var datetime = new Date(parseInt(array[0]));
                 var streamdata = { 
                     id_s : vid.toString(),
                     vehicle_id : long_vid,
                     timestamp : array[0], 
-                    //timestamp : datetime.toJSON(), 
                     speed : array[1], 
                     odometer : array[2], 
                     soc : array[3], 
@@ -408,7 +413,7 @@ function tsla_poll( vid, long_vid, token ) {
             if (argv.file) {
                 stream.write(data);
             } 
-            //after data is written deal with the napmode stuff
+            //after data is written and/or published deal with the napmode stuff
             lastss = ss; 
             ss = vals[9]; // TODO: fix hardcoded position for shift_state
             // [HJ] this section goes with the code above which allows one last poll
@@ -458,7 +463,7 @@ function getAux() {
         ulog( 'getting charge state Aux data');
         teslams.get_charge_state( getAux.vid, function(data) {
             var doc = { 'ts': new Date().getTime(), 'chargeState': data };
-            if (argv.db) {
+            if (argv.db && (data.charge_limit_soc !== undefined))  {
                 collectionA.insert(doc, { 'safe': true }, function(err,docs) {
                     if(err) throw err;
                 });
@@ -481,7 +486,7 @@ function getAux() {
             if (ds.length > 2 && ds != JSON.stringify(getAux.climate)) {
                 getAux.climate = data;
                 doc = { 'ts': new Date().getTime(), 'climateState': data };
-                if (argv.db) {                  
+                if (argv.db && (data.inside_temp !== undefined)) {                  
                     collectionA.insert(doc, { 'safe': true }, function(err,docs) {
                         if(err) throw err;
                     });
@@ -504,7 +509,7 @@ function getAux() {
 
 function storeVehicles(vehicles) {
     var doc = { 'ts': new Date().getTime(), 'vehicles': vehicles };
-    if (argv.db) {
+    if (argv.db && (vehicles !== undefined)) {
         collectionA.insert(doc, { 'safe': true }, function (err, docs) {
             if (err) console.dir(err);
         });
@@ -519,11 +524,12 @@ function storeVehicles(vehicles) {
             console.log('Error while publishing vehicles message to mqtt broker: ' + error.toString());
         }
     }
+
     rpm = rpm + 2; // increment REST request counter for following 2 requests
     teslams.get_vehicle_state(vehicles.id, function(data) {
         ulog( util.inspect(data));
         doc = { 'ts': new Date().getTime(), 'vehicleState': data };
-        if (argv.db) {
+        if (argv.db && (data.car_version !== undefined)) {
             collectionA.insert(doc, { 'safe': true }, function (err, docs) {
                 if (err) console.dir(err);
             });
@@ -541,7 +547,7 @@ function storeVehicles(vehicles) {
     teslams.get_gui_settings(vehicles.id, function(data) {
         ulog(util.inspect(data));
         doc = { 'ts': new Date().getTime(), 'guiSettings': data };
-        if (argv.db) {
+        if (argv.db && (data.gui_distance_units !== undefined )) {
             collectionA.insert(doc, { 'safe': true }, function (err, docs) {
                 if (err) console.dir(err);
             });
@@ -558,13 +564,12 @@ function storeVehicles(vehicles) {
     });
 }
 
-// if we are storing into a database we also want to
-// - store the vehicle data (once, after the first connection)
-// - store some other REST API data around climate and charging (every minute)
+// if we are storing into a database or publishing to mqtt we also want to
+// - store/publish the vehicle data (once, after the first connection)
+// - store/publish some other REST API data around climate and charging (every minute)
 function initdb(vehicles) {
     storeVehicles(vehicles);
     getAux.vid = vehicles.id;
-    // getAux();
     setInterval(getAux, 60000); // also get non-streaming data every 60 seconds
 }
 
@@ -686,9 +691,7 @@ function initstream() {
             sleepmode = false;
             if (firstTime) {    // initialize only once
                 firstTime = false;
-                //if (argv.db) { // initialize database
-                    initdb(vehicles);
-                //} 
+                initdb(vehicles);
                 if (argv.file) { // initialize first line of CSV file output with field names 
                     stream.write('timestamp,' + argv.values + '\n');
                 }
