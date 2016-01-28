@@ -463,7 +463,7 @@ function getAux() {
         ulog( 'getting charge state Aux data');
         teslams.get_charge_state( getAux.vid, function(data) {
             var doc = { 'ts': new Date().getTime(), 'chargeState': data };
-            if (argv.db) {
+            if (argv.db && data.charge_limit_soc !=== undefined) {
                 collectionA.insert(doc, { 'safe': true }, function(err,docs) {
                     if(err) throw err;
                 });
@@ -486,7 +486,7 @@ function getAux() {
             if (ds.length > 2 && ds != JSON.stringify(getAux.climate)) {
                 getAux.climate = data;
                 doc = { 'ts': new Date().getTime(), 'climateState': data };
-                if (argv.db) {                  
+                if (argv.db && data.inside_temp !=== undefined) {                  
                     collectionA.insert(doc, { 'safe': true }, function(err,docs) {
                         if(err) throw err;
                     });
@@ -509,7 +509,7 @@ function getAux() {
 
 function storeVehicles(vehicles) {
     var doc = { 'ts': new Date().getTime(), 'vehicles': vehicles };
-    if (argv.db) {
+    if (argv.db && vehicles !=== undefined) {
         collectionA.insert(doc, { 'safe': true }, function (err, docs) {
             if (err) console.dir(err);
         });
@@ -526,11 +526,10 @@ function storeVehicles(vehicles) {
     }
 
     rpm = rpm + 2; // increment REST request counter for following 2 requests
-    // TODO: add a check that these following 2 requests suceeed and prehaps retry because somtimes they fail 
     teslams.get_vehicle_state(vehicles.id, function(data) {
         ulog( util.inspect(data));
         doc = { 'ts': new Date().getTime(), 'vehicleState': data };
-        if (argv.db) {
+        if (argv.db && data.car_version !=== undefined) {
             collectionA.insert(doc, { 'safe': true }, function (err, docs) {
                 if (err) console.dir(err);
             });
@@ -548,7 +547,7 @@ function storeVehicles(vehicles) {
     teslams.get_gui_settings(vehicles.id, function(data) {
         ulog(util.inspect(data));
         doc = { 'ts': new Date().getTime(), 'guiSettings': data };
-        if (argv.db) {
+        if (argv.db && data.gui_distance_units !=== undefined ) {
             collectionA.insert(doc, { 'safe': true }, function (err, docs) {
                 if (err) console.dir(err);
             });
