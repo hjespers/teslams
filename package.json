@@ -16,7 +16,8 @@
     "passport": ">= 0.1.17",
     "passport-local": ">= 0.1.6",
     "pkginfo": "~0.3.0",
-    "request": ">=2.14.0"
+    "request": ">=2.14.0",
+    "wemore": "~0.1.0"
   },
   "devDependencies": {},
   "scripts": {
