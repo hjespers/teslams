@@ -300,14 +300,14 @@ function tsla_poll( vid, long_vid, token ) {
             pcount = pcount - 1;
             return;
         } else if (response.statusCode == 200) { // HTTP OK
-            if (body===undefined) {
+            if (body === undefined) {
                 ulog('WARN: HTTP returned OK but body is undefined');
                 setTimeout(function() {
                     tsla_poll( vid, long_vid, token ); // poll again
                 }, 10000); //10 seconds
                 pcount = pcount - 1;
                 return;
-            } else if (body===null) {
+            } else if (body === null) {
                 ulog('WARN: HTTP returned OK but body is null');
                 setTimeout(function() {
                     tsla_poll( vid, long_vid, token ); // poll again
