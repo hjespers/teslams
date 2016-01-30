@@ -100,7 +100,7 @@ teslams.all({ email: creds.username, password: creds.password }, function (error
 
 	charger.on('listening', function() {
 	    // if you want it, you can get it:
-	    console.log("charger listening on", this.port);
+	    console.log("my tesla charger listening on", this.port);
 	});
 
 	charger.on('state', function(binaryState) {
@@ -124,7 +124,7 @@ teslams.all({ email: creds.username, password: creds.password }, function (error
 
 	climate.on('listening', function() {
 	    // if you want it, you can get it:
-	    console.log("climate listening on", this.port);
+	    console.log("my tesla climate listening on", this.port);
 	});
 
 	climate.on('state', function(binaryState) {
