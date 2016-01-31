@@ -15,7 +15,7 @@ var awsIot = require('aws-iot-device-sdk');
 function argchecker( argv ) {
     if (argv.db === true) throw 'MongoDB database name is unspecified. Use -d, --db <dbname>';
     if (argv.mqtt === true) throw 'MQTT broker URL is unspecified. Use -m, -mqtt <broker_url> (i.e. "-m mqtt://hostname")';
-    if (argv.topic === true) throw 'MQTT topic is unspecified. Use -t, --topic <topic>';
+    if (argv.topic === "") throw 'MQTT topic is unspecified. Use -t, --topic <topic>';
 }
 
 var usage = 'Usage: $0 -u <username> -p <password> [-sz] \n' +
@@ -159,7 +159,13 @@ if (argv.file) {
     }
     stream = fs.createWriteStream(argv.file);
 }
-
+if (argv.ifttt) {
+    if (creds.ifttt) {
+        var ifttt = creds.ifttt;
+    } else {
+        console.log('No IFTTT Maker trigger URL found in config.json');
+    }
+}
 
 function tsla_poll( vid, long_vid, token ) {    
     pcount++;
@@ -479,6 +485,16 @@ function getAux() {
                     console.log('Error while publishing charge_state message to mqtt broker: ' + error.toString());
                 }
             }
+            if (argv.ifttt) {
+                var options = {
+                    method: 'POST', 
+                    url: ifttt, 
+                    form: { value1: "charge_state", value2: JSON.stringify(data) }
+                };
+                request( options, function (error, response, body) {
+                    ulog( 'IFTTT POST returned ' + response.statusCode );
+                });
+            }
         });
         ulog( 'getting climate state Aux data');
         teslams.get_climate_state( getAux.vid, function(data) {
@@ -501,7 +517,18 @@ function getAux() {
                         // failed to send, therefore stop publishing and log the error thrown
                         console.log('Error while publishing climate_state message to mqtt broker: ' + error.toString());
                     }
-                }   
+                }
+                if (argv.ifttt) {
+                    var options = {
+                        method: 'POST', 
+                        url: ifttt, 
+                        form: { value1: "climate_state", value2: JSON.stringify(data) }
+                    };
+                    request( options, function (error, response, body) {
+                        ulog( 'IFTTT POST returned ' + response.statusCode );
+                    });
+                }
+            } 
             }         
         });
     }
