@@ -528,8 +528,7 @@ function getAux() {
                         ulog( 'IFTTT POST returned ' + response.statusCode );
                     });
                 }
-            } 
-            }         
+            }    
         });
     }
 }
