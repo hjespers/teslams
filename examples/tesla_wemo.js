@@ -129,7 +129,6 @@ teslams.all({ email: creds.username, password: creds.password }, function (error
 
 	climate.on('state', function(binaryState) {
 	    console.log("climate set to=", binaryState);
-	    //.close(); // stop advertising the device
 	});
 
 	// also, 'on' and 'off' events corresponding to binary state
