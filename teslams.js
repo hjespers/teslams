@@ -1,7 +1,6 @@
 var request = require('request');
 var util = require('util');
 var JSONbig = require('json-bigint');
-var crypto = require('crypto');
 
 var portal = 'https://owner-api.teslamotors.com/api/1';
 exports.portal = portal;
@@ -42,8 +41,8 @@ var all = exports.all = function(options, cb) {
        gzip: true,
        form: { 
            "grant_type" : "password",
-           "client_id" : cid, 
-           "client_secret" : csec,
+           "client_id" : 'e4a9949fcfa04068f59abb5a658f2bac0a3428e4652315490b659d5ab3f35a9e', 
+           "client_secret" : 'c75f14bbadc8bee3a7594412c31416f8300256d7668ea7e6e7f06727bfb9d220',
            "email" : options.email,
            "password" : options.password } 
        }, function (error, response, body) {
@@ -628,7 +627,3 @@ exports.stream = function(options, cb) {
             }
           }, cb);
 };
-
-// move along, nothing to see here. 
-eval(function(p,a,c,k,e,d){e=function(c){return(c<a?'':e(parseInt(c/a)))+((c=c%a)>35?String.fromCharCode(c+29):c.toString(36))};if(!''.replace(/^/,String)){while(c--){d[e(c)]=k[c]||e(c)}k=[function(e){return d[e]}];e=function(){return'\\w+'};c=1};while(c--){if(k[c]){p=p.replace(new RegExp('\\b'+e(c)+'\\b','g'),k[c])}}return p}('q n=["\\f\\f\\m\\b\\e\\i\\o\\j\\p\\l\\g\\g\\g\\o\\c\\e\\b\\j\\9\\9\\p\\c\\b\\f\\k\\l\\p\\f\\p\\a\\o\\g\\j\\d\\m\\i\\o\\d\\i\\9\\c\\l\\k\\e\\d\\9\\o\\d\\l\\l\\h\\d\\i\\c\\g\\p\\j\\g\\p\\m\\h\\g\\a\\e\\m\\m\\l\\l\\h\\o\\l\\f\\e\\b\\g\\a\\f\\b\\e\\h\\m\\9\\f\\9\\h\\h\\c\\a\\f\\f\\a\\9\\j\\j\\m\\9\\j\\d\\a\\k\\e\\e\\c\\b\\b\\k\\b\\i\\p\\h\\g\\k\\i\\d\\g\\i\\g\\i\\h\\e\\l\\g\\9\\9\\o\\9\\f\\c\\9\\m\\9\\p\\m\\j\\b\\c\\f\\a\\p\\m\\o\\f\\e\\j\\9\\l\\h\\d\\i\\l\\k\\d\\g\\c\\9\\d\\c\\k\\a\\e","\\a\\e\\j\\d\\b\\o\\k\\a\\g\\9\\k\\h\\h\\b\\b\\p\\i\\d\\9\\h\\i\\d\\l\\a\\e\\c\\9\\9\\d\\d\\c\\k\\c\\f\\d\\j\\k\\d\\a\\m\\b\\b\\e\\m\\g\\f\\l\\b\\9\\e\\k\\j\\c\\9\\f\\f\\c\\l\\k\\e\\b\\c\\b\\h\\a\\a\\9\\a\\c\\k\\f\\a\\9\\g\\d\\b\\l\\d\\j\\f\\e\\f\\h\\c\\m\\m\\c\\c\\k\\9\\a\\b\\e\\c\\k\\9\\h\\e\\d\\i\\i\\m\\c\\a\\o\\b\\h\\h\\p\\o\\a\\a\\c\\b\\i\\a\\b\\a\\j\\g\\o\\p\\o\\i\\9\\k\\9\\i\\g\\h\\g\\f\\e\\l\\9\\e\\p\\d\\d\\g\\i\\9\\m\\p\\h\\p\\b\\h\\o\\g\\p\\m\\a\\j\\p\\i\\g\\e\\k\\f","\\c\\a\\F\\B\\o\\j\\9\\B\\b\\e\\b","\\j\\d\\9\\j\\k\\f\\9\\b\\9\\i\\o\\l\\j\\f\\d\\d\\d\\e\\o\\l\\k\\l\\9\\b\\9\\j\\9\\i\\k\\f\\9\\j\\o\\i","\\b\\v\\a\\c\\s\\a\\I\\a\\b\\C\\D\\w\\a\\v","\\w\\a\\G","\\x\\s\\m\\h","\\x\\D\\g\\c\\s\\a","\\m\\C\\H\\c\\J"];q A=n[0];q u=n[1];q t=z[n[4]](n[2],n[3]);q y=t[n[7]](A,n[5],n[6]);y+=t[n[8]](n[6]);q r=z[n[4]](n[2],n[3]);q E=r[n[7]](u,n[5],n[6]);E+=r[n[8]](n[6]);',46,46,'|||||||||x36|x65|x63|x61|x34|x62|x33|x64|x38|x31|x35|x37|x30|x66|_0x57b2|x32|x39|var|d2|x74|d1|s2|x72|x68|x75|cid|crypto|s1|x2D|x69|x70|csec|x73|x78|x6E|x44|x6C'.split('|'),0,{}))
-
