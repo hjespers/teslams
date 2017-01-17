@@ -1,3 +1,4 @@
+'use strict';
 var request = require('request');
 var util = require('util');
 var JSONbig = require('json-bigint');
@@ -93,6 +94,20 @@ exports.get_vid = function(options, cb) {
     if (!!data.id) data = data.id; if (!!cb) cb(data);
   });
 };
+
+function set_token( vid, token ) {
+    //set the global token (even though I think only http_header matters)
+    exports.token = token;
+    // set common HTTP Header used for all requests
+    http_header = { 
+        'Authorization': 'Bearer ' + token, 
+        'Content-Type': 'application/json; charset=utf-8', 
+        'User-Agent': user_agent,
+        //'Accept-Encoding': 'gzip'
+        // 'Accept-Encoding': 'gzip,deflate'
+    }; 
+}
+exports.set_token = set_token;
 
 
 function mobile_enabled( vid, cb ) {

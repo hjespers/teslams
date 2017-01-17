@@ -52,6 +52,8 @@ Or, you can instead create a json file in ~/.teslams/config.json and specify the
 	
 If you don't feel comfortable putting your password as a command line option (visible in the process table) or a file (visible to anyone who can read the file) then you can alternatively use the $TSLA_USERNAME and $TSLA_PASSWORD environment variables. These environment variable allow the execution of these apps in Heroku or other Platform-as-a-Service providers.
 
+Another alternative is to specify --id and --token in order to reuse an authentication token and avoid using login and password. A 90 day token can be generated using 'teslacmd -u username -p password --print_token'
+
 #teslams.js - The main library (for javascript programmers)
 
 Contains a library of functions and constants which allow the uses the TESLA "REST" API to get and set values on the Tesla Model S. 
@@ -79,6 +81,7 @@ Functions include:
 	auto_conditioning()     - turn on/off the climate control (HVAC) system
 	sun_roof()              - control the sun roof 
 	stream()                - low-level interface to streaming service
+	set_token()				- set the bearer token for authenticating using a previously generated token
 
 Constants include:
 
@@ -109,33 +112,40 @@ For help run :
 
 	teslacmd --help
 
-	Usage: teslacmd.js -u <username> -p <password> -acdFgHimPtvwXZ -A [on|off] -C [start|stop] 
-	                   -R [std|max|50-90|100] -S [close|vent|comfort|open|0-100] -L [lock|unlock] -T <temp>
-
+	Usage: teslacmd.js -u <username> -p <password> OR --id <id_string> --token <bearer_token>
+	                   -acdDFgHimMPtvVwXZ
+	                   -A [on|off] -C [start|stop] -L [lock|unlock] -O <offset>
+	                   -R [std|max|50-90|100] -S [close|vent|comfort|open|0-100] -T <temp>
 	Options:
-	  -u, --username  Teslamotors.com login                                        [required]
-	  -p, --password  Teslamotors.com password                                     [required]
-	  -a, --all       Print info for all vehicle on the users account              [boolean]
-	  -c              Display the charge state                                     [boolean]
-	  -d, --drive     Display the drive state                                      [boolean]
-	  -F, --flash     Flash the car headlights                                     [boolean]
-	  -g, --gui       Display the GUI settings                                     [boolean]
-	  -H, --honk      Honk the car horn                                            [boolean]
-	  -i, --info      Print vehicle info                                           [boolean]
-	  -m, --mobile    Display the mobile state                                     [boolean]
-	  -P, --port      Open charge port door                                        [boolean]
-	  -t              Display the climate/temp state                               [boolean]
-	  -v              Display the vehicle state                                    [boolean]
-	  -w, --wake      Wake up the car telemetry                                    [boolean]
-      -X, --isplugged Check if car is plugged in and continue only if connected    [boolean]
-      -Z, --isawake   Check if car is asleep and continue only if awake            [boolean]
-	  -A, --climate   Turn the air conditioning and heating on/off               
-	  -C, --charge    Turn the charging on/off                                   
-	  -R, --range     Charging range mode: "std", "max", or %limit (50-90, or 100 )                       
-	  -S, --roof      Move the car sunroof to any position or %open
-	  -L, --lock      Lock/Unlock the car doors                                  
-	  -T, --temp      Set the car climate control temperature (in Celcius)       
-	  -?, --help      Print usage information                                  
+	  -u, --username  Teslamotors.com login                                                       [required]
+	  -p, --password  Teslamotors.com password                                                    [required]
+	      --id        Vehicle id for the car you want to control                                  [required]
+	      --token     Teslamotors.com Bearer token (use --print_token to get a new token)         [required]
+	  -a, --all       Print info for all vehicle on the users account                             [boolean]
+	  -c              Display the charge state                                                    [boolean]
+	  -d, --drive     Display the drive state                                                     [boolean]
+	  -D, --debug     Display debug information                                                   [boolean]
+	  -F, --flash     Flash the car headlights                                                    [boolean]
+	  -g, --gui       Display the GUI settings                                                    [boolean]
+	  -H, --honk      Honk the car horn                                                           [boolean]
+	  -i, --info      Print vehicle info                                                          [boolean]
+	  -m, --mobile    Display the mobile state                                                    [boolean]
+	  -M, --metric    Convert measurements in metric unit                                         [boolean]
+	  -P, --port      Open charge port door                                                       [boolean]
+	  -t              Display the climate/temp state                                              [boolean]
+	  -v              Display the vehicle state                                                   [boolean]
+	  -V, --version   Print version of teslams software                                           [boolean]
+	  -w, --wake      Wake up the car telemetry                                                   [boolean]
+	  -X, --isplugged Check if car is plugged in and continue only if connected to a charger      [boolean]
+	  -Z, --isawake   Check if car is asleep and continue only if awake                           [boolean]
+	  -A, --climate   Turn the air conditioning and heating on/off
+	  -C, --charge    Turn the charging on/off
+	  -L, --lock      Lock/Unlock the car doors
+	  -O, --vehicle   Vehicle offset (i.e. 0 or 1) for accounts with multiple vehicles
+	  -R, --range     Charging range mode: "std" or "max" or any percent from 50-90 or 100
+	  -S, --roof      Move the car sunroof to: "close", "vent", "comfort", "open" or any percent
+	  -T, --temp      Set the car climate control temperature (in Celcius)
+	  -?, --help      Print usage information
 
 #streaming.js - Capture and log real-time telemetry to a file or MongoDB for analytics and visualization
 
