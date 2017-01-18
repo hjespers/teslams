@@ -229,7 +229,7 @@ function parseArgs( vehicle ) {
 }
 
 if (argv.token && argv.id) {
-    teslams.set_token( argv.id, argv.token);
+    teslams.set_token(argv.token);
     setTimeout(function(){ 
         parseArgs( {id: argv.id} ); 
     }, 5000); // 5 sec delay just to avoid login errors and throttling by Tesla

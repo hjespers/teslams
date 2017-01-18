@@ -95,7 +95,7 @@ exports.get_vid = function(options, cb) {
   });
 };
 
-function set_token( vid, token ) {
+function set_token( token ) {
     //set the global token (even though I think only http_header matters)
     exports.token = token;
     // set common HTTP Header used for all requests
