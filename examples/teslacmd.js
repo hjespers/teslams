@@ -228,58 +228,56 @@ function parseArgs( vehicle ) {
     }
 }
 
-if (argv.token && argv.id) {
+if (argv.token) {
     teslams.set_token(argv.token);
-    setTimeout(function(){ 
-        parseArgs( {id: argv.id} ); 
-    }, 5000); // 5 sec delay just to avoid login errors and throttling by Tesla
-} else {
-    teslams.all( { email: creds.username, password: creds.password }, function ( error, response, body ) {
-        var data, vehicle;
-        //check we got a valid JSON response from Tesla
-        try { 
-            data = JSONbig.parse(body); 
-        } catch(err) { 
-            pr(new Error('login failed')); 
-            process.exit(1);
-        }
-        //check we got an array of vehicles and get the right one using the (optionally) specified vehicle offset
-            if (!util.isArray(data.response)) {
-            pr(new Error('expecting an array from Tesla Motors cloud service'));
-            process.exit(1);
-        }
-        vehicle = data.response[argv.vehicle];
-        if (vehicle === undefined) {
-            pr( new Error('No vehicle data returned for car number ' + argv.vehicle));
-            process.exit(1);    
-        }
-        //check the vehicle has a valid id
-        if (vehicle.id === undefined) {
-            pr( new Error('expecting vehicle ID from Tesla Motors cloud service'));
-            process.exit(1);
-        }
-        if (argv.all) { pr(body); }
-        // first some checks to see if we should even continue
-        if (argv.isawake && vehicle.state == 'asleep') {
-            pr(new Error('exiting because car is asleep'));
-            process.exit(1);
-        } else if (argv.isplugged) { 
-            // safe to call get_charge_state because not asleep or don't care
-            teslams.get_charge_state( vehicle.id, function ( cs ) { 
-                if (cs.charging_state == 'Disconnected') {
-                    pr( new Error('exiting because car is not plugged in'));
-                    process.exit(1);
-                } else { 
-                    // passed through all exit condition checks 
-                    parseArgs( vehicle );
-                }
-            });
-        } else if (argv.print_token) {
-            console.log( teslams.token );
-        } else {
-            // passed through all exit condition checks 
-            setTimeout(function(){ parseArgs( vehicle ); }, 5000); // 5 sec delay just to avoid login errors and throttling by Tesla
-        }
-    });
-}
+} 
+
+teslams.all( { email: creds.username, password: creds.password, token: creds.token}, function ( error, response, body ) {
+    var data, vehicle;
+    //check we got a valid JSON response from Tesla
+    try { 
+        data = JSONbig.parse(body); 
+    } catch(err) { 
+        pr(new Error('login failed')); 
+        process.exit(1);
+    }
+    //check we got an array of vehicles and get the right one using the (optionally) specified vehicle offset
+        if (!util.isArray(data.response)) {
+        pr(new Error('expecting an array from Tesla Motors cloud service'));
+        process.exit(1);
+    }
+    vehicle = data.response[argv.vehicle];
+    if (vehicle === undefined) {
+        pr( new Error('No vehicle data returned for car number ' + argv.vehicle));
+        process.exit(1);    
+    }
+    //check the vehicle has a valid id
+    if (vehicle.id === undefined) {
+        pr( new Error('expecting vehicle ID from Tesla Motors cloud service'));
+        process.exit(1);
+    }
+    if (argv.all) { pr(body); }
+    // first some checks to see if we should even continue
+    if (argv.isawake && vehicle.state == 'asleep') {
+        pr(new Error('exiting because car is asleep'));
+        process.exit(1);
+    } else if (argv.isplugged) { 
+        // safe to call get_charge_state because not asleep or don't care
+        teslams.get_charge_state( vehicle.id, function ( cs ) { 
+            if (cs.charging_state == 'Disconnected') {
+                pr( new Error('exiting because car is not plugged in'));
+                process.exit(1);
+            } else { 
+                // passed through all exit condition checks 
+                parseArgs( vehicle );
+            }
+        });
+    } else if (argv.print_token) {
+        console.log( teslams.token );
+    } else {
+        // passed through all exit condition checks 
+        setTimeout(function(){ parseArgs( vehicle ); }, 5000); // 5 sec delay just to avoid login errors and throttling by Tesla
+    }
+});
+
 

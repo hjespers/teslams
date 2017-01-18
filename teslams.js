@@ -35,42 +35,60 @@ var report2 = function(call, body, cb) {
 // get_vid gives the callback the ID of the first vehicle in the array returned
 var all = exports.all = function(options, cb) {
     if (!cb) cb = function(error, response, body) {/* jshint unused: false */};
+    //add option to call without using email and password
+    if (options.token) { 
+        exports.token = options.token;
+        // set common HTTP Header used for all requests
+        http_header = { 
+            'Authorization': 'Bearer ' + options.token, 
+            'Content-Type': 'application/json; charset=utf-8', 
+            'User-Agent': user_agent,
+            //'Accept-Encoding': 'gzip'
+            // 'Accept-Encoding': 'gzip,deflate'
+        }; 
+        request( {
+            method : 'GET',
+            url: portal + '/vehicles',
+            gzip: true,
+            headers: http_header
+        }, cb); 
+    } else {
+        request( { 
+           method: 'POST',
+           url: owner_api + '/oauth/token',
+           gzip: true,
+           form: { 
+               "grant_type" : "password",
+               "client_id" : 'e4a9949fcfa04068f59abb5a658f2bac0a3428e4652315490b659d5ab3f35a9e', 
+               "client_secret" : 'c75f14bbadc8bee3a7594412c31416f8300256d7668ea7e6e7f06727bfb9d220',
+               "email" : options.email,
+               "password" : options.password } 
+           }, function (error, response, body) {
+              try{ 
+                  var authdata = JSON.parse( body );
+                  token = authdata.access_token;
+                  exports.token = token;
+                  // set common HTTP Header used for all requests
+                  http_header = { 
+                    'Authorization': 'Bearer ' + token, 
+                    'Content-Type': 'application/json; charset=utf-8', 
+                    'User-Agent': user_agent,
+                    //'Accept-Encoding': 'gzip'
+                    // 'Accept-Encoding': 'gzip,deflate'
+                  };
+              } catch (e) {
+                  console.log( 'Error parsing response to oauth token request');
+              }
 
-    request( { 
-       method: 'POST',
-       url: owner_api + '/oauth/token',
-       gzip: true,
-       form: { 
-           "grant_type" : "password",
-           "client_id" : 'e4a9949fcfa04068f59abb5a658f2bac0a3428e4652315490b659d5ab3f35a9e', 
-           "client_secret" : 'c75f14bbadc8bee3a7594412c31416f8300256d7668ea7e6e7f06727bfb9d220',
-           "email" : options.email,
-           "password" : options.password } 
-       }, function (error, response, body) {
-          try{ 
-              var authdata = JSON.parse( body );
-              token = authdata.access_token;
-              exports.token = token;
-              // set common HTTP Header used for all requests
-              http_header = { 
-                'Authorization': 'Bearer ' + token, 
-                'Content-Type': 'application/json; charset=utf-8', 
-                'User-Agent': user_agent,
-                //'Accept-Encoding': 'gzip'
-                // 'Accept-Encoding': 'gzip,deflate'
-              };
-          } catch (e) {
-              console.log( 'Error parsing response to oauth token request');
-          }
-
-          if ((!!error) || ((response.statusCode !== 200) && (response.statusCode !== 302))) return report(error, response, body, cb);
-          request( {
-             method : 'GET',
-             url: portal + '/vehicles',
-             gzip: true,
-             headers: http_header
-          }, cb); 
-    });
+              if ((!!error) || ((response.statusCode !== 200) && (response.statusCode !== 302))) return report(error, response, body, cb);
+              request( {
+                 method : 'GET',
+                 url: portal + '/vehicles',
+                 gzip: true,
+                 headers: http_header
+              }, cb); 
+        });
+    }
 };
 
 // returns first vehicle in list
@@ -96,7 +114,6 @@ exports.get_vid = function(options, cb) {
 };
 
 function set_token( token ) {
-    //set the global token (even though I think only http_header matters)
     exports.token = token;
     // set common HTTP Header used for all requests
     http_header = { 
