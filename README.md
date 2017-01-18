@@ -50,9 +50,14 @@ Or, you can instead create a json file in ~/.teslams/config.json and specify the
 		"password": "Your teslamotors.com password"
 	}
 	
-If you don't feel comfortable putting your password as a command line option (visible in the process table) or a file (visible to anyone who can read the file) then you can alternatively use the $TSLA_USERNAME and $TSLA_PASSWORD environment variables. These environment variable allow the execution of these apps in Heroku or other Platform-as-a-Service providers.
+You can alternatively use the $TSLA_USERNAME and $TSLA_PASSWORD environment variables. These environment variable allow the execution of these apps in Heroku or other Platform-as-a-Service providers.
 
-Another alternative is to specify --id and --token in order to reuse an authentication token and avoid using login and password. A 90 day token can be generated using 'teslacmd -u username -p password --print_token'
+Another alternative is to specify --token in order to reuse a pre-existing authentication token (and avoid using login and password). A 90 day token can be generated using 'teslacmd -u username -p password --print_token' and you can store it for reuse in ~/.teslams/config.json in place of username and password in the following format:
+
+	{
+		"token": "abc123abc123abc123abc123abc123abc123abc123"
+	}
+
 
 #teslams.js - The main library (for javascript programmers)
 
