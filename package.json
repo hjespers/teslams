@@ -3,7 +3,7 @@
   "version": "1.2.2",
   "description": "Utilities for the Tesla Model S ",
   "dependencies": {
-    "express": "= 3.x",
+    "express": "4.14.0",
     "express-namespace": "~0.1.1",
     "json-bigint": ">= 0.1.4",
     "kerberos": "~0.0",
