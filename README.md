@@ -3,7 +3,7 @@
 
 An implementation in Node.js of the client side interface to the Tesla Model S API documented at: 
 
-	http://docs.timdorr.apiary.io/
+http://docs.timdorr.apiary.io/
 
 This is unofficial documentation of the Tesla Model S REST API used by the iOS and Android apps. It features functionality to monitor and control the Model S remotely. Documentation is provided on the Apiary.io site linked above.
 
@@ -64,29 +64,29 @@ Another alternative is to specify --token in order to reuse a pre-existing authe
 Contains a library of functions and constants which allow the uses the TESLA "REST" API to get and set values on the Tesla Model S. 
 All functions take an optional callback that will be passed the javascript object returned from the TESLA API.
 
-Functions include:
-
-	get_vid()               - get the "id" of the Model S by logging into the Tesla portal
-	vehicles()              - login to portal and get vehicles list and options data
-	all()                   - get array of all vehicles (if more than one, we salute you!)
-	mobile_enabled()        - check is remote/mobile control is on or off
-	get_charge_state()      - get the full set of charge state information
-	get_climate_state()     - get the full set of climate state information 
-	get_drive_state()       - get the full set of drive state information
-	get_vehicle_state()     - get the full set of vehicle state information 
-	get_gui_settings()      - get the GUI setting
-	wake_up()               - wake up the communication with the car (if dormant) 
-	open_charge_port()      - open the charge port door 
-	charge_state()          - set the charging state 
-	charge_range()          - set the range mode 
-	flash()                 - flash the headlights 
-	honk()                  - honk the horn 
-	door_lock()             - lock/unlock the doors 
-	set_temperature()       - set the climate control temperatures
-	auto_conditioning()     - turn on/off the climate control (HVAC) system
-	sun_roof()              - control the sun roof 
-	stream()                - low-level interface to streaming service
-	set_token()				- set the bearer token for authenticating using a previously generated token
+Function quick reference:
+	
+	get_vid(opt, cb)               - get the "id" of the Model S by logging into the Tesla portal
+	vehicles(opt, cb)              - login to portal and get vehicles list and options data
+	all(opt, cb)                   - get array of all vehicles (if more than one, we salute you!)
+	mobile_enabled(vid, cb)        - check is remote/mobile control is on or off
+	get_charge_state(vid, cb)      - get the full set of charge state information
+	get_climate_state(vid, cb)     - get the full set of climate state information 
+	get_drive_state(vid, cb)       - get the full set of drive state information
+	get_vehicle_state(vid, cb)     - get the full set of vehicle state information 
+	get_gui_settings(vid, cb)      - get the GUI setting
+	wake_up(vid, cb)               - wake up the communication with the car (if dormant) 
+	open_charge_port(vid, cb)      - open the charge port door
+	charge_state({id, charge}, cb) - set the charging state
+	charge_range({id, range, percent}, cb) - set the range mode. See RANGE constants.
+	flash(vid, cb)                 - flash the headlights 
+	honk(vid, cb)                  - honk the horn 
+	door_lock({id, lock}, cb) .    - boolean toggle door locks
+	set_temperature({id, dtemp, ptemp}, vb) - set the driver and passenger temp
+	auto_conditioning({id, climate}, cb) - turn on/off the HVAC system. See CLIMATE constants
+	sun_roof({id, roof, percent}, cb) - control the sun roof. See roof constants
+	stream(opt, cb)                - low-level interface to streaming service
+	set_token(token)               - set the bearer token for authenticating using a previously generated token
 
 Constants include:
 
