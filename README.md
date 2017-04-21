@@ -1,4 +1,4 @@
-#Tesla Model S REST API
+# Tesla Model S REST API
 
 
 An implementation in Node.js of the client side interface to the Tesla Model S API documented at: 
@@ -15,11 +15,11 @@ Be careful not to send your login and password to anyone other than Tesla or you
 
 Also ensure that you don't overwhelm the Tesla servers with requests. Calling REST APIs at very high frequency can put substantial load on the Tesla servers and might get your IP blocked by Tesla.
 
-#Disclaimer
+# Disclaimer
 
 Use these programs at your own risk. The authors do not guaranteed the proper functioning of these applications. This code attempts to use the same interfaces used by the official Tesla phone apps. However, it is possible that use of this code may cause unexpected damage for which nobody but you are responsible. Use of these functions can change the settings on your car and may have negative consequences such as (but not limited to) unlocking the doors, opening the sun roof, or reducing the available charge in the battery.
 
-#Contributors
+# Contributors
 Marshall Rose (https://github.com/mrose17)
 Dirk Hohndel (https://github.com/dirkhh)
 Arthur Blake (https://github.com/arthurblake)
@@ -27,7 +27,7 @@ Hans Jespersen (https://github.com/hjespers)
 Nick Triantos
 Chris Crewdson (https://github.com/ChrisCrewdson)
 
-#Installation
+# Installation
 
 To use these programs you must download and install 'node' from http://nodejs.org
 . Once node is installed, use the included 'npm' utility to download and install the teslams tools and all it's dependent modules
@@ -59,7 +59,7 @@ Another alternative is to specify --token in order to reuse a pre-existing authe
 	}
 
 
-#teslams.js - The main library (for javascript programmers)
+# teslams.js - The main library (for javascript programmers)
 
 Contains a library of functions and constants which allow the uses the TESLA "REST" API to get and set values on the Tesla Model S. 
 All functions take an optional callback that will be passed the javascript object returned from the TESLA API.
@@ -105,7 +105,7 @@ Constants include:
 	ROOF_COMFORT - puts the roof in the 80% open position (for reduced noice)
 	ROOF_OPEN    - puts the roof in the 100% open position
 
-#teslacmd.js - Command Line Interface for all functions supported in the REST API 
+# teslacmd.js - Command Line Interface for all functions supported in the REST API 
 
 A sample command line application which uses the teslams.js library and takes command line arguments that allow all know REST API functions to be used.
 
@@ -152,7 +152,7 @@ For help run :
 	  -T, --temp      Set the car climate control temperature (in Celcius)
 	  -?, --help      Print usage information
 
-#streaming.js - Capture and log real-time telemetry to a file or MongoDB for analytics and visualization
+# streaming.js - Capture and log real-time telemetry to a file or MongoDB for analytics and visualization
 
 <img src=http://farm9.staticflickr.com/8241/8526534730_75643b3247_c.jpg>
 
@@ -183,7 +183,7 @@ For help run :
 		  -?, --help      Print usage information                                            
 
 
-#visualize.js - Graphically display historical data captured using streaming.js
+# visualize.js - Graphically display historical data captured using streaming.js
 
 A sample application that uses streaming data collected in MongoDB by the streaming.js app and makes it visible in a browser. For this app to work you need to be logging the streaming data into a database (see the streaming app above for details). Visualize then takes those data and shows them as a web application. You can connect to the main page for a simple welcome screen that allows you to pick the data range and then select one of the (currently) three supported applications:
 
@@ -226,7 +226,7 @@ if you don't have a "visualize" property in your config file, authentication is 
 
 
 
-#chargebar.js - monitor your car from your desktop 
+# chargebar.js - monitor your car from your desktop 
 
 
 <img src="http://farm9.staticflickr.com/8236/8535066907_f22a61b061_c.jpg">
@@ -251,7 +251,7 @@ For help run :
 	Missing required arguments: u, p
 
 
-#climatemon.js - monitor the temperature of your car from your desktop 
+# climatemon.js - monitor the temperature of your car from your desktop 
 
 <img src="http://farm9.staticflickr.com/8099/8573246292_3361647e14_b.jpg">
 
@@ -279,7 +279,7 @@ For help run :
 	Missing required arguments: u, p
 
 
-#teslamap.js - dude, where's my car?
+# teslamap.js - dude, where's my car?
 
 <img src="http://farm9.staticflickr.com/8248/8555931850_c2ae011075_z.jpg">
 
@@ -306,7 +306,7 @@ For help run :
 
 	Missing required arguments: u, p
 
-#example.js - a hello world app that uses the "teslams" node module 
+# example.js - a hello world app that uses the "teslams" node module 
 
 A very simple sample application which uses the teslams.js library to call common functions provided in the REST API.
 A valid teslamotors.com login and password is required and must be inserted into the config.json configuration file.
@@ -323,7 +323,7 @@ To execute change into the examples directory to run:
 	cd ~/node_modules/teslams/examples
 	node example
 
-#Feedback and Support
+# Feedback and Support
 
 For more information, feedback, or community support see the Tesla Motors Club forum at http://www.teslamotorsclub.com/showthread.php/13410-Model-S-REST-API or email teslams@googlegroups.com
 
