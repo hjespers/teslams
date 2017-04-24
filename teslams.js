@@ -2,6 +2,7 @@
 var request = require('request');
 var util = require('util');
 var JSONbig = require('json-bigint');
+var WebSocket = require('ws');
 
 var portal = 'https://owner-api.teslamotors.com/api/1';
 exports.portal = portal;
@@ -185,15 +186,22 @@ function get_climate_state( vid, cb ) {
 exports.get_climate_state = get_climate_state;
 
 function get_drive_state( vid, cb ) {
+              debugger;
+
     request( {
         method: 'GET',
         url: portal + '/vehicles/' + vid + '/data_request/drive_state',
         gzip: true,
         headers: http_header
     }, function (error, response, body) { 
+          debugger;
+
         if ((!!error) || (response.statusCode !== 200)) return report(error, response, body, cb);
         try {
             var data = JSON.parse(body); 
+
+                console.log(JSON.stringify(data.response, null, 4));
+
             if (typeof cb == 'function') return cb( data.response );  
             else return true;
         } catch (err) {
@@ -620,6 +628,31 @@ exports.ROOF_CLOSE = ROOF_CLOSE;
 exports.ROOF_VENT = ROOF_VENT;
 exports.ROOF_COMFORT = ROOF_COMFORT;
 exports.ROOF_OPEN = ROOF_OPEN;
+
+function trigger_homelink( vid, cb ) {
+    var error = false;
+    debugger;
+    //var drive_state = get_drive_state(vid, cb);
+//    console.log(JSON.stringify(drive_state, null, 4));
+
+var ws = new WebSocket('ws://virgilm@gmail.com:XrO7JgE7GBds@localhost:8080/');
+//var ws = new WebSocket('wss://' + options.email + ':' + options.password + '@streaming.vn.teslamotors.com/connect/' + vid);
+//var ws = new WebSocket('ws://virgilm@gmail.com:XrO7JgE7GBds@streaming.vn.teslamotors.com/connect/' + vid);
+
+ws.onmessage = function(event) {
+  console.log('Server data is: ' + event.data);
+};
+
+ws.onopen = function (event) {
+  ws.send("Here's some text that the server is urgently awaiting!"); 
+};
+
+    
+//                "lat" : "37.334261".toString(),
+//                "lon" : "-121.943385".toString(),
+
+}
+exports.trigger_homelink = trigger_homelink;
 
 //left off here//
 // Streaming API stuff is below. Everything above is the REST API 
