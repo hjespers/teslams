@@ -10,6 +10,10 @@ var owner_api = 'https://owner-api.teslamotors.com';
 exports.portal = owner_api;
 var token = '';
 exports.token = token;
+var username = '';
+exports.username = username;
+var password = '';
+exports.password = password;
 
 // emulate the android mobile app
 var version = '2.1.79';
@@ -36,6 +40,8 @@ var report2 = function(call, body, cb) {
 // get_vid gives the callback the ID of the first vehicle in the array returned
 var all = exports.all = function(options, cb) {
     if (!cb) cb = function(error, response, body) {/* jshint unused: false */};
+    exports.username = options.email;
+    exports.password = options.password;
     //add option to call without using email and password
     if (options.token) { 
         exports.token = options.token;
@@ -629,28 +635,76 @@ exports.ROOF_VENT = ROOF_VENT;
 exports.ROOF_COMFORT = ROOF_COMFORT;
 exports.ROOF_OPEN = ROOF_OPEN;
 
-function trigger_homelink( vid, cb ) {
+function keepAlive(ws) {
+    console.log('Call keepalive');
+    if (ws.readyState == ws.OPEN) {
+        var msg = {
+            msg_type: 'autopark:heartbeat_app',
+            timestamp: Date.now(),
+        }
+        ws.send(JSON.stringify(msg));
+    }
+}
+
+function trigger_homelink( params, cb ) {
     var error = false;
-    debugger;
-    //var drive_state = get_drive_state(vid, cb);
-//    console.log(JSON.stringify(drive_state, null, 4));
+    var vid = params.id;
+    var token = params.token;
+    var timerId = 0;
 
-var ws = new WebSocket('ws://virgilm@gmail.com:XrO7JgE7GBds@localhost:8080/');
-//var ws = new WebSocket('wss://' + options.email + ':' + options.password + '@streaming.vn.teslamotors.com/connect/' + vid);
-//var ws = new WebSocket('ws://virgilm@gmail.com:XrO7JgE7GBds@streaming.vn.teslamotors.com/connect/' + vid);
+    var ws = new WebSocket('wss://' + exports.username + ':' + token + '@streaming.vn.teslamotors.com/connect/' + vid);
 
-ws.onmessage = function(event) {
-  console.log('Server data is: ' + event.data);
-};
+    ws.onmessage = function(event) {
+        console.log('Server data is: ' + event.data);
+        var msg = JSON.parse(event.data);
+//        console.log( util.inspect(msg) );
+        switch (msg.msg_type) {
+            case 'control:hello':
+                var freq = msg.autopark.heartbeat_frequency;
+                console.log('Frequency is: ' + freq);
+                timerId = setInterval(keepAlive, 8*freq, ws);
+                break;
+            case 'homelink:status':
+                console.log('Nearby is: ' + msg.homelink_nearby);
+                var cmd = {
+                    msg_type: 'homelink:cmd_trigger',
+                    latitude: "37.334261".toString(), // HARDCODED
+                    longitude: "-121.943385".toString(), //HARDCODED
+                }
+                var message = JSON.stringify(cmd);
+                console.log('Sending message: ' + message);
+                ws.send(message);
+                break;
+            case 'homelink:cmd_result':
+                switch (msg.reason) {
+                    case 'no_homelink_nearby':
+                        console.log('No Garage nearby!');
+                        break;
+                    case '':
+                        if (msg.result == true) {
+                            console.log('Homelink command done!');
+                        } else {
+                            console.log('Homelink command failed!');
+                        }
+                        break;
+                    default:
+                        console.log('Received homelink message: ' + util.inspect(msg) );
+                }
+                ws.close();
+                clearInterval(timerId);
+                break;
+            default:
+                console.log('Received message type: ' + util.inspect(msg.msg_type) );
+        }
+    };
 
-ws.onopen = function (event) {
-  ws.send("Here's some text that the server is urgently awaiting!"); 
-};
+    ws.onopen = function (event) {
+      console.log('Connection opened');
+    };
 
-    
-//                "lat" : "37.334261".toString(),
-//                "lon" : "-121.943385".toString(),
-
+    ws.onclose = function (event) {
+        console.log('Connection closed, status code: ' + event.code);
+    };
 }
 exports.trigger_homelink = trigger_homelink;
 

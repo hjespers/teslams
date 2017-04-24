@@ -182,7 +182,7 @@ function parseArgs( vehicle ) {
         teslams.flash( vid, pr ); 
     }
     if (argv.h) {
-        teslams.trigger_homelink( vid, pr ); 
+        teslams.trigger_homelink( {id: vehicle.vehicle_id, token: vehicle.tokens[0] }, pr ); 
     }
     if (argv.H) {
         teslams.honk( vid, pr ); 
