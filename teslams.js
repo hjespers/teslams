@@ -628,8 +628,7 @@ exports.ROOF_VENT = ROOF_VENT;
 exports.ROOF_COMFORT = ROOF_COMFORT;
 exports.ROOF_OPEN = ROOF_OPEN;
 
-function keepAlive(ws) {
-    console.log('Call keepalive');
+function keep_alive (ws) {
     if (ws.readyState == ws.OPEN) {
         var msg = {
             msg_type: 'autopark:heartbeat_app',
@@ -639,79 +638,112 @@ function keepAlive(ws) {
     }
 }
 
+function send_message (ws, command, latitude, longitude) {
+    var cmd = {
+        msg_type: command,
+        latitude: latitude,
+        longitude: longitude,
+    }
+    var message = JSON.stringify(cmd);
+    console.log('Sending message: ' + message);
+    ws.send(message);
+}
+
 function streaming_interface (params, command, cb) {
     var error = false;
-    var vid = params.id;
     var token = params.token;
     var vehicle_id = params.vehicle_id;
-    var timerId = 0;
+    var autopark_timerId = 0;
+    var frequency = 0;
+    var autopark_started = false;
 
-    var latitude = 0;
-    var longitude = 0;
-    get_drive_state(vid, function (ds) {
-        console.log( util.inspect(ds) );
-        latitude = ds.latitude;
-        longitude = ds.longitude;          
-    });
+    var latitude = params.latitude;
+    var longitude = params.longitude;
 
     var ws = new WebSocket('wss://' + exports.username + ':' + token + '@streaming.vn.teslamotors.com/connect/' + vehicle_id);
 
-    ws.onmessage = function(event) {
-        console.log('Server data is: ' + event.data);
+    ws.onmessage = function (event) {
+//        console.log('Server data is: ' + event.data);
         var msg = JSON.parse(event.data);
 //        console.log( util.inspect(msg) );
         switch (msg.msg_type) {
+            // heartbeat
             case 'control:hello':
                 var freq = msg.autopark.heartbeat_frequency;
                 console.log('Frequency is: ' + freq);
-                timerId = setInterval(keepAlive, 8*freq, ws);
                 break;
+            // HomeLink
             case 'homelink:status':
-                console.log('Nearby is: ' + msg.homelink_nearby);
-                var cmd = {
-                    msg_type: 'homelink:cmd_trigger',
-                    latitude: latitude,
-                    longitude: longitude,
-                }
-                var message = JSON.stringify(cmd);
-                console.log('Sending message: ' + message);
-                ws.send(message);
+                console.log('Received message type: ' + msg.msg_type + ', nearby is ' + msg.homelink_nearby );
+                if ( (msg.homelink_nearby == true) && (command == 'homelink:cmd_trigger') ) {
+                    send_message(ws, command, latitude, longitude);
+                };
                 break;
             case 'homelink:cmd_result':
-                switch (msg.reason) {
-                    case 'no_homelink_nearby':
-                        console.log('No Garage nearby!');
-                        break;
-                    case '':
-                        if (msg.result == true) {
-                            console.log('Homelink command done!');
+                console.log('Received message type: ' + msg.msg_type + ', reason is ' + msg.reason );
+                ws.close();
+                break;
+            // Summon
+            case 'autopark:status':
+                console.log('Received message type: ' + msg.msg_type + ', autopark_state is ' + msg.autopark_state );
+                switch (msg.autopark_state) { // ready, paused, resuming, preparing, aborting...
+                    case 'ready':
+                        if (autopark_started) {
+                            // autopark is done.
+                            clearInterval(autopark_timerId);
+                            ws.close();
                         } else {
-                            console.log('Homelink command failed!');
+                            // start autopark if needed.
+                            if ((command == 'autopark:cmd_forward') || (command == 'autopark:cmd_reverse')) {
+                                send_message(ws, command, latitude, longitude);
+                                autopark_timerId = setInterval(keep_alive, freq, ws);
+                                autopark_started = true;
+                            }
                         }
                         break;
-                    default:
-                        console.log('Received homelink message: ' + util.inspect(msg) );
                 }
-                ws.close();
-                clearInterval(timerId);
+                break;
+            case 'autopark:cmd_result':
+                console.log('Received message type: ' + msg.msg_type + ', reason is ' + msg.reason );
                 break;
             default:
-                console.log('Received message type: ' + util.inspect(msg.msg_type) );
+//                console.log('Received unknown message type: ' + util.inspect(msg.msg_type) );
         }
     };
 
     ws.onopen = function (event) {
-      console.log('Connection opened');
+        console.log('WS connection opened');
     };
 
     ws.onclose = function (event) {
-        console.log('Connection closed, status code: ' + event.code);
+        console.log('WS connection closed, status code: ' + event.code);
     };
 
 }
 
+function prepare_required_data (params, command, cb) {
+    var vid = params.id;
+    get_drive_state(vid, function (ds) {
+//        console.log( util.inspect(ds) );
+        params.latitude = ds.latitude;
+        params.longitude = ds.longitude;
+
+        streaming_interface (params, command, cb);
+    });
+}
+
+function trigger_autopark_forward( params, cb ) {
+    prepare_required_data (params, 'autopark:cmd_forward', cb);
+}
+exports.trigger_autopark_forward = trigger_autopark_forward;
+
+function trigger_autopark_reverse( params, cb ) {
+    prepare_required_data (params, 'autopark:cmd_reverse', cb);
+}
+exports.trigger_autopark_reverse = trigger_autopark_reverse;
+
 function trigger_homelink( params, cb ) {
-    streaming_interface (params, 'homelink:cmd_trigger', cb);
+    prepare_required_data (params, 'homelink:cmd_trigger', cb);
 }
 exports.trigger_homelink = trigger_homelink;
 
