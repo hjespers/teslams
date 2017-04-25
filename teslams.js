@@ -192,22 +192,15 @@ function get_climate_state( vid, cb ) {
 exports.get_climate_state = get_climate_state;
 
 function get_drive_state( vid, cb ) {
-              debugger;
-
     request( {
         method: 'GET',
         url: portal + '/vehicles/' + vid + '/data_request/drive_state',
         gzip: true,
         headers: http_header
     }, function (error, response, body) { 
-          debugger;
-
         if ((!!error) || (response.statusCode !== 200)) return report(error, response, body, cb);
         try {
             var data = JSON.parse(body); 
-
-                console.log(JSON.stringify(data.response, null, 4));
-
             if (typeof cb == 'function') return cb( data.response );  
             else return true;
         } catch (err) {
@@ -646,13 +639,22 @@ function keepAlive(ws) {
     }
 }
 
-function trigger_homelink( params, cb ) {
+function streaming_interface (params, command, cb) {
     var error = false;
     var vid = params.id;
     var token = params.token;
+    var vehicle_id = params.vehicle_id;
     var timerId = 0;
 
-    var ws = new WebSocket('wss://' + exports.username + ':' + token + '@streaming.vn.teslamotors.com/connect/' + vid);
+    var latitude = 0;
+    var longitude = 0;
+    get_drive_state(vid, function (ds) {
+        console.log( util.inspect(ds) );
+        latitude = ds.latitude;
+        longitude = ds.longitude;          
+    });
+
+    var ws = new WebSocket('wss://' + exports.username + ':' + token + '@streaming.vn.teslamotors.com/connect/' + vehicle_id);
 
     ws.onmessage = function(event) {
         console.log('Server data is: ' + event.data);
@@ -668,8 +670,8 @@ function trigger_homelink( params, cb ) {
                 console.log('Nearby is: ' + msg.homelink_nearby);
                 var cmd = {
                     msg_type: 'homelink:cmd_trigger',
-                    latitude: "37.334261".toString(), // HARDCODED
-                    longitude: "-121.943385".toString(), //HARDCODED
+                    latitude: latitude,
+                    longitude: longitude,
                 }
                 var message = JSON.stringify(cmd);
                 console.log('Sending message: ' + message);
@@ -705,6 +707,11 @@ function trigger_homelink( params, cb ) {
     ws.onclose = function (event) {
         console.log('Connection closed, status code: ' + event.code);
     };
+
+}
+
+function trigger_homelink( params, cb ) {
+    streaming_interface (params, 'homelink:cmd_trigger', cb);
 }
 exports.trigger_homelink = trigger_homelink;
 
