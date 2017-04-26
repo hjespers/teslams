@@ -631,6 +631,16 @@ exports.ROOF_OPEN = ROOF_OPEN;
 function keep_alive (ws) {
     if (ws.readyState == ws.OPEN) {
         var msg = {
+            msg_type: 'control:ping',
+            timestamp: Date.now(),
+        }
+        ws.send(JSON.stringify(msg));
+    }
+}
+
+function keep_alive_autopark (ws) {
+    if (ws.readyState == ws.OPEN) {
+        var msg = {
             msg_type: 'autopark:heartbeat_app',
             timestamp: Date.now(),
         }
@@ -654,6 +664,7 @@ function streaming_interface (params, command, cb) {
     var token = params.token;
     var vehicle_id = params.vehicle_id;
     var autopark_timerId = 0;
+    var timerId = 0;
     var frequency = 0;
     var autopark_started = false;
 
@@ -669,8 +680,13 @@ function streaming_interface (params, command, cb) {
         switch (msg.msg_type) {
             // heartbeat
             case 'control:hello':
+                console.log('Received message type: ' + msg.msg_type + ', msg is ' + util.inspect(msg));
                 var freq = msg.autopark.heartbeat_frequency;
                 console.log('Frequency is: ' + freq);
+                timerId = setInterval(keep_alive, msg.connection_timeout/2, ws);
+                break;
+            case 'control:pong':
+//                console.log('Ignoring heartbeat (pong)');
                 break;
             // HomeLink
             case 'homelink:status':
@@ -696,7 +712,7 @@ function streaming_interface (params, command, cb) {
                             // start autopark if needed.
                             if ((command == 'autopark:cmd_forward') || (command == 'autopark:cmd_reverse')) {
                                 send_message(ws, command, latitude, longitude);
-                                autopark_timerId = setInterval(keep_alive, freq, ws);
+                                autopark_timerId = setInterval(keep_alive_autopark, freq, ws);
                                 autopark_started = true;
                             }
                         }
@@ -705,6 +721,9 @@ function streaming_interface (params, command, cb) {
                 break;
             case 'autopark:cmd_result':
                 console.log('Received message type: ' + msg.msg_type + ', reason is ' + msg.reason );
+                break;
+            case 'autopark:heartbeat_car':
+//                console.log('Ignoring heartbeat_car');
                 break;
             default:
 //                console.log('Received unknown message type: ' + util.inspect(msg.msg_type) );
@@ -717,6 +736,7 @@ function streaming_interface (params, command, cb) {
 
     ws.onclose = function (event) {
         console.log('WS connection closed, status code: ' + event.code);
+        clearInterval(timerId);
     };
 
 }
