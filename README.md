@@ -161,7 +161,7 @@ A valid teslamotors.com login and password is required and must be provided on t
 
 By default the output goes to a file called "streaming.out" which can also be changed with command line options. Each time you run the program you will over-write the output file so copy old log data or specify a different output file before running the application a second time.
 
-Data can be stored in MongoDB using the --db flag. This requires that you separately download, install, and start mongodb on your local host (see http://www.mongodb.org/downloads).
+Data can be stored in MongoDB using the --db flag. This requires that you separately download, install, and start mongodb on your local host (see http://www.mongodb.org/downloads or https://docs.docker.com/samples/library/mongo/).
 
 To execute run:
 
