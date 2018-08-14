@@ -115,8 +115,9 @@ if (argv.db) {
 
     MongoClient.connect(mongoUri, function(err, db) {
         if(err) throw err;
-        collectionS = db.collection('tesla_stream');
-        collectionA = db.collection('tesla_aux');
+	dbo=db.db(argv.db);
+        collectionS = dbo.collection('tesla_stream');
+        collectionA = dbo.collection('tesla_aux');
     });
 } 
 if (argv.awsiot) {
