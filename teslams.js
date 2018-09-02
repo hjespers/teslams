@@ -53,10 +53,16 @@ var all = exports.all = function(options, cb) {
             headers: http_header
         }, cb); 
     } else {
+      http_header = { 
+            'Authorization': 'Bearer ' + options.token, 
+            'Content-Type': 'application/json; charset=utf-8', 
+            'User-Agent': user_agent,
+        }; 
         request( { 
            method: 'POST',
            url: owner_api + '/oauth/token',
            gzip: true,
+           headers: http_header,
            form: { 
                "grant_type" : "password",
                "client_id" : 'e4a9949fcfa04068f59abb5a658f2bac0a3428e4652315490b659d5ab3f35a9e', 
