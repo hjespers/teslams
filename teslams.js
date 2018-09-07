@@ -17,6 +17,7 @@ var codename = 'REL';
 var release = '4.4.4';
 var locale = 'en_US';
 var user_agent = 'Model S ' + version + ' (' + model + '; Android ' + codename + ' ' + release + '; ' + locale + ')';
+var x_tesla_user_agent = 'TeslaApp/3.4.4-350/fad4a582e/android/9.0.0';
 
 //Common HTTP header variable for all requests. Includes authentication credentials (token) and user agent string
 var http_header;
@@ -43,6 +44,7 @@ var all = exports.all = function(options, cb) {
             'Authorization': 'Bearer ' + options.token, 
             'Content-Type': 'application/json; charset=utf-8', 
             'User-Agent': user_agent,
+            'X-Tesla-User-Agent': x_tesla_user_agent,
             //'Accept-Encoding': 'gzip'
             // 'Accept-Encoding': 'gzip,deflate'
         }; 
@@ -53,10 +55,17 @@ var all = exports.all = function(options, cb) {
             headers: http_header
         }, cb); 
     } else {
+      http_header = { 
+            'Authorization': 'Bearer ' + options.token, 
+            'Content-Type': 'application/json; charset=utf-8', 
+            'User-Agent': user_agent, 
+            'X-Tesla-User-Agent': x_tesla_user_agent,
+        }; 
         request( { 
            method: 'POST',
            url: owner_api + '/oauth/token',
            gzip: true,
+           headers: http_header,
            form: { 
                "grant_type" : "password",
                "client_id" : 'e4a9949fcfa04068f59abb5a658f2bac0a3428e4652315490b659d5ab3f35a9e', 
