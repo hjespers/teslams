@@ -11,7 +11,7 @@ var argv = require('optimist')
     .describe('P', 'HTTP Listen Port (default is 8888)')
     .alias('P', 'port')
     .default('P', '8888')
-    .alias('O', 'vehicle')   
+    .alias('O', 'vehicle')
     .describe('O', 'Select the vehicle offset for accounts with multiple vehicles')
     .default('O', 0)
     .boolean(['X', 'Z'])
@@ -64,7 +64,7 @@ function parseUrl(vehicle, req, res) {
 
     switch (url) {
     case "/vehicles":
-        teslams.all({ email: creds.username, password: creds.password }, function (error, response, body) {
+        teslams.all(creds, function (error, response, body) {
             res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
             res.setHeader("Pragma", "no-cache");
             res.setHeader("Expires", 0);
@@ -241,7 +241,7 @@ function parseUrl(vehicle, req, res) {
 
 console.log("web server running on http://localhost:" + httpport);
 
-teslams.all({ email: creds.username, password: creds.password }, function (error, response, body) {
+teslams.all(creds, function (error, response, body) {
     "use strict";
 
     function pr(stuff) {
@@ -287,9 +287,8 @@ teslams.all({ email: creds.username, password: creds.password }, function (error
     // require http module for the web server
     // start a web server and wait for requests to trigger TESLA Events
     http.createServer(function (req, res) {
-        setTimeout(function(){ 
+        setTimeout(function(){
             parseUrl(vehicle, req, res);
-        }, 5000);   
+        }, 5000);
     }).listen(httpport);
 });
-

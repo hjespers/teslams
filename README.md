@@ -1,7 +1,7 @@
 # Tesla Model S REST API
 
 
-An implementation in Node.js of the client side interface to the Tesla Model S API documented at: 
+An implementation in Node.js of the client side interface to the Tesla Model S API documented at:
 
 http://docs.timdorr.apiary.io/
 
@@ -33,54 +33,53 @@ To use these programs you must download and install 'node' from http://nodejs.or
 . Once node is installed, use the included 'npm' utility to download and install the teslams tools and all it's dependent modules
 
 	npm install -g teslams
-	
+
 or if you are not logged in as the root (administrator) use:
-	
+
 	sudo npm install -g teslams
 
 Alternatively, to run from github sources, clone teslams, go to the main folder and run
 
 	npm install
 
-All example programs normally require -u and -p in order to specify the Tesla Motors user name and password to access your Model S.
-Or, you can instead create a json file in ~/.teslams/config.json and specify them once, in the following format:
+All example programs require credentials to authenticate with the Tesla API. You can specify a config.json, format specified below, with $TSLA_CONFIG_FILE. This default location for the config file is `~/.teslams/config.json` if not specified. It's highly recommended to use the token approach with a secure file location, see the next section for details.
 
-	{
+   	{
 		"username": "Your teslamotors.com username/email",
-		"password": "Your teslamotors.com password"
+		"password": "Your teslamotors.com password",
 	}
-	
-You can alternatively use the $TSLA_USERNAME and $TSLA_PASSWORD environment variables. These environment variable allow the execution of these apps in Heroku or other Platform-as-a-Service providers.
 
-Another alternative is to specify --token in order to reuse a pre-existing authentication token (and avoid using login and password). A 90 day token can be generated using 'teslacmd -u username -p password --print_token' and you can store it for reuse in ~/.teslams/config.json in place of username and password in the following format:
+
+Alternatively, the token can be passed via --token in order to reuse a pre-existing authentication token (and avoid using login and password). A 90 day token can be generated using 'teslacmd -u username -p password --print_token' and you can store it for reuse in ~/.teslams/config.json in place of username and password in the following format:
 
 	{
 		"token": "abc123abc123abc123abc123abc123abc123abc123"
 	}
 
+Another alternative, username and password can be passed on the cli with -u and -p. Take care that no other users can access the system, as this will expose credentials in your history and process table `ps -ax`. The username and password can be passed as $TSLA_USERNAME and $TSLA_PASSWORD environment variables. These environment variable allow the execution of these apps in Heroku or other Platform-as-a-Service providers.
 
 # teslams.js - The main library (for javascript programmers)
 
-Contains a library of functions and constants which allow the uses the TESLA "REST" API to get and set values on the Tesla Model S. 
+Contains a library of functions and constants which allow the uses the TESLA "REST" API to get and set values on the Tesla Model S.
 All functions take an optional callback that will be passed the javascript object returned from the TESLA API.
 
 Function quick reference:
-	
+
 	get_vid(opt, cb)               - get the "id" of the Model S by logging into the Tesla portal
 	vehicles(opt, cb)              - login to portal and get vehicles list and options data
 	all(opt, cb)                   - get array of all vehicles (if more than one, we salute you!)
 	mobile_enabled(vid, cb)        - check is remote/mobile control is on or off
 	get_charge_state(vid, cb)      - get the full set of charge state information
-	get_climate_state(vid, cb)     - get the full set of climate state information 
+	get_climate_state(vid, cb)     - get the full set of climate state information
 	get_drive_state(vid, cb)       - get the full set of drive state information
-	get_vehicle_state(vid, cb)     - get the full set of vehicle state information 
+	get_vehicle_state(vid, cb)     - get the full set of vehicle state information
 	get_gui_settings(vid, cb)      - get the GUI setting
-	wake_up(vid, cb)               - wake up the communication with the car (if dormant) 
+	wake_up(vid, cb)               - wake up the communication with the car (if dormant)
 	open_charge_port(vid, cb)      - open the charge port door
 	charge_state({id, charge}, cb) - set the charging state
 	charge_range({id, range, percent}, cb) - set the range mode. See RANGE constants.
-	flash(vid, cb)                 - flash the headlights 
-	honk(vid, cb)                  - honk the horn 
+	flash(vid, cb)                 - flash the headlights
+	honk(vid, cb)                  - honk the horn
 	door_lock({id, lock}, cb) .    - boolean toggle door locks
 	set_temperature({id, dtemp, ptemp}, vb) - set the driver and passenger temp
 	auto_conditioning({id, climate}, cb) - turn on/off the HVAC system. See CLIMATE constants
@@ -105,7 +104,7 @@ Constants include:
 	ROOF_COMFORT - puts the roof in the 80% open position (for reduced noice)
 	ROOF_OPEN    - puts the roof in the 100% open position
 
-# teslacmd.js - Command Line Interface for all functions supported in the REST API 
+# teslacmd.js - Command Line Interface for all functions supported in the REST API
 
 A sample command line application which uses the teslams.js library and takes command line arguments that allow all know REST API functions to be used.
 
@@ -156,8 +155,8 @@ For help run :
 
 <img src=http://farm9.staticflickr.com/8241/8526534730_75643b3247_c.jpg>
 
-A sample application which uses the TESLA HTTP Long Polling "STREAMING" API to get continuous telemetry from the Tesla Model S. 
-A valid teslamotors.com login and password is required and must be provided on the command line options. 
+A sample application which uses the TESLA HTTP Long Polling "STREAMING" API to get continuous telemetry from the Tesla Model S.
+A valid teslamotors.com login and password is required and must be provided on the command line options.
 
 By default the output goes to a file called "streaming.out" which can also be changed with command line options. Each time you run the program you will over-write the output file so copy old log data or specify a different output file before running the application a second time.
 
@@ -165,7 +164,7 @@ Data can be stored in MongoDB using the --db flag. This requires that you separa
 
 To execute run:
 
-	streaming -u <username> -p <password> 
+	streaming -u <username> -p <password>
 
 For help run :
 
@@ -180,7 +179,7 @@ For help run :
 		  -f, --file      Output file.                           [default: "streaming.out"]
 		  -d, --db        MongoDB database location
 		  -v, --values    List of values to collect              [default: "speed,odometer,soc,elevation,est_heading,est_lat,est_lng,power,shift_state"]
-		  -?, --help      Print usage information                                            
+		  -?, --help      Print usage information
 
 
 # visualize.js - Graphically display historical data captured using streaming.js
@@ -211,7 +210,7 @@ For help run:
 
 Point your browser to http://localhost:8766 to view the various visualizations.
 
-URLs are of the form http://localhost:8766/energy?from=YYYY-MM-DD-HH-MM&to=YYYY-MM-DD-HH-MM 
+URLs are of the form http://localhost:8766/energy?from=YYYY-MM-DD-HH-MM&to=YYYY-MM-DD-HH-MM
 
 visualize.js now supports authentication. In your ~/.teslams/config.json file simply add a section for visualize like this:
 
@@ -226,22 +225,22 @@ if you don't have a "visualize" property in your config file, authentication is 
 
 
 
-# chargebar.js - monitor your car from your desktop 
+# chargebar.js - monitor your car from your desktop
 
 
 <img src="http://farm9.staticflickr.com/8236/8535066907_f22a61b061_c.jpg">
 
-This application displays the charge state of a Tesla Model S in an ASCII terminal window. 
+This application displays the charge state of a Tesla Model S in an ASCII terminal window.
 
 To execute run:
-	
+
 	chargebar -u <username> -p <password>
 
 For help run :
 
 	chargebar --help
 
-	Usage: chargebar.js -u <username> -p <password> 
+	Usage: chargebar.js -u <username> -p <password>
 
 	Options:
 	  -u, --username  Teslamotors.com login                                                             [required]
@@ -251,7 +250,7 @@ For help run :
 	Missing required arguments: u, p
 
 
-# climatemon.js - monitor the temperature of your car from your desktop 
+# climatemon.js - monitor the temperature of your car from your desktop
 
 <img src="http://farm9.staticflickr.com/8099/8573246292_3361647e14_b.jpg">
 
@@ -260,17 +259,17 @@ Colors are white/yellow when climate control is off
 Interior temperature bar is blue when cooling and red when heating
 
 To execute run:
-        
+
 	climatemon -u <username> -p <password>
 
-	CTRL-D toggles climate control on/off 
+	CTRL-D toggles climate control on/off
 	CTRL-C to exit
 
 For help run :
 
 	climatemon --help
 
-	Usage: climatemon.js -u username -p password 
+	Usage: climatemon.js -u username -p password
 
 	Options:
 	  -u, --username  Teslamotors.com login     [required]
@@ -306,7 +305,7 @@ For help run :
 
 	Missing required arguments: u, p
 
-# example.js - a hello world app that uses the "teslams" node module 
+# example.js - a hello world app that uses the "teslams" node module
 
 A very simple sample application which uses the teslams.js library to call common functions provided in the REST API.
 A valid teslamotors.com login and password is required and must be inserted into the config.json configuration file.
@@ -326,4 +325,3 @@ To execute change into the examples directory to run:
 # Feedback and Support
 
 For more information, feedback, or community support see the Tesla Motors Club forum at http://www.teslamotorsclub.com/showthread.php/13410-Model-S-REST-API or email teslams@googlegroups.com
-
