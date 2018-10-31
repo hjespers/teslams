@@ -149,6 +149,7 @@ For help run :
 	  -R, --range     Charging range mode: "std" or "max" or any percent from 50-90 or 100
 	  -S, --roof      Move the car sunroof to: "close", "vent", "comfort", "open" or any percent
 	  -T, --temp      Set the car climate control temperature (in Celcius)
+          --json      Output result as json
 	  -?, --help      Print usage information
 
 # streaming.js - Capture and log real-time telemetry to a file or MongoDB for analytics and visualization
