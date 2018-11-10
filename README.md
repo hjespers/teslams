@@ -20,12 +20,12 @@ Also ensure that you don't overwhelm the Tesla servers with requests. Calling RE
 Use these programs at your own risk. The authors do not guaranteed the proper functioning of these applications. This code attempts to use the same interfaces used by the official Tesla phone apps. However, it is possible that use of this code may cause unexpected damage for which nobody but you are responsible. Use of these functions can change the settings on your car and may have negative consequences such as (but not limited to) unlocking the doors, opening the sun roof, or reducing the available charge in the battery.
 
 # Contributors
-Marshall Rose (https://github.com/mrose17)
-Dirk Hohndel (https://github.com/dirkhh)
-Arthur Blake (https://github.com/arthurblake)
-Hans Jespersen (https://github.com/hjespers)
-Nick Triantos
-Chris Crewdson (https://github.com/ChrisCrewdson)
+- [Marshall Rose](https://github.com/mrose17)
+- [Dirk Hohndel](https://github.com/dirkhh)
+- [Arthur Blake](https://github.com/arthurblake)
+- [Hans Jespersen](https://github.com/hjespers)
+- Nick Triantos
+- [Chris Crewdson](https://github.com/ChrisCrewdson)
 
 # Installation
 
