@@ -29,22 +29,21 @@ Use these programs at your own risk. The authors do not guaranteed the proper fu
 
 # Installation
 
-To use these programs you must download and install 'node' from http://nodejs.org
-. Once node is installed, use the included 'npm' utility to download and install the teslams tools and all it's dependent modules
+To use these programs you must download and install `node` (eg from http://nodejs.org). Once node is installed, use the included `npm` utility to download and install the `teslams` tools and all its dependent modules.
 
 	npm install -g teslams
 
-or if you are not logged in as the root (administrator) use:
+or if you are not logged in as root (administrator) use:
 
 	sudo npm install -g teslams
 
-Alternatively, to run from github sources, clone teslams, go to the main folder and run
+Alternatively, to run from github sources, clone `teslams`, go to the main folder and run
 
 	npm install
 
-All example programs require credentials to authenticate with the Tesla API. You can specify a config.json, format specified below, with $TSLA_CONFIG_FILE. This default location for the config file is `~/.teslams/config.json` if not specified. It's highly recommended to use the token approach with a secure file location, see the next section for details.
 # Authentication
 
+All example programs require credentials to authenticate with the Tesla API. You can specify a `config.json`, format specified below, with `$TSLA_CONFIG_FILE`. This default location for the config file is `~/.teslams/config.json` if not specified. It's highly recommended to use the token approach with a secure file location, see the next section for details.
 
    	{
 		"username": "Your teslamotors.com username/email",
@@ -52,13 +51,13 @@ All example programs require credentials to authenticate with the Tesla API. You
 	}
 
 
-Alternatively, the token can be passed via --token in order to reuse a pre-existing authentication token (and avoid using login and password). A 90 day token can be generated using 'teslacmd -u username -p password --print_token' and you can store it for reuse in ~/.teslams/config.json in place of username and password in the following format:
+Alternatively, the token can be passed via `--token` in order to reuse a pre-existing authentication token (and avoid using login and password). A 90 day token can be generated using `teslacmd -u username -p password --print_token` and you can store it for reuse in `~/.teslams/config.json` in place of username and password in the following format:
 
 	{
 		"token": "abc123abc123abc123abc123abc123abc123abc123"
 	}
 
-Another alternative, username and password can be passed on the cli with -u and -p. Take care that no other users can access the system, as this will expose credentials in your history and process table `ps -ax`. The username and password can be passed as $TSLA_USERNAME and $TSLA_PASSWORD environment variables. These environment variable allow the execution of these apps in Heroku or other Platform-as-a-Service providers.
+Another alternative, username and password can be passed on the cli with `-u` and `-p`. Take care that no other users can access the system, as this will expose credentials in your history and process table `ps -ax`. The username and password can be passed as `$TSLA_USERNAME` and `$TSLA_PASSWORD` environment variables. These environment variable allow the execution of these apps in Heroku or other Platform-as-a-Service providers.
 
 # teslams.js - The main library (for javascript programmers)
 
@@ -114,7 +113,7 @@ To execute run:
 
 	teslacmd -u <username> -p <password>
 
-For help run :
+For help run:
 
 	teslacmd --help
 
@@ -157,18 +156,18 @@ For help run :
 
 <img src=http://farm9.staticflickr.com/8241/8526534730_75643b3247_c.jpg>
 
-A sample application which uses the TESLA HTTP Long Polling "STREAMING" API to get continuous telemetry from the Tesla Model S.
+A sample application which uses the TESLA HTTP Long Polling "STREAMING" API to get continuous telemetry from the Tesla.
 A valid teslamotors.com login and password is required and must be provided on the command line options.
 
 By default the output goes to a file called "streaming.out" which can also be changed with command line options. Each time you run the program you will over-write the output file so copy old log data or specify a different output file before running the application a second time.
 
-Data can be stored in MongoDB using the --db flag. This requires that you separately download, install, and start mongodb on your local host (see http://www.mongodb.org/downloads or https://docs.docker.com/samples/library/mongo/).
+Data can be stored in MongoDB using the --db flag. This requires that you separately download, install, and start mongodb on your local host (see https://www.mongodb.org/downloads or https://docs.docker.com/samples/library/mongo/).
 
 To execute run:
 
 	streaming -u <username> -p <password>
 
-For help run :
+For help run:
 
 	streaming --help
 
@@ -214,7 +213,7 @@ Point your browser to http://localhost:8766 to view the various visualizations.
 
 URLs are of the form http://localhost:8766/energy?from=YYYY-MM-DD-HH-MM&to=YYYY-MM-DD-HH-MM
 
-visualize.js now supports authentication. In your ~/.teslams/config.json file simply add a section for visualize like this:
+visualize.js now supports authentication. In your `~/.teslams/config.json` file simply add a section for visualize like this:
 
 	"visualize": {
 		"webusers": [
@@ -238,7 +237,7 @@ To execute run:
 
 	chargebar -u <username> -p <password>
 
-For help run :
+For help run:
 
 	chargebar --help
 
@@ -267,7 +266,7 @@ To execute run:
 	CTRL-D toggles climate control on/off
 	CTRL-C to exit
 
-For help run :
+For help run:
 
 	climatemon --help
 
@@ -290,7 +289,7 @@ To execute run:
 
 	teslamap -u <username> -p <password>
 
-For help run :
+For help run:
 
 	teslamap --help
 
@@ -310,9 +309,9 @@ For help run :
 # example.js - a hello world app that uses the "teslams" node module
 
 A very simple sample application which uses the teslams.js library to call common functions provided in the REST API.
-A valid teslamotors.com login and password is required and must be inserted into the config.json configuration file.
+A valid teslamotors.com login and password is required and must be inserted into the `config.json` configuration file.
 
-The example.js application requires that you edit the credentials in the file "config.json" before running the programs or authentication will fail. All other examples get the username and password from the command line options.
+The example.js application requires that you edit the credentials in the file `config.json` before running the programs or authentication will fail. All other examples get the username and password from the command line options.
 
 	{
 	"username": "yourMyTeslaLogin@email.com",
