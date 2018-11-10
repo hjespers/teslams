@@ -230,7 +230,7 @@ if you don't have a "visualize" property in your config file, authentication is 
 # chargebar.js - monitor your car from your desktop
 
 
-<img src="http://farm9.staticflickr.com/8236/8535066907_f22a61b061_c.jpg">
+<img src="https://user-images.githubusercontent.com/2879972/48303962-2d112500-e4d7-11e8-9015-fc09cd6e3f31.jpg">
 
 This application displays the charge state of a Tesla Model S in an ASCII terminal window.
 
@@ -254,7 +254,7 @@ For help run :
 
 # climatemon.js - monitor the temperature of your car from your desktop
 
-<img src="http://farm9.staticflickr.com/8099/8573246292_3361647e14_b.jpg">
+<img src="https://user-images.githubusercontent.com/2879972/48303961-2b476180-e4d7-11e8-85db-e54851764366.jpg">
 
 This application displays and controls the climate control system of a Tesla Model S.
 Colors are white/yellow when climate control is off
@@ -282,7 +282,7 @@ For help run :
 
 # teslamap.js - dude, where's my car?
 
-<img src="http://farm9.staticflickr.com/8248/8555931850_c2ae011075_z.jpg">
+<img src="https://user-images.githubusercontent.com/2879972/48303959-28e50780-e4d7-11e8-8da1-baf84bff6bbb.jpg">
 
 A sample application which uses the teslams.js library to determine the car location and optionally launch a browser using Google Maps.
 
