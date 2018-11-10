@@ -43,10 +43,12 @@ Alternatively, to run from github sources, clone teslams, go to the main folder 
 	npm install
 
 All example programs require credentials to authenticate with the Tesla API. You can specify a config.json, format specified below, with $TSLA_CONFIG_FILE. This default location for the config file is `~/.teslams/config.json` if not specified. It's highly recommended to use the token approach with a secure file location, see the next section for details.
+# Authentication
+
 
    	{
 		"username": "Your teslamotors.com username/email",
-		"password": "Your teslamotors.com password",
+		"password": "Your teslamotors.com password"
 	}
 
 
@@ -314,7 +316,7 @@ The example.js application requires that you edit the credentials in the file "c
 
 	{
 	"username": "yourMyTeslaLogin@email.com",
-	"password": "yourPassword",
+	"password": "yourPassword"
 	}
 
 To execute change into the examples directory to run:
