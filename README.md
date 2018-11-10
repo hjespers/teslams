@@ -1,11 +1,11 @@
-# Tesla Model S REST API
+# Tesla REST API
 
 
-An implementation in Node.js of the client side interface to the Tesla Model S API documented at:
+An implementation in Node.js of the client side interface to the Tesla API documented at:
 
 http://docs.timdorr.apiary.io/
 
-This is unofficial documentation of the Tesla Model S REST API used by the iOS and Android apps. It features functionality to monitor and control the Model S remotely. Documentation is provided on the Apiary.io site linked above.
+This is unofficial documentation of the Tesla REST API used by the iOS and Android apps. It features functionality to monitor and control the remotely. Documentation is provided on the Apiary.io site linked above.
 
 These programs and documentation do not come from Tesla Motors Inc.
 
@@ -62,12 +62,12 @@ Another alternative, username and password can be passed on the cli with -u and 
 
 # teslams.js - The main library (for javascript programmers)
 
-Contains a library of functions and constants which allow the uses the TESLA "REST" API to get and set values on the Tesla Model S.
+Contains a library of functions and constants which allow the uses the TESLA "REST" API to get and set values on the Tesla.
 All functions take an optional callback that will be passed the javascript object returned from the TESLA API.
 
 Function quick reference:
 
-	get_vid(opt, cb)               - get the "id" of the Model S by logging into the Tesla portal
+	get_vid(opt, cb)               - get the "id" of the vehicle by logging into the Tesla portal
 	vehicles(opt, cb)              - login to portal and get vehicles list and options data
 	all(opt, cb)                   - get array of all vehicles (if more than one, we salute you!)
 	mobile_enabled(vid, cb)        - check is remote/mobile control is on or off
@@ -232,7 +232,7 @@ if you don't have a "visualize" property in your config file, authentication is 
 
 <img src="https://user-images.githubusercontent.com/2879972/48303962-2d112500-e4d7-11e8-9015-fc09cd6e3f31.jpg">
 
-This application displays the charge state of a Tesla Model S in an ASCII terminal window.
+This application displays the charge state of a Tesla in an ASCII terminal window.
 
 To execute run:
 
@@ -256,7 +256,7 @@ For help run :
 
 <img src="https://user-images.githubusercontent.com/2879972/48303961-2b476180-e4d7-11e8-85db-e54851764366.jpg">
 
-This application displays and controls the climate control system of a Tesla Model S.
+This application displays and controls the climate control system of a Tesla.
 Colors are white/yellow when climate control is off
 Interior temperature bar is blue when cooling and red when heating
 
