@@ -6,7 +6,7 @@
     "aws-iot-device-sdk": ">= 1.0.9",
     "body-parser": "^1.18.1",
     "cookie-parser": "^1.4.3",
-    "express": "= 4.x",
+    "express": ">= 4.15.5",
     "express-namespace": "~0.1.1",
     "express-session": "^1.15.5",
     "json-bigint": ">= 0.1.4",
