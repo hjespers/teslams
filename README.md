@@ -164,8 +164,6 @@ For help run:
 
 # streaming.js - Capture and log real-time telemetry to a file or MongoDB for analytics and visualization
 
-<img src=http://farm9.staticflickr.com/8241/8526534730_75643b3247_c.jpg>
-
 A sample application which uses the TESLA HTTP Long Polling "STREAMING" API to get continuous telemetry from the Tesla.
 A valid teslamotors.com login and password is required and must be provided on the command line options.
 
