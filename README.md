@@ -24,18 +24,18 @@ Use these programs at your own risk. The authors do not guaranteed the proper fu
 - [Dirk Hohndel](https://github.com/dirkhh)
 - [Arthur Blake](https://github.com/arthurblake)
 - [Hans Jespersen](https://github.com/hjespers)
-- [Nick Triantos]
+- Nick Triantos
 - [Drew Wells](https://github.com/drewwells)
 - [Craig Hughes](https://github.com/hughescr)
 - [ve6rah](https://github.com/ve6rah)
-- [Santiago Castro] (https://github.com/bryant1410)
+- [Santiago Castro](https://github.com/bryant1410)
 - [Ian Maddox](https://github.com/ianmaddox)
 - [Mike Reinstein](https://github.com/mreinstein)
 - [Peter Leschev](https://github.com/pleschev)
 - [Eric ten Harkel](https://github.com/erictenharkel)
-- [Christian Brandlehner]( https://github.com/cbrandlehner)
+- [Christian Brandlehner](https://github.com/cbrandlehner)
 - [Chris Crewdson](https://github.com/ChrisCrewdson)
-- [Allen Hancock] (https://github.com/YesThatAllen)
+- [Allen Hancock](https://github.com/YesThatAllen)
 
 # Installation
 
