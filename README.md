@@ -3,7 +3,7 @@
 
 An implementation in Node.js of the client side interface to the Tesla API documented at:
 
-http://docs.timdorr.apiary.io/
+https://tesla-api.timdorr.com/
 
 This is unofficial documentation of the Tesla REST API used by the iOS and Android apps. It features functionality to monitor and control the remotely. Documentation is provided on the Apiary.io site linked above.
 
