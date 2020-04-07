@@ -104,6 +104,7 @@ if ( argv.help === true ) {
     console.log( '  -R, --range     Charging range mode: "std" or "max" or any percent from 50-90 or 100      ');
     console.log( '  -S, --roof      Move the car sunroof to: "close", "vent", "comfort", "open" or any percent');
     console.log( '  -T, --temp      Set the car climate control temperature (in Celcius)                      ');
+    console.log( '      --json      Output result as json                                                     ');
     console.log( '  -?, --help      Print usage information                                                   ');
     process.exit();
 }
@@ -116,7 +117,11 @@ if (argv.version) {
 
 
 function pr( stuff ) {
-    console.log( util.inspect(stuff) );
+    if (argv.json) {
+        console.log(util.format('%j', stuff));
+    } else {
+        console.log( util.inspect(stuff) );
+    }
 }
 
 function parseArgs( vehicle ) {
