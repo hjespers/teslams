@@ -2,6 +2,7 @@
 var request = require('request');
 var util = require('util');
 var JSONbig = require('json-bigint');
+var WebSocket = require('ws');
 
 var portal = 'https://owner-api.teslamotors.com/api/1';
 exports.portal = portal;
@@ -9,6 +10,10 @@ var owner_api = 'https://owner-api.teslamotors.com';
 exports.portal = owner_api;
 var token = '';
 exports.token = token;
+var username = '';
+exports.username = username;
+var password = '';
+exports.password = password;
 
 // emulate the android mobile app
 var version = '2.1.79';
@@ -36,6 +41,8 @@ var report2 = function(call, body, cb) {
 // get_vid gives the callback the ID of the first vehicle in the array returned
 var all = exports.all = function(options, cb) {
     if (!cb) cb = function(error, response, body) {/* jshint unused: false */};
+    exports.username = options.email;
+    exports.password = options.password;
     //add option to call without using email and password
     if (options.token) { 
         exports.token = options.token;
@@ -629,6 +636,145 @@ exports.ROOF_CLOSE = ROOF_CLOSE;
 exports.ROOF_VENT = ROOF_VENT;
 exports.ROOF_COMFORT = ROOF_COMFORT;
 exports.ROOF_OPEN = ROOF_OPEN;
+
+function keep_alive (ws) {
+    if (ws.readyState == ws.OPEN) {
+        var msg = {
+            msg_type: 'control:ping',
+            timestamp: Date.now(),
+        }
+        ws.send(JSON.stringify(msg));
+    }
+}
+
+function keep_alive_autopark (ws) {
+    if (ws.readyState == ws.OPEN) {
+        var msg = {
+            msg_type: 'autopark:heartbeat_app',
+            timestamp: Date.now(),
+        }
+        ws.send(JSON.stringify(msg));
+    }
+}
+
+function send_message (ws, command, latitude, longitude) {
+    var cmd = {
+        msg_type: command,
+        latitude: latitude,
+        longitude: longitude,
+    }
+    var message = JSON.stringify(cmd);
+    console.log('Sending message: ' + message);
+    ws.send(message);
+}
+
+function streaming_interface (params, command, cb) {
+    var error = false;
+    var token = params.token;
+    var vehicle_id = params.vehicle_id;
+    var autopark_timerId = 0;
+    var timerId = 0;
+    var frequency = 0;
+    var autopark_started = false;
+
+    var latitude = params.latitude;
+    var longitude = params.longitude;
+
+    var ws = new WebSocket('wss://' + exports.username + ':' + token + '@streaming.vn.teslamotors.com/connect/' + vehicle_id);
+
+    ws.onmessage = function (event) {
+//        console.log('Server data is: ' + event.data);
+        var msg = JSON.parse(event.data);
+//        console.log( util.inspect(msg) );
+        switch (msg.msg_type) {
+            // heartbeat
+            case 'control:hello':
+                console.log('Received message type: ' + msg.msg_type + ', msg is ' + util.inspect(msg));
+                var freq = msg.autopark.heartbeat_frequency;
+                console.log('Frequency is: ' + freq);
+                timerId = setInterval(keep_alive, msg.connection_timeout/2, ws);
+                break;
+            case 'control:pong':
+//                console.log('Ignoring heartbeat (pong)');
+                break;
+            // HomeLink
+            case 'homelink:status':
+                console.log('Received message type: ' + msg.msg_type + ', nearby is ' + msg.homelink_nearby );
+                if ( (msg.homelink_nearby == true) && (command == 'homelink:cmd_trigger') ) {
+                    send_message(ws, command, latitude, longitude);
+                };
+                break;
+            case 'homelink:cmd_result':
+                console.log('Received message type: ' + msg.msg_type + ', reason is ' + msg.reason );
+                ws.close();
+                break;
+            // Summon
+            case 'autopark:status':
+                console.log('Received message type: ' + msg.msg_type + ', autopark_state is ' + msg.autopark_state );
+                switch (msg.autopark_state) { // ready, paused, resuming, preparing, aborting...
+                    case 'ready':
+                        if (autopark_started) {
+                            // autopark is done.
+                            clearInterval(autopark_timerId);
+                            ws.close();
+                        } else {
+                            // start autopark if needed.
+                            if ((command == 'autopark:cmd_forward') || (command == 'autopark:cmd_reverse')) {
+                                send_message(ws, command, latitude, longitude);
+                                autopark_timerId = setInterval(keep_alive_autopark, freq, ws);
+                                autopark_started = true;
+                            }
+                        }
+                        break;
+                }
+                break;
+            case 'autopark:cmd_result':
+                console.log('Received message type: ' + msg.msg_type + ', reason is ' + msg.reason );
+                break;
+            case 'autopark:heartbeat_car':
+//                console.log('Ignoring heartbeat_car');
+                break;
+            default:
+//                console.log('Received unknown message type: ' + util.inspect(msg.msg_type) );
+        }
+    };
+
+    ws.onopen = function (event) {
+        console.log('WS connection opened');
+    };
+
+    ws.onclose = function (event) {
+        console.log('WS connection closed, status code: ' + event.code);
+        clearInterval(timerId);
+    };
+
+}
+
+function prepare_required_data (params, command, cb) {
+    var vid = params.id;
+    get_drive_state(vid, function (ds) {
+//        console.log( util.inspect(ds) );
+        params.latitude = ds.latitude;
+        params.longitude = ds.longitude;
+
+        streaming_interface (params, command, cb);
+    });
+}
+
+function trigger_autopark_forward( params, cb ) {
+    prepare_required_data (params, 'autopark:cmd_forward', cb);
+}
+exports.trigger_autopark_forward = trigger_autopark_forward;
+
+function trigger_autopark_reverse( params, cb ) {
+    prepare_required_data (params, 'autopark:cmd_reverse', cb);
+}
+exports.trigger_autopark_reverse = trigger_autopark_reverse;
+
+function trigger_homelink( params, cb ) {
+    prepare_required_data (params, 'homelink:cmd_trigger', cb);
+}
+exports.trigger_homelink = trigger_homelink;
 
 //left off here//
 // Streaming API stuff is below. Everything above is the REST API 

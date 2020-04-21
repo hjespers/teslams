@@ -6,14 +6,14 @@ var JSONbig = require('json-bigint');
 var util = require('util');
 var teslams = require('../teslams.js');
 var argv = require('optimist')
-    .usage('Usage: $0 -u <username> -p <password> || --id <id_string> --token <bearer_token> \n -acdDFgHimMPtvVwXZ -A [on|off] -C [start|stop] -L [lock|unlock] -O offset -R [std|max|50-90,100] -S [close|vent|comfort|open|0-100] -T temp')
+    .usage('Usage: $0 -u <username> -p <password> || --id <id_string> --token <bearer_token> \n -acdDFfghHimMPrtvVwXZ -A [on|off] -C [start|stop] -L [lock|unlock] -O offset -R [std|max|50-90,100] -S [close|vent|comfort|open|0-100] -T temp')
     .string('id')
     .string('token')
     .alias('u', 'username')
     .describe('u', 'Teslamotors.com login')
     .alias('p', 'password')
     .describe('p', 'Teslamotors.com password')
-    .boolean(['a', 'c', 'd', 'D', 'F', 'g', 'H', 'i', 'm', 'M', 'P', 't', 'v', 'V', 'w', 'X', 'Z'])
+    .boolean(['a', 'c', 'd', 'D', 'f', 'F', 'g', 'h', 'H', 'i', 'm', 'M', 'P', 'r', 't', 'v', 'V', 'w', 'X', 'Z'])
     .alias('a', 'all')
     .describe('a', 'Print information about all vehicles on the account')
     .describe('c', 'Display the charge state')
@@ -25,6 +25,12 @@ var argv = require('optimist')
     .alias('F', 'flash')
     .describe('g', 'Display the GUI settings')
     .alias('g', 'gui')
+    .alias('h', 'homelink')
+    .describe('h', 'Activate Homelink')
+    .alias('f', 'AutoPark Forward')
+    .describe('f', 'Activate Summon Forward')
+    .alias('r', 'AutoPark Reverse')
+    .describe('r', 'Activate Summon Reverse')
     .alias('H', 'honk')
     .describe('H', 'Honk the car horn')
     .alias('i', 'info')
@@ -86,6 +92,7 @@ if ( argv.help === true ) {
     console.log( '  -D, --debug     Display debug information                                                   [boolean]');
     console.log( '  -F, --flash     Flash the car headlights                                                    [boolean]');
     console.log( '  -g, --gui       Display the GUI settings                                                    [boolean]');
+    console.log( '  -h, --homelink  Activate Homelink                                                           [boolean]');
     console.log( '  -H, --honk      Honk the car horn                                                           [boolean]');
     console.log( '  -i, --info      Print vehicle info                                                          [boolean]');
     console.log( '  -m, --mobile    Display the mobile state                                                    [boolean]');
@@ -182,6 +189,15 @@ function parseArgs( vehicle ) {
     //
     if (argv.F) {
         teslams.flash( vid, pr );
+    }
+    if (argv.h) {
+        teslams.trigger_homelink( {id: vehicle.id, vehicle_id: vehicle.vehicle_id, token: vehicle.tokens[0] }, pr );
+    }
+    if (argv.f) {
+        teslams.trigger_autopark_forward( {id: vehicle.id, vehicle_id: vehicle.vehicle_id, token: vehicle.tokens[0] }, pr );
+    }
+    if (argv.r) {
+        teslams.trigger_autopark_reverse( {id: vehicle.id, vehicle_id: vehicle.vehicle_id, token: vehicle.tokens[0] }, pr );
     }
     if (argv.H) {
         teslams.honk( vid, pr );
